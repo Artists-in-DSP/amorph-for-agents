@@ -5,7 +5,7 @@
 
 ## Build compatibility
 
-> **Gumroad v0.99:** copy-paste + Lab; Explore (Hub) with **seeded** patches only (no user publish). **Not in v0.99:** MCP, in-plugin BYOK. **v1 preview:** Discord `#announcements`; **v1 public:** next Gumroad update.
+> **v0.99 (Gumroad):** copy-paste + Lab; **Explore** = chosen/verified patches only. **v1 beta (next):** MCP, BYOK, share via unlisted link — **not** Explore catalog listing. **v1.0 official** ~ end summer 2026.
 
 See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUILD_COMPAT.md — before MCP/BYOK, confirm **Settings → Connections** exists.
 
@@ -66,8 +66,8 @@ All authoring paths below edit these files and compile into the **same live patc
 | Way | Role | Audience |
 |-----|------|----------|
 | **Editor + copy-paste** | Edit DSP/UI directly in the runtime, or use Copy Instructions/Prompt to take context to any external LLM, paste the code back, Compile | Anyone — **in v0.99**; no API key, no subscription |
-| **BYOK in-runtime agent** | Beta — in-runtime AI chat with the user's own key; **4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek** | **Not in v0.99** — v1 preview (Discord), then Gumroad |
-| **MCP** | External coding agent reads/edits/compiles the patch in a running runtime | **Not in v0.99** — v1 preview (Discord), then Gumroad |
+| **BYOK in-runtime agent** | Beta — in-runtime AI chat with the user's own key; **4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek** | **v1 beta** — not v0.99 |
+| **MCP** | External coding agent reads/edits/compiles the patch in a running runtime | **v1 beta** — not v0.99 |
 | **Play / control** *(not authoring)* | Perform the loaded patch in the DAW or remote browser UI | Anyone, no code editing |
 
 All paths target the **same live patch** — not separate products.
@@ -76,9 +76,9 @@ Download (single canonical build): https://artistsindsp.gumroad.com/l/amorph
 
 ---
 
-## MCP server (not in v0.99)
+## MCP server (v1 beta)
 
-Each amorph runtime includes native **Model Context Protocol** support in updated Gumroad builds. Confirm **Settings → Connections** exists before setup.
+Each amorph runtime includes native **Model Context Protocol** support in **v1 beta** builds. Confirm **Settings → Connections** exists before setup.
 
 ### Connection
 
@@ -235,7 +235,7 @@ not a DAW replacement. MCP edits the patch inside amorph; it does not control th
 ## Differentiators
 
 1. A platform, not a fixed plugin — one runtime becomes any instrument, effect, or MIDI processor you describe
-2. Native MCP — external agents read, edit, compile, and QA DSP inside a running runtime (**not in v0.99**)
+2. Native MCP — external agents read, edit, compile, and QA DSP inside a running runtime (**v1 beta**)
 3. Real Cmajor source output, owned by the user (not black-box audio)
 4. Real-time JIT — prompt to playable patch in seconds
 5. BYOK multi-provider (no vendor lock-in for the in-runtime agent)

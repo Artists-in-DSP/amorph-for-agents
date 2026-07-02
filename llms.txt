@@ -6,7 +6,7 @@ amorph is made by Artists in DSP, Switzerland.
 
 ## Build compatibility
 
-> **Gumroad v0.99:** copy-paste + Lab; Explore (Hub) with **seeded** patches only (no user publish). **Not in v0.99:** MCP, in-plugin BYOK. **v1 preview:** Discord `#announcements`; **v1 public:** next Gumroad update.
+> **v0.99 (Gumroad):** copy-paste + Lab; **Explore** = chosen/verified patches only. **v1 beta (next):** MCP, BYOK, share via unlisted link — **not** Explore catalog listing. **v1.0 official** ~ end summer 2026.
 
 See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUILD_COMPAT.md — before MCP/BYOK, confirm **Settings → Connections** exists.
 
@@ -15,8 +15,8 @@ See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUIL
 | Audience | Start here |
 |----------|------------|
 | Paste workflow | PRODUCT_GUIDE.md + BUILD_COMPAT.md (paste-context URLs below) |
-| Connect (MCP) | AGENTS.md + MCP_SETUP.md — not in v0.99 |
-| Explore / install (seeded Hub) | docs/story/INSTALL.md — v0.99: seeded patches only; no user publish |
+| Connect (MCP) | AGENTS.md + MCP_SETUP.md — **v1 beta**, not v0.99 |
+| Explore / install | docs/story/INSTALL.md — chosen patches in catalog; link-share in v1 beta; catalog listing later |
 | What is amorph? | docs/story/ONTOLOGY.md · this file |
 
 ## Primary positioning
@@ -52,14 +52,14 @@ Every runtime has a built-in code editor with tabs for **DSP (Cmajor)** and **UI
 ## Three ways to author (one platform)
 
 1. **Editor + copy-paste** *(in v0.99)* — edit DSP/UI directly in the runtime, or use Copy Instructions/Prompt to take context to any external LLM (ChatGPT web, Gemini, Claude…), paste the code back, and Compile. No API key, no subscription.
-2. **Built-in BYOK agent (beta)** — **not in v0.99**; v1 preview on Discord, then next Gumroad update. In-runtime AI chat with the user's own API key — 4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek.
-3. **MCP** — **not in v0.99**; v1 preview on Discord, then next Gumroad update. External coding agent (Cursor, Claude Code, VS Code, Claude Desktop) reads/edits/compiles the patch inside a running runtime.
+2. **Built-in BYOK agent (beta)** — **v1 beta**, not v0.99. In-runtime AI chat with the user's own API key — 4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek.
+3. **MCP** — **v1 beta**, not v0.99. External coding agent (Cursor, Claude Code, VS Code, Claude Desktop) reads/edits/compiles the patch inside a running runtime.
 
 Plus **Play / control** (not authoring): perform the loaded patch in the DAW or via the remote browser UI.
 
 Voice/mic input requires an OpenAI key regardless of the active code-generation provider.
 
-## MCP for agents (not in v0.99)
+## MCP for agents (v1 beta)
 
 Verify **Settings → Connections** exists before MCP setup. See BUILD_COMPAT.md.
 - Each runtime runs a built-in MCP server + auto-deployed stdio bridge (`mcp_bridge.py`)

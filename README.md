@@ -36,17 +36,15 @@ These three are the moat. Most "AI audio" tools have one; amorph is the only one
 | Audience | Start here |
 |----------|------------|
 | **Paste workflow** (Copy Instructions / external LLM) | [`docs/paste-context/PRODUCT_GUIDE.md`](docs/paste-context/PRODUCT_GUIDE.md) + [`BUILD_COMPAT.md`](BUILD_COMPAT.md) |
-| **Connect (MCP)** — Cursor, VS Code, Claude Desktop | [`AGENTS.md`](AGENTS.md) + [`MCP_SETUP.md`](MCP_SETUP.md) — **not in v0.99**; see [`BUILD_COMPAT.md`](BUILD_COMPAT.md) |
-| **Explore / share / install** | [`docs/story/SHARE_USER.md`](docs/story/SHARE_USER.md) · [`docs/story/INSTALL.md`](docs/story/INSTALL.md) |
+| **Connect (MCP)** — Cursor, VS Code, Claude Desktop | [`AGENTS.md`](AGENTS.md) + [`MCP_SETUP.md`](MCP_SETUP.md) — **v1 beta**; see [`BUILD_COMPAT.md`](BUILD_COMPAT.md) |
+| **Explore / share / install** | [`docs/story/INSTALL.md`](docs/story/INSTALL.md) — chosen catalog; link-share in v1 beta |
 | **What is amorph?** (ontology, tabs, layers) | [`docs/story/ONTOLOGY.md`](docs/story/ONTOLOGY.md) · [`llms.txt`](llms.txt) |
 
 Reference: [`TOOLS.md`](TOOLS.md) (MCP tools) · [`PRODUCT_TIERS.md`](PRODUCT_TIERS.md) (editor · BYOK · MCP · play) · [`CMAJOR_QUICKREF.md`](CMAJOR_QUICKREF.md)
 
 ## Build compatibility
 
-Gumroad **v0.99** supports copy-paste + Lab and Explore (Hub) with **seeded** patches only — **no user publish yet**. **Not in v0.99:** MCP, in-plugin BYOK, Hub upload. **v1 preview:** Discord `#announcements`; **v1 public:** next Gumroad update. Before MCP/BYOK setup, confirm **Settings → Connections** exists in the plugin.
-
-See [`BUILD_COMPAT.md`](BUILD_COMPAT.md) for the full gate and v0.99-safe claims.
+**v0.99 (Gumroad):** copy-paste + Lab; Explore = **chosen** patches only. **v1 beta (next):** MCP, BYOK, share via unlisted link — **not** Explore catalog listing. **v1.0 official** ~ end summer 2026. See [`BUILD_COMPAT.md`](BUILD_COMPAT.md).
 
 ## Quick links
 
@@ -55,9 +53,9 @@ See [`BUILD_COMPAT.md`](BUILD_COMPAT.md) for the full gate and v0.99-safe claims
 - **Discord:** https://discord.gg/JzVbjU38tp
 - **Agent spec (canonical):** this repo — [`llms.txt`](llms.txt) · [`llms-full.txt`](llms-full.txt) (raw GitHub URLs in paste-context). The copies on artistsindsp.com are marketing snapshots; bot fetch may 403 until Cloudflare allowlist — prefer `raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/…`
 
-## MCP in 30 seconds (not in v0.99)
+## MCP in 30 seconds (v1 beta)
 
-1. Confirm **Settings → Connections** is present ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). If missing, the user is on v0.99 — **copy-paste + Lab only**; do not guide MCP or BYOK.
+1. Confirm **Settings → Connections** is present ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). If missing, the user is on **v0.99** — copy-paste + Lab only.
 2. Install amorph and open a runtime in your DAW.
 3. Connect your IDE agent via MCP ([setup guide](MCP_SETUP.md)).
 4. Call **`get_host_status`** first (works even before the plugin is open).

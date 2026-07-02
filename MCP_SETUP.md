@@ -4,7 +4,7 @@ Each amorph runtime (`Amorph_Instrument` / `Amorph_FX` / `Amorph_MIDI`) exposes 
 
 ## Prerequisites
 
-1. **Verify compatibility:** Confirm **Settings → Connections** exists in the plugin. The current Gumroad download (v0.99) does not include MCP or in-plugin BYOK — see [`BUILD_COMPAT.md`](BUILD_COMPAT.md). v0.99: copy-paste + Lab; Hub is seeded patches only (no user publish). v1 preview: Discord `#announcements`.
+1. **Verify compatibility:** Confirm **Settings → Connections** exists in the plugin. **v0.99 (Gumroad)** has no MCP or BYOK. **v1 beta** adds MCP, BYOK, and share-via-link (unlisted — not Explore catalog listing). See [`BUILD_COMPAT.md`](BUILD_COMPAT.md). Preview: Discord `#announcements`.
 2. Install amorph: https://artistsindsp.gumroad.com/l/amorph  
 3. Open an amorph runtime in your DAW (instrument, fx, or midi variant). In the DAW,
    the plugins may appear as `Amorph Instrument`, `Amorph FX`, and `Amorph MIDI` (spaces) or `Amorph_Instrument`, `Amorph_FX`, `Amorph_MIDI` (underscores in MCP/docs).

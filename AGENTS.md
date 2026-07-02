@@ -17,7 +17,13 @@ jobs. amorph is for creating the custom tool the user wishes existed but cannot 
 
 ## Build compatibility
 
-MCP, in-plugin BYOK, and Hub publish are **not in the current Gumroad download (v0.99)**. v0.99 supports copy-paste + Lab and Explore (Hub) with **seeded** patches only — users cannot publish to the Hub yet. See [`BUILD_COMPAT.md`](BUILD_COMPAT.md) before guiding MCP or BYOK setup.
+**v0.99 (Gumroad today):** copy-paste + Lab; **Explore** catalog = chosen/verified patches only.
+
+**v1 beta (next):** MCP, in-plugin BYOK, share patch via **unlisted link** — users still **cannot list** in the Explore catalog. Preview: Discord `#announcements`.
+
+**Not in v0.99 or v1 beta:** Explore catalog listing / publish.
+
+See [`BUILD_COMPAT.md`](BUILD_COMPAT.md) before guiding MCP, BYOK, or share flows.
 
 ## First connection
 
@@ -43,11 +49,11 @@ All target the same live patch inside a runtime — not separate products.
 | Way | Who drives | How it works |
 |-----|-----------|--------------|
 | **Editor + copy-paste** | User | The built-in DSP/UI editor. Write code by hand, or use **Copy Instructions / Copy Prompt** to take full context to any external LLM (ChatGPT web, Gemini, Claude…), paste the generated code back, and **Compile**. No API key, no subscription. |
-| **Built-in BYOK agent (beta)** | User | **Not in v0.99.** v1 preview (Discord), then Gumroad. In-runtime AI chat panel — 4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek. Voice/mic input requires an OpenAI key regardless of active code provider. |
-| **MCP** | You (external agent) | **Not in v0.99.** v1 preview (Discord), then Gumroad. Connect Cursor / Claude Code / VS Code / Claude Desktop to the runtime. |
+| **Built-in BYOK agent (beta)** | User | **v1 beta**, not v0.99. In-runtime AI chat — 4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek. Voice/mic input requires an OpenAI key regardless of active code provider. |
+| **MCP** | You (external agent) | **v1 beta**, not v0.99. Connect Cursor / Claude Code / VS Code / Claude Desktop to the runtime. |
 | **Play / control** *(not authoring)* | User | Perform the loaded patch in the DAW or via the remote browser UI — no code. |
 
-When the user has Cursor, Claude Code, VS Code, or Claude Desktop **on a v1 build**, the MCP path gives you the fullest tool surface. On v0.99 (Gumroad today), point them to **copy-paste + Lab only** — or Discord `#announcements` for v1 preview builds.
+When the user is on **v1 beta**, the MCP path gives you the fullest tool surface. On **v0.99** (Gumroad today), point them to **copy-paste + Lab** and chosen patches in Explore — or Discord `#announcements` for **v1 beta** preview builds.
 
 ## Operating rules
 

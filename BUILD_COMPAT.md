@@ -1,11 +1,36 @@
-<!-- Hand-edited Jul 2026 for Gumroad tier truth — re-sync from InfinityLab export when source is updated -->
+<!-- Hand-edited Jul 2026 — re-sync from InfinityLab export when source is updated -->
 
 # Build compatibility
 
-> **Gumroad v0.99 (public download today)** — Ask → Compile → Play via copy-paste and the Lab editor; **Explore (Hub)** to browse and install **seeded** community patches (**users cannot publish to the Hub yet**). Three runtimes: Instrument, FX, MIDI. macOS and Windows.
+## Release track
 
-> **Not in v0.99:** MCP (Cursor, VS Code, Claude Desktop), in-plugin AI chat (BYOK), and Hub upload/publish.
+| Release | Channel | When |
+|---------|---------|------|
+| **v0.99 Open Beta** | [Gumroad](https://artistsindsp.gumroad.com/l/amorph) (public) | **Today** |
+| **v1 beta** (1, 2, …) | [Discord](https://discord.gg/JzVbjU38tp) `#announcements` preview → Gumroad when ready | **Next** |
+| **v1 gamma** | TBD | After v1 beta stabilizes |
+| **v1.0 official** | Gumroad | Target ~end summer 2026 |
 
-> **v1 preview:** Discord → `#announcements` (https://discord.gg/JzVbjU38tp). **v1 public:** next Gumroad update — see release notes when updating.
+## Explore (community catalog)
 
-Before MCP or BYOK setup: confirm **Settings → Connections** is present in the plugin. If it is missing, the user is on v0.99 — guide **copy-paste + Lab only**; do not run MCP or in-plugin agent steps.
+**User-facing:** **Explore** tab. **Internal engineering name:** Hub — do not use "Hub" in public copy.
+
+The **Explore catalog** lists **chosen, verified** patches only (curated by Artists in DSP). It is not open upload.
+
+| Capability | v0.99 | v1 beta | v1.0 official (target) |
+|------------|-------|---------|------------------------|
+| Browse / install **chosen** patches in Explore | ✅ | ✅ | ✅ |
+| Share your patch via **unlisted link** (install link) | ❌ | ✅ | ✅ |
+| **List** your patch in the Explore catalog | ❌ | ❌ | later (post–v1 beta) |
+
+## Authoring & agents
+
+**v0.99 (Gumroad today):** Ask → Compile → Play via copy-paste + Lab. Explore = chosen patches only. Instrument / FX / MIDI. macOS + Windows.
+
+**v1 beta (next):** adds MCP, in-plugin BYOK, and **share-via-link** (unlisted — **not** Explore catalog listing).
+
+**Not in v0.99 or v1 beta:** MCP, BYOK, link-share (see v1 beta); **Explore catalog listing / Hub publish** (any release through v1 beta).
+
+Before MCP or BYOK setup: confirm **Settings → Connections** is present. If missing, the user is on v0.99 — guide **copy-paste + Lab only**.
+
+Preview builds: Discord → `#announcements`
