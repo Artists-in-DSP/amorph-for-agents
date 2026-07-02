@@ -6,9 +6,9 @@ amorph is made by Artists in DSP, Switzerland.
 
 ## Build compatibility
 
-> **MCP, IDE auto-connect, and Connections onboarding are not in the current Gumroad download (v0.99).**
+> **Gumroad v0.99:** copy-paste + Lab; Explore (Hub) with **seeded** patches only (no user publish). **Not in v0.99:** MCP, in-plugin BYOK. **v1 preview:** Discord `#announcements`; **v1 public:** next Gumroad update.
 
-The public beta (v0.99) supports copy-paste, in-plugin assistant, and Explore on macOS and Windows. MCP requires an **updated download from Gumroad** — see release notes when updating. Before MCP setup, confirm **Settings → Connections** is present. See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUILD_COMPAT.md
+See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUILD_COMPAT.md — before MCP/BYOK, confirm **Settings → Connections** exists.
 
 ## Pick your door
 
@@ -16,7 +16,7 @@ The public beta (v0.99) supports copy-paste, in-plugin assistant, and Explore on
 |----------|------------|
 | Paste workflow | PRODUCT_GUIDE.md + BUILD_COMPAT.md (paste-context URLs below) |
 | Connect (MCP) | AGENTS.md + MCP_SETUP.md — not in v0.99 |
-| Explore / share / install | docs/story/SHARE_USER.md · INSTALL.md |
+| Explore / install (seeded Hub) | docs/story/INSTALL.md — v0.99: seeded patches only; no user publish |
 | What is amorph? | docs/story/ONTOLOGY.md · this file |
 
 ## Primary positioning
@@ -51,9 +51,9 @@ Every runtime has a built-in code editor with tabs for **DSP (Cmajor)** and **UI
 
 ## Three ways to author (one platform)
 
-1. **Editor + copy-paste:** edit DSP/UI directly in the runtime, or use Copy Instructions/Prompt to take context to any external LLM (ChatGPT web, Gemini, Claude…), paste the code back, and Compile. No API key, no subscription.
-2. **Built-in BYOK agent (beta):** in-runtime AI chat with the user's own API key — 4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek.
-3. **MCP:** an external coding agent (Cursor, Claude Code, VS Code, Claude Desktop) reads/edits/compiles the patch inside a running runtime — **not in v0.99** (see BUILD_COMPAT.md).
+1. **Editor + copy-paste** *(in v0.99)* — edit DSP/UI directly in the runtime, or use Copy Instructions/Prompt to take context to any external LLM (ChatGPT web, Gemini, Claude…), paste the code back, and Compile. No API key, no subscription.
+2. **Built-in BYOK agent (beta)** — **not in v0.99**; v1 preview on Discord, then next Gumroad update. In-runtime AI chat with the user's own API key — 4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek.
+3. **MCP** — **not in v0.99**; v1 preview on Discord, then next Gumroad update. External coding agent (Cursor, Claude Code, VS Code, Claude Desktop) reads/edits/compiles the patch inside a running runtime.
 
 Plus **Play / control** (not authoring): perform the loaded patch in the DAW or via the remote browser UI.
 

@@ -44,7 +44,7 @@ Reference: [`TOOLS.md`](TOOLS.md) (MCP tools) · [`PRODUCT_TIERS.md`](PRODUCT_TI
 
 ## Build compatibility
 
-MCP, IDE auto-connect, and Connections onboarding are **not in the current Gumroad download (v0.99)**. v0.99 supports copy-paste, in-plugin assistant, and Explore on macOS and Windows. Before MCP setup, confirm **Settings → Connections** exists in the plugin.
+Gumroad **v0.99** supports copy-paste + Lab and Explore (Hub) with **seeded** patches only — **no user publish yet**. **Not in v0.99:** MCP, in-plugin BYOK, Hub upload. **v1 preview:** Discord `#announcements`; **v1 public:** next Gumroad update. Before MCP/BYOK setup, confirm **Settings → Connections** exists in the plugin.
 
 See [`BUILD_COMPAT.md`](BUILD_COMPAT.md) for the full gate and v0.99-safe claims.
 
@@ -57,7 +57,7 @@ See [`BUILD_COMPAT.md`](BUILD_COMPAT.md) for the full gate and v0.99-safe claims
 
 ## MCP in 30 seconds (not in v0.99)
 
-1. Confirm **Settings → Connections** is present ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). If missing, the user is on v0.99 — use copy-paste or BYOK only.
+1. Confirm **Settings → Connections** is present ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). If missing, the user is on v0.99 — **copy-paste + Lab only**; do not guide MCP or BYOK.
 2. Install amorph and open a runtime in your DAW.
 3. Connect your IDE agent via MCP ([setup guide](MCP_SETUP.md)).
 4. Call **`get_host_status`** first (works even before the plugin is open).

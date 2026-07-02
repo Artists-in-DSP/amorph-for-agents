@@ -5,9 +5,9 @@
 
 ## Build compatibility
 
-> **MCP, IDE auto-connect, and Connections onboarding are not in the current Gumroad download (v0.99).**
+> **Gumroad v0.99:** copy-paste + Lab; Explore (Hub) with **seeded** patches only (no user publish). **Not in v0.99:** MCP, in-plugin BYOK. **v1 preview:** Discord `#announcements`; **v1 public:** next Gumroad update.
 
-The public beta (v0.99) supports copy-paste, in-plugin assistant, and Explore on macOS and Windows. MCP requires an **updated download from Gumroad** — see release notes when updating. Before MCP setup, confirm **Settings → Connections** is present. See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUILD_COMPAT.md
+See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUILD_COMPAT.md — before MCP/BYOK, confirm **Settings → Connections** exists.
 
 ---
 
@@ -65,9 +65,9 @@ All authoring paths below edit these files and compile into the **same live patc
 
 | Way | Role | Audience |
 |-----|------|----------|
-| **Editor + copy-paste** | Edit DSP/UI directly in the runtime, or use Copy Instructions/Prompt to take context to any external LLM, paste the code back, Compile | Anyone — no API key, no subscription |
-| **BYOK in-runtime agent** | Beta — in-runtime AI chat with the user's own key; **4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek** | Users who want in-plugin AI |
-| **MCP** | External coding agent reads/edits/compiles the patch in a running runtime | Cursor, Claude Code, VS Code, Claude Desktop users — not in v0.99 |
+| **Editor + copy-paste** | Edit DSP/UI directly in the runtime, or use Copy Instructions/Prompt to take context to any external LLM, paste the code back, Compile | Anyone — **in v0.99**; no API key, no subscription |
+| **BYOK in-runtime agent** | Beta — in-runtime AI chat with the user's own key; **4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek** | **Not in v0.99** — v1 preview (Discord), then Gumroad |
+| **MCP** | External coding agent reads/edits/compiles the patch in a running runtime | **Not in v0.99** — v1 preview (Discord), then Gumroad |
 | **Play / control** *(not authoring)* | Perform the loaded patch in the DAW or remote browser UI | Anyone, no code editing |
 
 All paths target the **same live patch** — not separate products.
