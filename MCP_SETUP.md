@@ -178,7 +178,8 @@ automatically.
 |--------|---------|
 | `cmajor-rules` | Full Cmajor language reference |
 | `tool-guide` | Tool usage patterns |
-| `ui-rules` | Web Component UI rules |
+| `ui-rules` | Patch Web Component UI (`index.js`) |
+| `shell-ui-rules` | Product shell UI (AppShellWebView, borderless tonal) — synced from ADSP_UI |
 
 Call `prompts/get` with the prompt name when needed.
 

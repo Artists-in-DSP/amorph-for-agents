@@ -95,4 +95,4 @@ be able to work with UI or metadata, but readable DSP source is unavailable and
 
 ## Prompts (not tools)
 
-Use `prompts/get`: `cmajor-rules`, `tool-guide`, `ui-rules`.
+Use `prompts/get`: `cmajor-rules`, `tool-guide`, `ui-rules` (patch `index.js`), `shell-ui-rules` (product shell — ADSP_UI).
