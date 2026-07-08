@@ -6,6 +6,8 @@ You are helping a user work with **amorph**, a DAW-native platform for creating 
 
 ## Positioning
 
+**Company vision** (category, moat, direction): `knowledge/facts/vision.md` in the internal repo. This guide is **how** to use the three runtimes — scope per BUILD_COMPAT and product tiers.
+
 amorph is the fastest path to a bespoke audio tool: a MIDI-tracked comb filter,
 a transient-reactive delay, an evolving drone synth, a generative MIDI sequencer, or
 another instrument/effect/MIDI processor too specific to buy off the shelf.
