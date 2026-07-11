@@ -34,6 +34,22 @@ See [`BUILD_COMPAT.md`](BUILD_COMPAT.md) before guiding MCP, BYOK, or share flow
 3. If **disconnected:** guide install from https://artistsindsp.gumroad.com/l/amorph → open a runtime in the DAW → reconnect. Do not call code tools yet.
 4. If **connected:** read `initialize` instructions for variant, patch name, and **project folder** (source of truth).
 
+## New project (two paths)
+
+| Path | Who | When |
+|------|-----|------|
+| **In-plugin** | User saves **New blank patch** | Traditional; creates `Projects/<Name>/` + `.vscode/mcp.json` |
+| **MCP agent** | You call **`create_project`** | Blank saved project without manual Save; requires plugin open |
+
+**Connect MCP (by client):**
+
+| Client | Open project folder? |
+|--------|---------------------|
+| **Cursor / Claude Desktop / Windsurf** | **No** for MCP-only authoring — chat from any workspace (auto-registered). Optional to open folder for hand-editing files. |
+| **VS Code** | **Yes** — `File → Open Folder` → project folder (uses `.vscode/mcp.json`). |
+
+**Editor connected** badge = MCP client ran a tool recently — not “user opened the folder.”
+
 ## The editor (what you and the user are editing)
 
 Every runtime has a **built-in code editor** with separate tabs:
@@ -64,8 +80,8 @@ When the user is on **v1 beta**, the MCP path gives you the fullest tool surface
 - **Every MCP code change must end with `task_complete` → `apply_draft`.** Until `apply_draft` returns OK, nothing is live — do not ask the user to reload presets or click Apply.
 - Prefer **`edit_lines`** for edits; finish with **`task_complete`** then **`apply_draft`** to commit live audio.
 - File saves alone do **not** recompile — use `reload_from_disk` or `apply_draft`.
+- **`reload_from_disk`** is the **human/IDE path** after hand-editing saved project files — do **not** call mid MCP session unless passing `discard_unsaved=true` to intentionally abandon uncommitted edits.
 - **`generate_code`** writes working copy only — without `task_complete` then `apply_draft`, changes are not committed to live audio.
-- `reload_from_disk` with default `compile=true` can apply on-disk files without a separate `task_complete`; use it after hand-editing saved project files.
 - Runtimes / variants: DAW plugins **Amorph_Instrument**, **Amorph_FX**, **Amorph_MIDI**; MCP variants `instrument`, `fx`, `midi`.
 - You operate the patch inside the runtime; you do **not** control the user’s DAW.
 - Never edit locked patches (`dsp.cmajor` starting with `Cmaj0001`); readable DSP source is unavailable and `reload_from_disk` cannot make it editable.
@@ -73,12 +89,19 @@ When the user is on **v1 beta**, the MCP path gives you the fullest tool surface
 
 ## Recommended workflow
 
+**Existing patch:**
 ```
 get_host_status → read_code / get_code_outline → edit_lines
 → fix any compile errors reported by the edit result → run_qa_probe? → task_complete → apply_draft
 ```
 
-For hand-edits in an IDE: save files → `reload_from_disk` (default compile=true).
+**New patch from scratch (agent-first):**
+```
+get_host_status → create_project(name="…") → generate_code / edit_lines
+→ run_qa_probe? → task_complete → apply_draft → get_error none
+```
+
+For hand-edits in an IDE: save files → `reload_from_disk` (default compile=true; requires `discard_unsaved=true` if MCP working copy is dirty).
 Use `get_error` to inspect current live/reload/runtime compile state when needed; failed
 edit/generate calls usually return their compile error directly.
 

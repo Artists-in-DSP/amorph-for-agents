@@ -10,6 +10,12 @@ Tool names use **snake_case** in MCP `tools/call`. Always call **`get_host_statu
 | `list_instances` | List open runtimes (ports, variants, patches, focus) when multiple instances are running |
 | `set_active_instance` | Pin routing by `port`, `patch`, or `variant`; or `follow_focus: true` to clear pin |
 
+## Project
+
+| Tool | When to use |
+|------|-------------|
+| `create_project` | Blank saved project + switch live runtime (`name`, `overwrite`, `discard_unsaved`). Same as in-plugin New patch + save. Use for agent-first new patches. |
+
 ## Code — read
 
 | Tool | Purpose |
@@ -38,7 +44,7 @@ Tool names use **snake_case** in MCP `tools/call`. Always call **`get_host_statu
 | `get_error` | Last compiler error |
 | `task_complete` | Signal goal done — surfaces draft for review (**does not** auto-commit) |
 | `apply_draft` | Commit pending draft to the live runtime + compile |
-| `reload_from_disk` | Pull `dsp.cmajor` / `index.js` from project folder (default: compile) |
+| `reload_from_disk` | Pull `dsp.cmajor` / `index.js` from project folder (default: compile). **Human/IDE path only** — requires `discard_unsaved=true` if MCP working copy differs from snapshot or a draft is pending. |
 
 ## QA & catalog
 

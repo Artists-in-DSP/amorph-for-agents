@@ -141,9 +141,9 @@ SETTINGS REFERENCE
   Set any action to "Off" to disable.
 - Connections (collapsible):
   - Connect your editor (MCP): status-first setup. Badge shows
-    Editor connected when your IDE is linked. Create a named patch to get
-    the project folder and .vscode/mcp.json. Cursor, Claude Desktop,
-    and Windsurf auto-register; VS Code uses the project folder.
+    Editor connected when your MCP client runs a tool. Create a project
+    (New blank patch or agent create_project). Cursor, Claude Desktop,
+    and Windsurf auto-register; VS Code needs the project folder open.
   - Remote Control: URL + QR for phone or browser-capable agents.
   - Share Context (no MCP): copy instructions for ChatGPT web, Gemini, etc.
 - About: version, variant, mode descriptions.
@@ -153,11 +153,12 @@ SETTINGS REFERENCE
 CONNECTING EXTERNAL AGENTS
 Amorph runs a local HTTP JSON-RPC server on localhost (port 7331-7399).
 Status-first setup via Settings > Connections:
-1. Keep Amorph open in your DAW.
-2. Create a named patch (creates Projects/<patch name>/ and .vscode/mcp.json).
-3. Open that folder in Cursor or VS Code, or chat in Cursor / Claude
-   Desktop / Windsurf (auto-registered on plugin load). Badge shows
-   Editor connected when linked.
+1. Keep Amorph open in your DAW (MCP starts automatically).
+2. Create a project (New blank patch here, or agent create_project).
+3. Cursor / Claude Desktop / Windsurf: chat from any window (reload MCP
+   once if the client was already open). VS Code: File > Open Folder on
+   the project folder. Optional: open the folder to hand-edit files.
+4. Badge shows Editor connected on the first MCP tool call.
 VS Code: open the saved project folder as workspace root -- not the repo
 root. Troubleshooting: Settings > Connections > Troubleshooting >
 Copy setup if auto-register did not add Amorph. One universal "amorph"
