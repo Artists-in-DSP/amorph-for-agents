@@ -17,7 +17,7 @@ Primary onboarding path (matches Settings → Connections). **Opening the projec
 | Step | What to do | What you should see |
 |------|------------|---------------------|
 | **1. Open** | Load amorph in your DAW | Settings → **Connections** shows MCP status; header badge → **Not connected** |
-| **2. Create** | **New blank patch** + save in Amorph, **or** ask your agent to call `create_project` | Named folder under `Projects/<PresetName>/` (+ `.vscode/mcp.json` on save) |
+| **2. Create** | **New blank patch** + save in Amorph, **or** ask your agent to call `create_project` | Named folder under `Projects/<PatchName>/` (+ `.vscode/mcp.json` on save) |
 | **3. Connect** | See **by client** below | Badge → **Editor connected** on first MCP tool call |
 
 **Step 1 detail:** Opening the plugin starts the MCP HTTP server and deploys bridge v5. On load, amorph **auto-registers** a single `amorph` entry in **Cursor**, **Claude Desktop**, and **Windsurf** (if those apps are installed). No manual JSON paste required for those clients.
@@ -26,7 +26,7 @@ Primary onboarding path (matches Settings → Connections). **Opening the projec
 
 | Action | Project folder | `.vscode/mcp.json` |
 |--------|----------------|--------------------|
-| **Save** (named preset) or **`create_project`** | `Projects/<PresetName>/` | Written on save / create |
+| **Save** (named patch) or **`create_project`** | `Projects/<PatchName>/` | Written on save / create |
 | **Compile only** (unsaved scratch) | May land in `Projects/Scratch/` | **Not** written — name or `create_project` first |
 
 **Step 3 detail — by client:**
@@ -34,8 +34,8 @@ Primary onboarding path (matches Settings → Connections). **Opening the projec
 | Client | What to do |
 |--------|------------|
 | **Cursor / Claude Desktop / Windsurf** | Chat from **any** workspace (auto-registered). Reload MCP servers once if the client was already open before Amorph. |
-| **VS Code** | **File → Open Folder…** → `Projects/<PresetName>/`. The saved `.vscode/mcp.json` wires MCP from that window. |
-| **Hand-editing files (optional)** | Open `Projects/<PresetName>/` in Cursor or VS Code to browse/edit `dsp.cmajor` / `index.js` in the file tree; finish with `reload_from_disk` or `apply_draft`. |
+| **VS Code** | **File → Open Folder…** → `Projects/<PatchName>/`. The saved `.vscode/mcp.json` wires MCP from that window. |
+| **Hand-editing files (optional)** | Open `Projects/<PatchName>/` in Cursor or VS Code to browse/edit `dsp.cmajor` / `index.js` in the file tree; finish with `reload_from_disk` or `apply_draft`. |
 
 Check the header badge or Settings → Connections: **Editor connected** means your MCP client recently ran a tool — not merely that you opened a folder.
 
@@ -95,12 +95,12 @@ Bridge v5 routes every tool call dynamically (CLI filter → session pin → foc
 claude mcp add amorph python3 ~/Library/Presets/Artists_in_DSP/AMORPH/mcp_bridge.py
 ```
 
-On preset **save**, amorph auto-writes `.vscode/mcp.json` into `Projects/<PresetName>/` (variant + patch pinned for that workspace). Prefer opening that folder over hand-editing config.
+On patch **save**, amorph auto-writes `.vscode/mcp.json` into `Projects/<PatchName>/` (variant + patch pinned for that workspace). Prefer opening that folder over hand-editing config.
 
 Project folder roots (variant-scoped):
 
-- macOS: `~/Library/Presets/Artists_in_DSP/AMORPH/{Instruments,FX,MIDI}/Projects/<PresetName>/`
-- Windows: `%APPDATA%\Artists_in_DSP\AMORPH\{Instruments,FX,MIDI}\Projects\<PresetName>\`
+- macOS: `~/Library/Presets/Artists_in_DSP/AMORPH/{Instruments,FX,MIDI}/Projects/<PatchName>/`
+- Windows: `%APPDATA%\Artists_in_DSP\AMORPH\{Instruments,FX,MIDI}\Projects\<PatchName>\`
 
 Legacy `AMORPH/Projects` paths are migration-only. Trust the **Project folder** reported by MCP `initialize` / `get_host_status` for the connected patch.
 
@@ -191,9 +191,11 @@ Call `prompts/get` with the prompt name when needed.
 | “Plugin busy” | Internal agent running — wait and retry |
 | Edits don’t play | Call `apply_draft` or `reload_from_disk` |
 | Wrong patch / wrong instance | `list_instances` → `set_active_instance`, or focus the target plugin window |
-| No project folder / no mcp.json | **Save** the preset or use agent **`create_project`** (compile-only scratch may be `Scratch/` without mcp.json) |
+| No project folder / no mcp.json | **Save** the patch or use agent **`create_project`** (compile-only scratch may be `Scratch/` without mcp.json) |
 | Auto-register missing | Reload MCP in the client; if still missing, use **Copy setup** (fallback) |
-| `reload_from_disk` fails | Save the preset first so a project folder exists; locked/binary patches cannot be reloaded as editable source |
-| Offline edit missing after DAW reopen | Load the saved amorph preset/project by name; reopening a DAW session may restore its embedded copy instead of offline file edits |
+| `reload_from_disk` fails | Save the patch first so a project folder exists; locked/binary patches cannot be reloaded as editable source |
+| `apply_draft` says saved patch was not updated | Call `apply_draft` again to retry canonical `.amorph` sync; do not replace the MCP apply flow with `reload_from_disk` |
+| `apply_draft` returns unexpected `NO DRAFT` | Call `get_draft_state` and inspect working-copy / snapshot state before retrying |
+| Offline edit missing after DAW reopen | Load the saved amorph patch/project by name; reopening a DAW session may restore its embedded copy instead of offline file edits |
 
 See [`TOOLS.md`](TOOLS.md) for the full tool list.

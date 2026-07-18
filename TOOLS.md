@@ -42,6 +42,7 @@ Tool names use **snake_case** in MCP `tools/call`. Always call **`get_host_statu
 | Tool | Purpose |
 |------|---------|
 | `get_error` | Last compiler error |
+| `get_draft_state` | Inspect working-copy, snapshot, and pending-draft state when apply eligibility is unclear |
 | `task_complete` | Signal goal done — surfaces draft for review (**does not** auto-commit) |
 | `apply_draft` | Commit pending draft to the live runtime + compile |
 | `reload_from_disk` | Pull `dsp.cmajor` / `index.js` from project folder (default: compile). **Human/IDE path only** — requires `discard_unsaved=true` if MCP working copy differs from snapshot or a draft is pending. |
@@ -50,7 +51,9 @@ Tool names use **snake_case** in MCP `tools/call`. Always call **`get_host_statu
 
 | Tool | Purpose |
 |------|---------|
-| `run_qa_probe` | Headless render with real MIDI (C4 + C6 + GM drums for synths; 440 Hz sine for FX), 32 × 512-sample blocks at 44.1 kHz. Returns: RMS, peak, NaN/Inf, silence (-100 dBFS), clipping, DC offset, stereo correlation, stereo width, phase-cancellation warning, note-off release decay (synths), and 8K-sample FFT spectral centroid/rolloff/peak (instruments). Optional args: `variant` (`fx`/`instrument`/`midi`) and `parameter_overrides` (`param1`, `param2`, ... in real units). The agent uses these metrics to decide whether a patch is safe to commit, not just whether it compiles. |
+| `run_qa_probe` | Compile the MCP working copy in an isolated validation runtime, run deterministic audio safety checks, and restore temporary parameter overrides. Returns RMS, peak, NaN/Inf, silence, clipping, DC offset, stereo/phase, release, and spectral metrics; use `response_format: "json"` for versioned schema-v1 output. |
+| `audition_patch` | Exploratory isolated Instrument/FX render with controlled profiles, time-evolution evidence, optional temporary WAV capture, and loudness-matched A/B. It never changes live audio, drafts, or the deterministic QA gate; MIDI-only patches are unsupported in v1. |
+| `run_ui_probe` | Audit the live PatchWebView, compare `[data-param]` controls with compiled DSP endpoints, and optionally capture `ui_probe.png` |
 | `search_components` | Browse built-in DSP/UI snippet catalog |
 
 ## Eval/admin tools
@@ -66,20 +69,28 @@ Internal prompt-loop tools such as `create_checkpoint`, `get_graph_topology`, `p
 
 ```
 read → edit_lines → fix any compile errors returned by the edit/generate result
-→ run_qa_probe? → task_complete → apply_draft
+→ audition_patch? → run_qa_probe? / run_ui_probe? → task_complete → apply_draft → get_error none
 ```
+
+`audition_patch` is for hypothesis-driven timbral evaluation or A/B comparison. It does
+not replace `run_qa_probe`, and an audition failure is not a `task_complete` blocker.
 
 **Critical:** `generate_code` / edits may compile the draft, but they stay in the working
 copy until `task_complete` then `apply_draft` commits them to live audio.
 
 **Never offload commit to the user.** External MCP agents must call `apply_draft` themselves.
-Do not ask them to reload the preset, re-select the patch, or click Apply in the plugin UI.
-Only say a change is live after `apply_draft` returns OK **including the verified `dsp.cmajor` path**.
-If it returns `ERROR`, fix and call `apply_draft` again — never hand-write project files or use `reload_from_disk` as a workaround.
+Do not ask them to reload or re-select the patch, or click Apply in the plugin UI.
+Only say a change is live after `apply_draft` returns OK and `get_error` returns `none`.
+If `apply_draft` reports that live audio compiled but the saved patch was not updated,
+call `apply_draft` again: the retry reattempts canonical `.amorph` sync. Never hand-write
+project files or use `reload_from_disk` as a workaround for a failed MCP apply.
 
 If no edits changed the working copy, `task_complete` may not create a draft; `apply_draft`
-then has nothing to apply. `apply_draft` requests the live compile/application; call
-`get_error` afterwards if compile status matters.
+then has nothing to apply. If `apply_draft` returns `NO DRAFT` unexpectedly, inspect
+`get_draft_state` instead of retrying blindly.
+
+Do not switch patches while MCP working copies differ from their snapshot or a draft is
+pending. Finish `task_complete` → `apply_draft`, or explicitly discard the work first.
 
 `reload_from_disk` requires a saved project folder. With default `compile=true`, it pulls
 on-disk `dsp.cmajor` / `index.js` into the runtime and applies them without a separate
