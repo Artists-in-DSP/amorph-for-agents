@@ -113,7 +113,7 @@ Voice input (mic button) ALWAYS requires an OpenAI key, regardless of
 which provider is active for code generation.
 
 SETTINGS REFERENCE
-- Workflow: In-plugin assistant / External AI / I'll code it myself.
+- Workflow: In-plugin assistant / External AI (Web chat or External editor).
 - Assistant: select provider, enter/clear API key.
 - Advanced (collapsible): model select, temperature, max tokens,
   agent turns.

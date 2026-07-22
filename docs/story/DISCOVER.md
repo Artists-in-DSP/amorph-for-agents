@@ -23,7 +23,7 @@ These three tab labels are **fixed**. Do not rename, reorder in copy, or substit
 
 | Term | Meaning |
 |------|---------|
-| **Console** | Right strip: log, compile output, errors (`own_ai` / `myself`) |
+| **Console** | Right strip: log, compile output, errors (`own_ai` / unchosen) |
 | **Assistant** | Right strip: built-in Ask / Auto-build (`amorph`) |
 | **Ask / Auto-build** | Assistant sub-modes (not Chat / Agent) |
 | **Share…** | Play toolbar button — never “Update link” on the button label |
