@@ -44,7 +44,7 @@ Reference: [`TOOLS.md`](TOOLS.md) (MCP tools) · [`PRODUCT_TIERS.md`](PRODUCT_TI
 
 ## Build compatibility
 
-**v0.99 (Gumroad):** copy-paste + Lab; Explore = **chosen** patches only. **v1 beta (next):** MCP, BYOK, share via unlisted link — **not** Explore catalog listing. **v1.0 official** ~ end summer 2026. See [`BUILD_COMPAT.md`](BUILD_COMPAT.md).
+**v0.99 (Gumroad):** copy-paste in **Build**; Explore = **chosen** patches only. **v1 beta (next):** MCP, BYOK, share via unlisted link — **not** Explore catalog listing. **v1.0 official** ~ end summer 2026. See [`BUILD_COMPAT.md`](BUILD_COMPAT.md).
 
 ## Quick links
 
@@ -55,7 +55,7 @@ Reference: [`TOOLS.md`](TOOLS.md) (MCP tools) · [`PRODUCT_TIERS.md`](PRODUCT_TI
 
 ## MCP in 30 seconds (v1 beta)
 
-1. Confirm **Settings → Connections** is present ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). If missing, the user is on **v0.99** — copy-paste + Lab only.
+1. Confirm **Settings → Connections** is present ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). If missing, the user is on **v0.99** — copy-paste in Build only.
 2. Install amorph and open a runtime in your DAW.
 3. Connect your IDE agent via MCP ([setup guide](MCP_SETUP.md)).
 4. Call **`get_host_status`** first (works even before the plugin is open).

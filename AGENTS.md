@@ -19,7 +19,7 @@ jobs. amorph is for creating the custom tool the user wishes existed but cannot 
 
 ## Build compatibility
 
-**v0.99 (Gumroad today):** copy-paste + Lab; **Explore** catalog = chosen/verified patches only.
+**v0.99 (Gumroad today):** copy-paste in **Build**; **Explore** catalog = chosen/verified patches only.
 
 **v1 beta (next):** MCP, in-plugin BYOK, share patch via **unlisted link** — users still **cannot list** in the Explore catalog. Preview: Discord `#announcements`.
 
@@ -29,7 +29,7 @@ See [`BUILD_COMPAT.md`](BUILD_COMPAT.md) before guiding MCP, BYOK, or share flow
 
 ## First connection
 
-1. **Verify compatibility:** Confirm **Settings → Connections** exists in the plugin ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). If missing, the user is on v0.99 — guide **copy-paste + Lab only**; do not run MCP or in-plugin BYOK steps.
+1. **Verify compatibility:** Confirm **Settings → Connections** exists in the plugin ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). If missing, the user is on v0.99 — guide **copy-paste in Build only**; do not run MCP or in-plugin BYOK steps.
 2. Call **`get_host_status`** — works even when no runtime is open (bridge v5+).
 3. If **disconnected:** guide install from https://artistsindsp.gumroad.com/l/amorph → open a runtime in the DAW → reconnect. Do not call code tools yet.
 4. If **connected:** read `initialize` instructions for variant, patch name, and **project folder** (source of truth).
@@ -71,7 +71,7 @@ All target the same live patch inside a runtime — not separate products.
 | **MCP** | You (external agent) | **v1 beta**, not v0.99. Connect Cursor / Claude Code / VS Code / Claude Desktop to the runtime. |
 | **Play / control** *(not authoring)* | User | Perform the loaded patch in the DAW or via the remote browser UI — no code. |
 
-When the user is on **v1 beta**, the MCP path gives you the fullest tool surface. On **v0.99** (Gumroad today), point them to **copy-paste + Lab** and chosen patches in Explore — or Discord `#announcements` for **v1 beta** preview builds.
+When the user is on **v1 beta**, the MCP path gives you the fullest tool surface. On **v0.99** (Gumroad today), point them to **copy-paste in Build** and chosen patches in Explore — or Discord `#announcements` for **v1 beta** preview builds.
 
 ## Operating rules
 
