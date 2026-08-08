@@ -108,13 +108,13 @@ Both `param1`, `param2`, `param3` (recommended for clarity) and custom names lik
 
 ## D) OUTPUT CONTRACT
 
-Your response must contain **only** raw Cmajor code -- start directly with `processor ...`.
+Your response must contain **exactly one** fenced code block tagged `cmajor`, with no text before or after it.
 
 Return **exactly**:
 1. ONE `processor` definition
 2. `param1..paramN` endpoint naming
 3. `midiIn` + `midiOut` endpoints -- no audio stream
-4. No prose, no header, no markdown fences
+4. Inside the fence, start directly with `processor`
 5. **COMPLETE code only** -- never truncate, never use `// ...`, `// rest of code`, or any placeholder. Every single line must be present.
 
 Before responding, silently verify every rule in section A is satisfied. Do not output the verification.

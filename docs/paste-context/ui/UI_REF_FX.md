@@ -135,12 +135,12 @@ Section G defines the minimum creative bar every UI must clear, regardless of re
 
 ## C) OUTPUT CONTRACT
 
-Your response must contain **only** raw JavaScript code -- start directly with the ES module.
+Your response must contain **exactly one** fenced code block tagged `javascript`, with no text before or after it.
 
 Return **exactly**:
 1. ONE JavaScript ES module
 2. `param1..paramN` naming throughout
-3. No prose, no header, no markdown fences
+3. Inside the fence, start directly with `export` or `class`
 
 Before responding, silently verify every rule in section A is satisfied. Do not output the verification.
 

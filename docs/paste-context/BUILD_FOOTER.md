@@ -4,8 +4,9 @@
 ---
 ## Response format (required)
 
-- Return the **complete** corrected source file in **one** response block.
-- Raw Cmajor or JavaScript only -- no markdown ``` fences, no prose before/after.
+- Return the **complete** corrected source file in **exactly one** fenced code block.
+- Tag the fence `cmajor` for DSP or `javascript` for UI.
+- No prose, headings, or notes before or after the code block.
 - **Never** use `<<<<<<< SEARCH` / `>>>>>>> REPLACE` markers (paste workflow has no patch applier).
-- Start with `graph`, `processor`, `export`, or `class` as appropriate.
-- After pasting the response into Amorph: **Compile** (DSP) or switch to Play to verify UI.
+- Inside the fence, start with `graph`, `processor`, `export`, or `class` as appropriate.
+- Amorph removes the outer fence after paste; then **Compile** (DSP) or switch to Play to verify UI.
