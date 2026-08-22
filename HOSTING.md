@@ -1,8 +1,9 @@
 # External-context hosting contract
 
-The reviewed `public-context/` tree is the complete deployable artifact. It is
-intended for GitHub Pages at `https://context.artistsindsp.com` using the Pages
-workflow in this repository.
+The reviewed `public-context/` tree is the complete deployable artifact. Its
+canonical candidate origin is the Artists in DSP GitHub Pages project at
+`https://artists-in-dsp.github.io/amorph-for-agents` using the Pages workflow
+in this repository.
 
 ## Release properties
 
@@ -26,11 +27,11 @@ The validation workflow runs on the pull request. The deployment workflow runs
 only after a reviewed change reaches `main`, or when a reviewer deliberately
 dispatches the exact candidate ref for a public pre-release evaluation.
 
-Before the first deployment, configure GitHub Pages to use GitHub Actions and
-add `context.artistsindsp.com` as the repository custom domain. In the existing
-Cloudflare-managed `artistsindsp.com` zone, create the GitHub Pages CNAME as
-DNS-only so the zone's current AI-bot blocking policy cannot replace the
-endpoint response. Enable HTTPS in GitHub Pages after DNS verification.
+GitHub Pages must use GitHub Actions with public access and HTTPS enforcement.
+The candidate deliberately uses the project-domain origin: it requires no DNS
+or Cloudflare configuration, and the versioned document path is the exact URL
+tested by Amorph. A future custom domain is a separate migration that requires
+fresh HTTP and unsigned-consumer evaluation before Amorph may use it.
 
 Run `scripts/verify_http_endpoint.py` against the deployed candidate and save
 its JSON output with the release evaluation evidence. Do not merge the Amorph

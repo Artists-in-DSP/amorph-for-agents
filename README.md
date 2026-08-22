@@ -53,8 +53,8 @@ Amorph keeps its useful local prompt layers—library and community examples,
 history, manifest, current source, diagnostics, and compact host-wiring
 guidance—while the linked document remains the canonical full static rule set.
 See [`HOSTING.md`](HOSTING.md) for the immutable publication and verification
-contract. The custom endpoint is not considered released until its deployment
-and unsigned-consumer evaluation are green.
+contract. The versioned GitHub Pages endpoint is not considered released until
+its deployment and unsigned-consumer evaluation are green.
 
 ## Build compatibility
 
