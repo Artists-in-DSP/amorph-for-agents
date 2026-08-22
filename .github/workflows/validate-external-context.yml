@@ -1,0 +1,20 @@
+name: Validate external context
+
+on:
+  pull_request:
+  push:
+    branches-ignore:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify generated documents
+        run: python3 scripts/build_external_context.py --check
+      - name: Run contract tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
