@@ -1,0 +1,6 @@
+# This endpoint is intentionally readable by real-time URL retrieval tools.
+# Its content may be used as live model input, but not for model training.
+
+User-agent: *
+Content-Signal: search=yes,ai-input=yes,ai-train=no
+Allow: /

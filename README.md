@@ -42,6 +42,20 @@ These three are the moat. Most "AI audio" tools have one; amorph is the only one
 
 Reference: [`TOOLS.md`](TOOLS.md) (MCP tools) · [`PRODUCT_TIERS.md`](PRODUCT_TIERS.md) (editor · BYOK · MCP · play) · [`CMAJOR_QUICKREF.md`](CMAJOR_QUICKREF.md)
 
+## External Copy Prompt context
+
+The candidate v1 Copy Prompt corpus lives in [`context-src/v1`](context-src/v1)
+and builds into six self-contained anonymous plain-text documents under
+[`public-context/v1`](public-context/v1). Each document contains its own
+retrieval receipts and complete rules for one DSP/UI target and runtime variant.
+
+Amorph keeps its useful local prompt layers—library and community examples,
+history, manifest, current source, diagnostics, and compact host-wiring
+guidance—while the linked document remains the canonical full static rule set.
+See [`HOSTING.md`](HOSTING.md) for the immutable publication and verification
+contract. The versioned GitHub Pages endpoint is not considered released until
+its deployment and unsigned-consumer evaluation are green.
+
 ## Build compatibility
 
 **v0.99 (Gumroad):** copy-paste in **Build**; Explore = **chosen** patches only. **v1 beta (next):** MCP, BYOK, share via unlisted link — **not** Explore catalog listing. **v1.0 official** ~ end summer 2026. See [`BUILD_COMPAT.md`](BUILD_COMPAT.md).
