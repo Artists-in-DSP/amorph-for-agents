@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / "context-src" / "v1"
-DEFAULT_RELEASE = "preview-20260822-a"
+DEFAULT_RELEASE = "preview-20260823-a"
 
 TARGETS = ("dsp", "ui")
 VARIANTS = ("instrument", "fx", "midi")

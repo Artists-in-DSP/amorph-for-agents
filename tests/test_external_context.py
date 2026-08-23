@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_ROOT = ROOT / "public-context" / "v1" / "preview-20260822-a"
+RELEASE_ROOT = ROOT / "public-context" / "v1" / "preview-20260823-a"
 
 
 class ExternalContextTests(unittest.TestCase):
@@ -82,6 +82,8 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("never declare a value with `let` inside a `for` or `while` body", text)
                 self.assertIn("preserve every existing endpoint, parameter", text)
                 self.assertIn("next sequential `paramN` ID", text)
+                self.assertIn("a Cmajor state initializer is not a substitute", text)
+                self.assertIn("preserves the existing intended/audible default", text)
                 self.assertIn("After the two required receipt comments", text)
                 self.assertNotIn("Inside the fence, start directly with", text)
 
