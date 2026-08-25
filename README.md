@@ -44,17 +44,20 @@ Reference: [`TOOLS.md`](TOOLS.md) (MCP tools) · [`PRODUCT_TIERS.md`](PRODUCT_TI
 
 ## External Copy Prompt context
 
-The candidate v1 Copy Prompt corpus lives in [`context-src/v1`](context-src/v1)
-and builds into six self-contained anonymous plain-text documents under
-[`public-context/v1`](public-context/v1). Each document contains its own
-retrieval receipts and complete rules for one DSP/UI target and runtime variant.
+The v1 Copy Prompt corpus lives in [`context-src/v1`](context-src/v1) and builds
+into six self-contained anonymous static HTML documents under
+[`public-context/v1`](public-context/v1). Each page contains the complete
+canonical document in its initial server-rendered `<pre>` element, with a
+paired plain-text artifact retained only for deterministic auditing.
 
 Amorph keeps its useful local prompt layers—library and community examples,
 history, manifest, current source, diagnostics, and compact host-wiring
 guidance—while the linked document remains the canonical full static rule set.
 See [`HOSTING.md`](HOSTING.md) for the immutable publication and verification
-contract. The versioned GitHub Pages endpoint is not considered released until
-its deployment and unsigned-consumer evaluation are green.
+contract. Immutable previews are tested before their exact visible text can be
+promoted to `/v1/stable`; breaking contracts require a new major channel. The
+GitHub Pages endpoint is not considered promoted until its deployment and the
+named consumer-provider gate are green.
 
 ## Build compatibility
 

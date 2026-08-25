@@ -5,10 +5,13 @@ on:
     branches:
       - main
       - codex/link-context-v1
+      - codex/static-html-context-v1
     paths:
       - public-context/**
       - context-src/**
       - scripts/build_external_context.py
+      - scripts/promote_external_context.py
+      - scripts/verify_http_endpoint.py
       - tests/**
       - .github/workflows/deploy-external-context.yml
   workflow_dispatch:

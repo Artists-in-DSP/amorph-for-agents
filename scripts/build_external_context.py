@@ -1,24 +1,31 @@
 #!/usr/bin/env python3
-"""Build self-contained plain-text context documents for Amorph Copy/Paste."""
+"""Build immutable plain-text audit artifacts and static HTML context pages."""
 
 from __future__ import annotations
 
 import argparse
 import hashlib
+import html
 import json
 from pathlib import Path
+from typing import Dict, Iterable, List, Tuple
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / "context-src" / "v1"
-DEFAULT_RELEASE = "preview-20260823-a"
+PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
+DEFAULT_RELEASE = "preview-20260824-a"
 
 TARGETS = ("dsp", "ui")
 VARIANTS = ("instrument", "fx", "midi")
 
 
+def sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
 def sha256_text(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return sha256_bytes(text.encode("utf-8"))
 
 
 def normalise_source(path: Path) -> str:
@@ -62,11 +69,30 @@ near the top and bottom of this document:
 """
 
 
-def render_document(target: str, variant: str, source: str, release: str) -> tuple[str, dict]:
+def render_html_page(document: str, target: str, variant: str, canonical_url: str) -> str:
+    escaped = html.escape(document, quote=False)
+    title = f"Amorph {target.upper()} context — {variant}"
+    return (
+        "<!doctype html>\n"
+        '<html lang="en">\n'
+        "<head>\n"
+        '<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
+        '<meta name="robots" content="index,follow">\n'
+        f"<title>{html.escape(title)}</title>\n"
+        f'<link rel="canonical" href="{html.escape(canonical_url, quote=True)}">\n'
+        "</head>\n"
+        f'<body><pre id="amorph-context">{escaped}</pre></body>\n'
+        "</html>\n"
+    )
+
+
+def render_document(target: str, variant: str, source: str, release: str) -> Tuple[str, Dict[str, object]]:
     body = response_contract(target).strip() + "\n\n" + source.strip() + "\n"
     body_sha = sha256_text(body)
-    context_id = f"amorph-{target}-{variant}-{body_sha[:16]}"
-    end_token = f"amorph-end-{body_sha[-16:]}"
+    receipt_sha = sha256_text(f"AMORPH_EXTERNAL_CONTEXT v1\nRELEASE: {release}\n{body}")
+    context_id = f"amorph-{target}-{variant}-{receipt_sha[:16]}"
+    end_token = f"amorph-end-{receipt_sha[-16:]}"
 
     document = f"""AMORPH_EXTERNAL_CONTEXT v1
 CONTEXT_ID: {context_id}
@@ -74,8 +100,9 @@ TARGET: {target}
 VARIANT: {variant}
 RELEASE: {release}
 BODY_SHA256: {body_sha}
-CONTENT_TYPE: text/plain; charset=utf-8
-ACCESS_CONTRACT: anonymous complete-document retrieval; no secondary URL required
+DELIVERY_FORMAT: static-html-v1
+CONTENT_TYPE: text/html; charset=utf-8
+ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
 FAILURE_CONTRACT: return exactly CONTEXT_UNAVAILABLE when retrieval is incomplete
 
 BEGIN_AMORPH_CONTEXT
@@ -84,58 +111,133 @@ END_AMORPH_CONTEXT
 END_TOKEN: {end_token}
 """
 
-    metadata = {
+    text_raw = document.encode("utf-8")
+    html_path = f"{target}/{variant}.html"
+    audit_path = f"{target}/{variant}.txt"
+    canonical_url = f"{PUBLIC_BASE_URL}/v1/{release}/{html_path}"
+    page = render_html_page(document, target, variant, canonical_url)
+    html_raw = page.encode("utf-8")
+
+    metadata: Dict[str, object] = {
         "target": target,
         "variant": variant,
-        "path": f"{target}/{variant}.txt",
+        "path": html_path,
+        "html_path": html_path,
+        "audit_path": audit_path,
         "body_sha256": body_sha,
-        "document_sha256": sha256_text(document),
-        "bytes": len(document.encode("utf-8")),
+        "canonical_text_sha256": sha256_bytes(text_raw),
+        "html_sha256": sha256_bytes(html_raw),
+        "visible_text_bytes": len(text_raw),
+        "html_bytes": len(html_raw),
+        "html": page,
     }
     return document, metadata
 
 
+def manifest_records(output_root: Path) -> Iterable[Tuple[str, str, Dict[str, object]]]:
+    for manifest_path in sorted((output_root / "v1").glob("**/manifest.json")):
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if manifest.get("schema_version") != 2:
+            continue
+        release = str(manifest.get("release") or manifest.get("active_release") or "")
+        prefix = manifest_path.parent.relative_to(output_root).as_posix()
+        for record in manifest.get("documents", []):
+            if isinstance(record, dict) and record.get("html_path"):
+                yield prefix, release, record
+
+
+def render_site_files(output_root: Path) -> Dict[Path, str]:
+    links: List[Tuple[str, str]] = []
+    for prefix, release, record in manifest_records(output_root):
+        manifest_channel = "stable" if prefix == "v1/stable" else release
+        path = f"{prefix}/{record['html_path']}"
+        label = f"{manifest_channel} — {record['target']} — {record['variant']}"
+        if (path, label) not in links:
+            links.append((path, label))
+
+    links.sort()
+    link_html = "\n".join(
+        f'<li><a href="/{path}">{html.escape(label)}</a></li>' for path, label in links
+    )
+    index = (
+        "<!doctype html>\n"
+        '<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
+        '<meta name="robots" content="index,follow">\n'
+        "<title>Amorph external context</title>\n</head>\n<body>\n"
+        "<h1>Amorph external context</h1>\n"
+        "<p>Static, anonymous, server-rendered context documents for Amorph Copy/Paste.</p>\n"
+        f"<ul>\n{link_html}\n</ul>\n</body>\n</html>\n"
+    )
+
+    urls = [f"{PUBLIC_BASE_URL}/"] + [f"{PUBLIC_BASE_URL}/{path}" for path, _ in links]
+    sitemap = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        + "".join(f"  <url><loc>{html.escape(url)}</loc></url>\n" for url in urls)
+        + "</urlset>\n"
+    )
+    llms = (
+        "# Amorph external context\n\n"
+        "Complete static HTML documents for Amorph Copy/Paste:\n\n"
+        + "".join(f"- [{label}]({PUBLIC_BASE_URL}/{path})\n" for path, label in links)
+    )
+    return {
+        output_root / "index.html": index,
+        output_root / "sitemap.xml": sitemap,
+        output_root / "llms.txt": llms,
+    }
+
+
+def write_or_check(path: Path, expected: str, check: bool, mismatches: List[str]) -> None:
+    if check:
+        if not path.exists() or path.read_text(encoding="utf-8") != expected:
+            mismatches.append(str(path.relative_to(ROOT)))
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(expected, encoding="utf-8")
+
+
 def build(release: str, output_root: Path, check: bool) -> int:
     release_root = output_root / "v1" / release
-    records = []
-    mismatches = []
+    records: List[Dict[str, object]] = []
+    mismatches: List[str] = []
 
     for target in TARGETS:
         for variant in VARIANTS:
             source = normalise_source(SOURCE_ROOT / target / f"{variant}.md")
-            document, metadata = render_document(target, variant, source, release)
-            destination = release_root / target / f"{variant}.txt"
-            records.append(metadata)
-
-            if check:
-                if not destination.exists() or destination.read_text(encoding="utf-8") != document:
-                    mismatches.append(str(destination.relative_to(ROOT)))
-            else:
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                destination.write_text(document, encoding="utf-8")
+            document, rendered = render_document(target, variant, source, release)
+            page = str(rendered.pop("html"))
+            records.append(rendered)
+            write_or_check(release_root / target / f"{variant}.txt", document, check, mismatches)
+            write_or_check(release_root / target / f"{variant}.html", page, check, mismatches)
 
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "release": release,
-        "content_type": "text/plain; charset=utf-8",
+        "delivery_format": "static-html-v1",
+        "model_content_type": "text/html; charset=utf-8",
+        "audit_content_type": "text/plain; charset=utf-8",
         "documents": records,
     }
     manifest_text = json.dumps(manifest, indent=2, sort_keys=True) + "\n"
-    manifest_path = release_root / "manifest.json"
+    write_or_check(release_root / "manifest.json", manifest_text, check, mismatches)
 
-    if check:
-        if not manifest_path.exists() or manifest_path.read_text(encoding="utf-8") != manifest_text:
-            mismatches.append(str(manifest_path.relative_to(ROOT)))
-        if mismatches:
-            print("Generated context is stale:")
-            for path in mismatches:
-                print(f"  {path}")
-            return 1
-    else:
-        manifest_path.parent.mkdir(parents=True, exist_ok=True)
-        manifest_path.write_text(manifest_text, encoding="utf-8")
+    if not check:
+        (release_root / "manifest.json").write_text(manifest_text, encoding="utf-8")
+    for path, content in render_site_files(output_root).items():
+        write_or_check(path, content, check, mismatches)
 
-    print(f"PASS: {len(records)} self-contained context documents for {release}")
+    if mismatches:
+        print("Generated context is stale:")
+        for path in mismatches:
+            print(f"  {path}")
+        return 1
+
+    print(f"PASS: {len(records)} static HTML context documents for {release}")
     return 0
 
 
