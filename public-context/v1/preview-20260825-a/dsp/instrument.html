@@ -1,4 +1,39 @@
-You are writing Cmajor DSP code for the **Amorph_Instrument** plugin variant (MIDI synthesiser -- MIDI IN -> audio OUT).
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow">
+<title>Amorph DSP context — instrument</title>
+<link rel="canonical" href="https://artists-in-dsp.github.io/amorph-for-agents/v1/preview-20260825-a/dsp/instrument.html">
+</head>
+<body><pre id="amorph-context">AMORPH_EXTERNAL_CONTEXT v1
+CONTEXT_ID: amorph-dsp-instrument-613902f3119fd286
+TARGET: dsp
+VARIANT: instrument
+RELEASE: preview-20260825-a
+BODY_SHA256: f9e80a28210b5ece49ddc7bc37e42e16124fd689a2ddcf90b9cba427bf3870ea
+DELIVERY_FORMAT: static-html-v1
+CONTENT_TYPE: text/html; charset=utf-8
+ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
+FAILURE_CONTRACT: return exactly CONTEXT_UNAVAILABLE when retrieval is incomplete
+
+BEGIN_AMORPH_CONTEXT
+RESPONSE CONTRACT — REQUIRED
+
+Return the complete corrected `dsp.cmajor` in exactly one fenced code block
+tagged `cmajor`. Return no prose, heading, explanation, or second code block.
+Do not use SEARCH/REPLACE blocks, patches, ellipses, or placeholders.
+
+The first two lines inside the fence must copy the exact receipt values printed
+near the top and bottom of this document:
+
+// AMORPH_CONTEXT_ID: &lt;exact CONTEXT_ID&gt;
+// AMORPH_END_TOKEN: &lt;exact END_TOKEN&gt;
+
+The next source token must be graph or processor. Amorph removes the outer fence before Compile.
+
+You are writing Cmajor DSP code for the **Amorph_Instrument** plugin variant (MIDI synthesiser -- MIDI IN -&gt; audio OUT).
 **USER REQUEST ALWAYS WINS** -- algorithm design, voice architecture, oscillator type, parameter count, and feature complexity are all driven by what the user asks for. The rules below are Cmajor correctness guardrails only, not design constraints.
 
 ---
@@ -9,7 +44,7 @@ You are writing Cmajor DSP code for the **Amorph_Instrument** plugin variant (MI
 2. **Helper functions:** processor scope only -- NOT inside `main()` or `event` handlers.
 3. **Required endpoints:**
    - `input event std::midi::Message midiIn;`
-   - `output stream float out;` (or `float<2>` for stereo)
+   - `output stream float out;` (or `float&lt;2&gt;` for stereo)
 4. **Types:** `float64` for phase accumulators only. Everything else: `float`.
    - [NO] `double` does not exist in Cmajor -- use `float64`.
 5. **No C++ tokens:** `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`.
@@ -22,7 +57,7 @@ You are writing Cmajor DSP code for the **Amorph_Instrument** plugin variant (MI
    ```
    Every host-facing parameter endpoint, including one preserved from current code, must include explicit `name`, `min`, `max`, and `init` annotations. Amorph and plugin hosts apply the annotated `init` after compile and during QA; a Cmajor state initializer is not a substitute. In edit mode, if an existing endpoint has no metadata, add it and choose an `init` that preserves the existing intended/audible default (for example, do not accidentally reset gain or cutoff to `0.0`).
 8. **Array indexing:** use `.at(i)`.
-9. **Audio loop must:** write `out <- value;` then `advance();` every iteration.
+9. **Audio loop must:** write `out &lt;- value;` then `advance();` every iteration.
 10. **Fixed-size arrays only:** `float[1024] buf;` -- NO unsized `float[] buf`, NO runtime `.wrap(size)`, NO `.size` property. Buffer sizes must be compile-time constants.
 11. **Increment style:** `i++` / `++i` in `for` loop headers are valid Cmajor (catalog uses them). Prefer `i += 1` in new code; do not rewrite working `++` solely for style.
 12. **Loop-local declarations (CRITICAL):** never declare a value with `let` inside a `for` or `while` body. Cmajor `let` bindings are function-scoped, so a repeated declaration fails on the next iteration. Use an explicit typed local such as `float x = ...;` / `int x = ...;`, or hoist the declaration before the loop. Before responding, audit every `for` and `while` body for `let`.
@@ -54,9 +89,9 @@ Both `param1`, `param2`, `param3` (recommended for clarity) and custom names lik
 | `select(mask, a, b)` | Vector-only masked selection; scalar arguments fail to compile. For scalar values use `cond ? a : b` |
 | `twoPi` / `pi` | Built-in constants (use `float(twoPi)` in `float` context) |
 | `int(x)` / `float(x)` / `float64(x)` | Explicit numeric casts |
-| `wrap<N>` | Modular int type -- ideal for ring buffers |
+| `wrap&lt;N&gt;` | Modular int type -- ideal for ring buffers |
 
-**MIDI & notes:**
+**MIDI &amp; notes:**
 
 | Symbol | Description |
 |---|---|
@@ -65,29 +100,29 @@ Both `param1`, `param2`, `param3` (recommended for clarity) and custom names lik
 | `msg.getNoteNumber()` | Returns `int` 0-127 |
 | `msg.getVelocity()` | Returns `int` 0-127 |
 | `msg.getFloatVelocity()` | Returns `float32` 0..1 |
-| `std::notes::noteToFrequency(n)` | MIDI note -> Hz (`float32`) -- NOT `float64` |
-| `std::notes::frequencyToNote(hz)` | Hz -> MIDI note (`float32`) |
+| `std::notes::noteToFrequency(n)` | MIDI note -&gt; Hz (`float32`) -- NOT `float64` |
+| `std::notes::frequencyToNote(hz)` | Hz -&gt; MIDI note (`float32`) |
 
 **Polyphonic graph MIDI (only if using `graph` + `VoiceAllocator`):**
 
     connection
     {
-        midiIn -> std::midi::MPEConverter -> voiceAllocator;
-        voiceAllocator.voiceEventOut -> voices.eventIn;
-        voices -> out;
+        midiIn -&gt; std::midi::MPEConverter -&gt; voiceAllocator;
+        voiceAllocator.voiceEventOut -&gt; voices.eventIn;
+        voices -&gt; out;
     }
 
-> [NO] **Never** wire `midiIn -> allocator.eventIn` directly (`Message` vs `NoteOn/NoteOff` mismatch).
-> [NO] **Never** use `midiParser.midiIn` -- `std::midi::MPEConverter` has no `midiIn` port.
-> Use the **chain** form above (`midiIn -> std::midi::MPEConverter -> allocator`), not a named parser node.
-> For external paste workflow, a **single `processor`** with `event midiIn (std::midi::Message msg)` is simpler and preferred.
+&gt; [NO] **Never** wire `midiIn -&gt; allocator.eventIn` directly (`Message` vs `NoteOn/NoteOff` mismatch).
+&gt; [NO] **Never** use `midiParser.midiIn` -- `std::midi::MPEConverter` has no `midiIn` port.
+&gt; Use the **chain** form above (`midiIn -&gt; std::midi::MPEConverter -&gt; allocator`), not a named parser node.
+&gt; For external paste workflow, a **single `processor`** with `event midiIn (std::midi::Message msg)` is simpler and preferred.
 
-**Levels & gain (stdlib):**
+**Levels &amp; gain (stdlib):**
 
 | Symbol | Description |
 |---|---|
-| `std::levels::dBtoGain(x)` | dB -> linear gain (`float32`/`float64`) |
-| `std::levels::gainTodB(x)` | Linear gain -> dB (`float32`/`float64`) |
+| `std::levels::dBtoGain(x)` | dB -&gt; linear gain (`float32`/`float64`) |
+| `std::levels::gainTodB(x)` | Linear gain -&gt; dB (`float32`/`float64`) |
 
 **RNG:**
 
@@ -98,18 +133,18 @@ Both `param1`, `param2`, `param3` (recommended for clarity) and custom names lik
 | `rng.getUnipolar()` | Returns `float32` in 0..1 |
 | `rng.getBipolar()` | Returns `float32` in -1..1 |
 
-> [NO] **`std::random(lo, hi)` does NOT exist** -- `std::random` is a namespace, not a function. Declare `std::random::RNG rng;` as a processor field.
+&gt; [NO] **`std::random(lo, hi)` does NOT exist** -- `std::random` is a namespace, not a function. Declare `std::random::RNG rng;` as a processor field.
 
 **Filters (stdlib preferred for commodity poles/SVF):**
 
 | Symbol | Description |
 |---|---|
-| `std::filters (float<2>)::tpt::svf::Processor` | Resonant SVF (LP/HP/BP) — specialise FrameType |
-| `std::filters (float<2>)::tpt::onepole::Processor` | One-pole LPF/HPF |
-| `std::filters (float<2>)::dcblocker::Processor` | DC blocker |
+| `std::filters (float&lt;2&gt;)::tpt::svf::Processor` | Resonant SVF (LP/HP/BP) — specialise FrameType |
+| `std::filters (float&lt;2&gt;)::tpt::onepole::Processor` | One-pole LPF/HPF |
+| `std::filters (float&lt;2&gt;)::dcblocker::Processor` | DC blocker |
 
-> Prefer stdlib cards from `search_components` for exact 1.0.3175 syntax. Manual one-pole remains valid when you need a specific coefficient recipe.
-> `tpt::svf` Q is true Q (min 0.01) — never feed a 0..1 Resonance knob into `setFrequency`; never `create(..., 0.0, ...)`.
+&gt; Prefer stdlib cards from `search_components` for exact 1.0.3175 syntax. Manual one-pole remains valid when you need a specific coefficient recipe.
+&gt; `tpt::svf` Q is true Q (min 0.01) — never feed a 0..1 Resonance knob into `setFrequency`; never `create(..., 0.0, ...)`.
 
 **Manual One-Pole Lowpass (fallback):**
 
@@ -129,7 +164,7 @@ Both `param1`, `param2`, `param3` (recommended for clarity) and custom names lik
     int randomSeed = 12345;
 
     // Inside main() loop:
-    randomSeed = (randomSeed * 1103515245 + 12345) & 0x7fffffff;
+    randomSeed = (randomSeed * 1103515245 + 12345) &amp; 0x7fffffff;
     float noise = (float(randomSeed) / 2147483647.0f) * 2.0f - 1.0f;
 
 ---
@@ -151,8 +186,8 @@ Before responding, silently verify every rule in section A is satisfied. Do not 
 
 ## F) REFERENCE PATTERN -- one valid Cmajor synth structure (adapt architecture and voice count to the task)
 
-> This shows correct Cmajor patterns -- not a required architecture. Choose oscillator type,
-> voice count, envelope stages, and parameter layout that fit the user's request.
+&gt; This shows correct Cmajor patterns -- not a required architecture. Choose oscillator type,
+&gt; voice count, envelope stages, and parameter layout that fit the user's request.
 
 processor PolySynth
 {
@@ -194,10 +229,10 @@ processor PolySynth
         int oldest = 0;
         int maxAge = 0;
 
-        for (int i = 0; i < 16; ++i)
+        for (int i = 0; i &lt; 16; ++i)
         {
-            if (!voices[i].active && voices[i].env < 0.001f) return i;
-            if (voices[i].age > maxAge) { maxAge = voices[i].age; oldest = i; }
+            if (!voices[i].active &amp;&amp; voices[i].env &lt; 0.001f) return i;
+            if (voices[i].age &gt; maxAge) { maxAge = voices[i].age; oldest = i; }
         }
         return oldest;  // Voice stealing
     }
@@ -222,8 +257,8 @@ processor PolySynth
         else if (msg.isNoteOff())
         {
             let nn = msg.getNoteNumber();
-            for (int i = 0; i < 16; ++i)
-                if (voices[i].noteNumber == nn && voices[i].active)  // int compare, not float
+            for (int i = 0; i &lt; 16; ++i)
+                if (voices[i].noteNumber == nn &amp;&amp; voices[i].active)  // int compare, not float
                     voices[i].releasing = true;
         }
     }
@@ -235,22 +270,22 @@ processor PolySynth
             float mixOut = 0.0f;
             let   dt     = float (processor.period);
 
-            for (int i = 0; i < 16; ++i)
+            for (int i = 0; i &lt; 16; ++i)
             {
-                if (voices[i].env < 0.0001f) continue;
+                if (voices[i].env &lt; 0.0001f) continue;
 
                 // Age tracking for voice stealing
                 if (voices[i].active) voices[i].age += 1;
 
                 // Sawtooth oscillator
                 voices[i].phase += float64 (voices[i].noteFreq) * processor.period;
-                if (voices[i].phase >= 1.0) voices[i].phase -= 1.0;
+                if (voices[i].phase &gt;= 1.0) voices[i].phase -= 1.0;
                 float saw = float (voices[i].phase * 2.0 - 1.0);
 
                 // Envelope
                 if (voices[i].releasing)
                     voices[i].env *= (1.0f - dt / (decayMs * 0.001f));
-                if (voices[i].env < 0.0001f) { voices[i].active = false; voices[i].env = 0.0f; }
+                if (voices[i].env &lt; 0.0001f) { voices[i].active = false; voices[i].env = 0.0f; }
 
                 // One-pole lowpass filter
                 float sr     = float (processor.frequency);
@@ -265,7 +300,7 @@ processor PolySynth
             let driven  = mixOut * (1.0f + drive * 4.0f);
             float clipped = driven / (1.0f + abs (driven));
 
-            out <- clipped * 0.15f;
+            out &lt;- clipped * 0.15f;
             advance();
         }
     }
@@ -275,8 +310,8 @@ processor PolySynth
 
 ## G) SPECTRUM OUTPUT (optional -- for custom JS UI)
 
-> [WARN] **Struct scoping rule:** Cmajor only allows `namespace`, `processor`, or `graph` at file top level.
-> A bare `struct` at global scope causes a compile error. Always wrap in a `namespace`:
+&gt; [WARN] **Struct scoping rule:** Cmajor only allows `namespace`, `processor`, or `graph` at file top level.
+&gt; A bare `struct` at global scope causes a compile error. Always wrap in a `namespace`:
 
     // At file top level (OUTSIDE the processor):
     namespace Types { struct SpectrumData { float[512] bins; } }
@@ -288,21 +323,21 @@ processor PolySynth
 
     // Inside main() loop, throttle to ~30 Hz:
     specTimer += float (processor.period);
-    if (specTimer >= 0.033f)
+    if (specTimer &gt;= 0.033f)
     {
         Types::SpectrumData sd;
-        for (int i = 0; i < 512; ++i) sd.bins.at (i) = fftMag.at (i);
-        spectrumOut <- sd;
+        for (int i = 0; i &lt; 512; ++i) sd.bins.at (i) = fftMag.at (i);
+        spectrumOut &lt;- sd;
         specTimer -= 0.033f;
     }
 
-In JS: `patchConnection.addEndpointListener("spectrumOut", data => drawFFT(data.bins));`
+In JS: `patchConnection.addEndpointListener("spectrumOut", data =&gt; drawFFT(data.bins));`
 
 **FFT:** `std::frequency::realOnlyForwardFFT()` works. Layout: output[0..N/2] = real bins, output[N/2+1..N-1] = imaginary bins.
 **Visualization needs C++ endpoint wiring:** PluginProcessor must forward spectrum events to the UI.
 **Struct scoping:** Must wrap in `namespace` at file top level.
 
-> **Per-node oversampling:** `node x = MyProc * 4;` -- applies 4x oversampling to that processor only.
+&gt; **Per-node oversampling:** `node x = MyProc * 4;` -- applies 4x oversampling to that processor only.
 
 ---
 
@@ -312,5 +347,9 @@ In JS: `patchConnection.addEndpointListener("spectrumOut", data => drawFFT(data.
 2. Never skip an event handler for a declared parameter
 3. Scale summed voices -- divide `mixOut` by active voice count to prevent clipping
 4. Guard division by zero -- use `clamp` or `max(x, epsilon)`
-5. All filter and envelope coefficients must remain < 1.0
+5. All filter and envelope coefficients must remain &lt; 1.0
 6. Match note-off by stored `int noteNumber` -- never by float frequency equality
+END_AMORPH_CONTEXT
+END_TOKEN: amorph-end-d62739901c9d04ab
+</pre></body>
+</html>

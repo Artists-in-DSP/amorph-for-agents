@@ -18,11 +18,14 @@ class PromotionTests(unittest.TestCase):
 
             source_root = output_root / "v1" / DEFAULT_RELEASE
             stable_root = output_root / "v1" / "stable"
-            archive_root = output_root / "v1" / "releases" / "20260824-a"
+            archive_name = DEFAULT_RELEASE.removeprefix("preview-")
+            archive_root = output_root / "v1" / "releases" / archive_name
             stable_manifest = json.loads((stable_root / "manifest.json").read_text(encoding="utf-8"))
 
             self.assertEqual(DEFAULT_RELEASE, stable_manifest["active_release"])
-            self.assertEqual("v1/releases/20260824-a", stable_manifest["immutable_archive"])
+            self.assertEqual(
+                f"v1/releases/{archive_name}", stable_manifest["immutable_archive"]
+            )
             for record in stable_manifest["documents"]:
                 for key in ("audit_path", "html_path"):
                     relative = Path(record[key])
