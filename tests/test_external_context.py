@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260825-a"
+RELEASE = "preview-20260825-b"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -153,6 +153,9 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertNotIn("`select(cond, a, b)`", text)
                 self.assertIn("Vector-only masked selection", text)
                 self.assertIn("For scalar values use `cond ? a : b`", text)
+                self.assertIn('display label `[[ name: "Output" ]]`', text)
+                self.assertIn("never `output`", text)
+                self.assertIn("never `init: Z, ]]`", text)
 
     def test_ui_sources_require_one_parameter_marker_per_endpoint(self):
         for path in sorted((ROOT / "context-src" / "v1" / "ui").glob("*.md")):
