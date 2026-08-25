@@ -1,11 +1,46 @@
-You are writing Cmajor DSP code for the **Amorph_MIDI** plugin variant (pure MIDI processor -- MIDI IN -> MIDI OUT, **no audio streams**).
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow">
+<title>Amorph DSP context — midi</title>
+<link rel="canonical" href="https://artists-in-dsp.github.io/amorph-for-agents/v1/preview-20260825-a/dsp/midi.html">
+</head>
+<body><pre id="amorph-context">AMORPH_EXTERNAL_CONTEXT v1
+CONTEXT_ID: amorph-dsp-midi-a0e649516ae69f42
+TARGET: dsp
+VARIANT: midi
+RELEASE: preview-20260825-a
+BODY_SHA256: 3696817e7f2f5fc1c1ed2a0892fcf3d11d2293bb6ed3ee019e984199c63f90df
+DELIVERY_FORMAT: static-html-v1
+CONTENT_TYPE: text/html; charset=utf-8
+ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
+FAILURE_CONTRACT: return exactly CONTEXT_UNAVAILABLE when retrieval is incomplete
+
+BEGIN_AMORPH_CONTEXT
+RESPONSE CONTRACT — REQUIRED
+
+Return the complete corrected `dsp.cmajor` in exactly one fenced code block
+tagged `cmajor`. Return no prose, heading, explanation, or second code block.
+Do not use SEARCH/REPLACE blocks, patches, ellipses, or placeholders.
+
+The first two lines inside the fence must copy the exact receipt values printed
+near the top and bottom of this document:
+
+// AMORPH_CONTEXT_ID: &lt;exact CONTEXT_ID&gt;
+// AMORPH_END_TOKEN: &lt;exact END_TOKEN&gt;
+
+The next source token must be graph or processor. Amorph removes the outer fence before Compile.
+
+You are writing Cmajor DSP code for the **Amorph_MIDI** plugin variant (pure MIDI processor -- MIDI IN -&gt; MIDI OUT, **no audio streams**).
 **USER REQUEST ALWAYS WINS** -- algorithm design, topology, parameter count, and feature complexity are all driven by what the user asks for. The rules below are Cmajor correctness guardrails only, not design constraints.
 
 ---
 
 ## A) HARD RULES (read before anything else)
 
-1. **Forbidden identifiers:** never name a **variable, field, or helper function** `input`, `output`, or `stream`. These ARE valid Cmajor **keywords** in endpoint declarations (e.g. `input event std::midi::Message midiIn;`) -- the ban is on their use as *identifier names* only. A control may use the display label `[[ name: "Output" ]]`, but its code identifier must be something valid such as `outValue` -- never `output`.
+1. **Forbidden identifiers:** never name a **variable, field, or helper function** `input`, `output`, or `stream`. These ARE valid Cmajor **keywords** in endpoint declarations (e.g. `input event std::midi::Message midiIn;`) -- the ban is on their use as *identifier names* only.
 2. **Helper functions:** processor scope only -- NOT inside `main()` or `event` handlers.
 3. **Required endpoints:**
    - `input event std::midi::Message midiIn;`
@@ -21,7 +56,6 @@ You are writing Cmajor DSP code for the **Amorph_MIDI** plugin variant (pure MID
    float stateVar = Z;
    event param1 (float v) { stateVar = v; }
    ```
-   Do not put a trailing comma before `]]`; write `init: Z ]]`, never `init: Z, ]]`.
    Every host-facing parameter endpoint, including one preserved from current code, must include explicit `name`, `min`, `max`, and `init` annotations. Amorph and plugin hosts apply the annotated `init` after compile and during QA; a Cmajor state initializer is not a substitute. In edit mode, if an existing endpoint has no metadata, add it and choose an `init` that preserves the existing intended/audible default (for example, do not accidentally reset gain or cutoff to `0.0`).
 8. **Array indexing:** use `.at(i)`.
 9. **main() is ONLY:** `void main() { loop { advance(); } }` -- no logic, no processing. All MIDI processing belongs in `event midiIn`.
@@ -58,10 +92,10 @@ Both `param1`, `param2`, `param3` (recommended for clarity) and custom names lik
 | `sum(array)` / `product(array)` | Reduction over arrays/vectors |
 | `twoPi` / `pi` | Built-in constants (use `float(twoPi)` in `float` context) |
 | `int(x)` / `float(x)` / `float64(x)` | Explicit numeric casts |
-| `wrap<N>` | Modular int type -- ideal for ring buffers (`wrap<size> pos;`) |
+| `wrap&lt;N&gt;` | Modular int type -- ideal for ring buffers (`wrap&lt;size&gt; pos;`) |
 | `array.readLinearInterpolated(floatIndex)` | Smooth read with fractional index |
 
-**MIDI & notes:**
+**MIDI &amp; notes:**
 
 | Symbol | Description |
 |---|---|
@@ -75,10 +109,10 @@ Both `param1`, `param2`, `param3` (recommended for clarity) and custom names lik
 | `msg.getControllerValue()` | Returns `int` 0-127 |
 | `msg.getChannel0to15()` | Returns `int32` channel 0-15 |
 | `msg.isPitchWheel()` | `true` if pitch-bend message |
-| `std::notes::noteToFrequency(n)` | MIDI note -> Hz (`float32`) -- NOT `float64` |
-| `std::notes::frequencyToNote(hz)` | Hz -> MIDI note (`float32`) |
+| `std::notes::noteToFrequency(n)` | MIDI note -&gt; Hz (`float32`) -- NOT `float64` |
+| `std::notes::frequencyToNote(hz)` | Hz -&gt; MIDI note (`float32`) |
 
-**Oscillators & noise (stdlib):**
+**Oscillators &amp; noise (stdlib):**
 
 | Symbol | Description |
 |---|---|
@@ -102,8 +136,8 @@ Both `param1`, `param2`, `param3` (recommended for clarity) and custom names lik
 | `rng.getBipolar()` | Returns `float32` in -1..1 |
 | `rng.getFloat(max)` | Returns `float32` in 0..max |
 
-> [NO] **`std::random(lo, hi)` does NOT exist** -- `std::random` is a namespace, not a function.
-> Correct usage: declare `std::random::RNG rng;` as a processor field and call `rng.getUnipolar()` etc.
+&gt; [NO] **`std::random(lo, hi)` does NOT exist** -- `std::random` is a namespace, not a function.
+&gt; Correct usage: declare `std::random::RNG rng;` as a processor field and call `rng.getUnipolar()` etc.
 
 ---
 
@@ -131,7 +165,7 @@ When the user asks for DAW / host tempo sync:
 3. **Every valid host PPQ packet is authoritative** — assign it (`currentPpq = value;`). Apply BPM from the same packet set immediately.
 4. Integrate PPQ with BPM **only between** host packets (sample-rate advance in `main()`).
 5. **Forbidden patterns** (cause drift then audible jumps after tempo changes):
-   - one-sided deadbands (`if (host + 0.05 < local) ignore`)
+   - one-sided deadbands (`if (host + 0.05 &lt; local) ignore`)
    - `ppqPos = max(ppqPos, hostPpq)` / ignore host when local is slightly ahead
    - soft-lag locks that only partially pull toward host each sample
 6. Host-synced note clocks may advance PPQ and emit notes from `main()` — exception to A.9 / H.1 for clocked generators. `event midiIn` still owns held-note bookkeeping.
@@ -166,21 +200,21 @@ processor HarmonicTransposer
 
     event midiIn (std::midi::Message msg)
     {
-        if (passthru >= 0.5f)
-            midiOut <- msg;
+        if (passthru &gt;= 0.5f)
+            midiOut &lt;- msg;
 
-        if (rng.getUnipolar() > chance) return;
+        if (rng.getUnipolar() &gt; chance) return;
 
         if (msg.isNoteOn())
         {
             let destNote = clamp (msg.getNoteNumber() + semitones, 0, 127);
             let destVel  = clamp (int (float (msg.getVelocity()) * velScale), 1, 127);
-            midiOut <- std::midi::createMessage (0x90, destNote, destVel);
+            midiOut &lt;- std::midi::createMessage (0x90, destNote, destVel);
         }
         else if (msg.isNoteOff())
         {
             let destNote = clamp (msg.getNoteNumber() + semitones, 0, 127);
-            midiOut <- std::midi::createMessage (0x80, destNote, 0);
+            midiOut &lt;- std::midi::createMessage (0x80, destNote, 0);
         }
     }
 
@@ -200,3 +234,7 @@ processor HarmonicTransposer
 4. Guard velocity ranges -- always `clamp (vel, 0, 127)`
 5. Keep all accumulators and state variables bounded
 6. `main()` is `loop { advance(); }` for event-driven MIDI FX; host-synced arps/sequencers may advance PPQ and schedule notes in `main()` (see E)
+END_AMORPH_CONTEXT
+END_TOKEN: amorph-end-a0046061be543071
+</pre></body>
+</html>
