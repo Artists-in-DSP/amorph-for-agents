@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260826-b"
+RELEASE = "preview-20260826-c"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -181,6 +181,9 @@ class ExternalContextTests(unittest.TestCase):
                     "The next source declaration MUST be `export default function createPatchView (patchConnection)`",
                     text,
                 )
+                self.assertIn("Never use `ResizeObserver`", text)
+                self.assertIn("ResizeObserver loop-delivery warnings as runtime errors", text)
+                self.assertNotIn("or use a `ResizeObserver`", text)
                 scaffold = text.split("```javascript\n", 1)[1].split("\n```", 1)[0]
                 self.assertLess(
                     scaffold.index("export default function createPatchView (patchConnection)"),
