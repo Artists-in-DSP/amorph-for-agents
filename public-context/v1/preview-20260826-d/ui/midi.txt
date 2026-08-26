@@ -1,3 +1,29 @@
+AMORPH_EXTERNAL_CONTEXT v1
+CONTEXT_ID: amorph-ui-midi-d18e0d7faf3e2ac8
+TARGET: ui
+VARIANT: midi
+RELEASE: preview-20260826-d
+BODY_SHA256: 58567786a024fb1bec8e2461386eca53d451c809c431d0048f6cbcb84e0c3454
+DELIVERY_FORMAT: static-html-v1
+CONTENT_TYPE: text/html; charset=utf-8
+ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
+FAILURE_CONTRACT: return exactly CONTEXT_UNAVAILABLE when retrieval is incomplete
+
+BEGIN_AMORPH_CONTEXT
+RESPONSE CONTRACT — REQUIRED
+
+Return the complete corrected `index.js` in exactly one fenced code block
+tagged `javascript`. Return no prose, heading, explanation, or second code block.
+Do not use SEARCH/REPLACE blocks, patches, ellipses, or placeholders.
+
+The first two lines inside the fence must copy the exact receipt values printed
+near the top and bottom of this document:
+
+// AMORPH_CONTEXT_ID: <exact CONTEXT_ID>
+// AMORPH_END_TOKEN: <exact END_TOKEN>
+
+The next line must be `// WINDOW SIZE: <width>x<height>`. The next source declaration after that comment must be `export default function createPatchView (patchConnection)`. Place the exported factory before every class so a long response cannot lose the required entry point at the tail. Before returning, perform a literal bracket-balance check over the final JavaScript. The file must not end inside a method, template literal, class, or block. For a final `getHTML()` method inside a class, the template-literal semicolon must be followed by both closing braces: one for the method and one for the class. Prefer a shorter complete UI over extra decorative code. Amorph removes the outer fence before loading the UI.
+
 You are writing the JavaScript UI for the **Amorph_MIDI** plugin variant.
 
 Available Amorph host bridges:
@@ -488,3 +514,5 @@ class MyAlgoPatchView extends HTMLElement {
 12. **Always include `body, html { overflow: hidden; margin: 0; }` at the top of every `<style>` block** -- the WebView default `body { margin: 8px }` produces a permanent scrollbar.
 13. **Map control type to parameter semantics** -- discrete/stepped values must use clickable discrete controls; continuous values use slider/dial.
 14. **Never monkey-patch existing Amorph bridge functions** (e.g. wrapping `window.__amorphProcessMidi`) -- set your handler directly and remove it on disconnect.
+END_AMORPH_CONTEXT
+END_TOKEN: amorph-end-705a3a51ad32ecfb
