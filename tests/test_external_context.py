@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260825-b"
+RELEASE = "preview-20260826-a"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -156,6 +156,17 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn('display label `[[ name: "Output" ]]`', text)
                 self.assertIn("never `output`", text)
                 self.assertIn("never `init: Z, ]]`", text)
+                self.assertIn("every occurrence of `processor.period`", text)
+                self.assertIn("Never use bare `processor.period`", text)
+                self.assertIn("`float64(processor.period)`", text)
+                self.assertIn("`float dt = float(processor.period);`", text)
+
+        instrument = (ROOT / "context-src" / "v1" / "dsp" / "instrument.md").read_text(encoding="utf-8")
+        self.assertNotIn("float64 (voices[i].noteFreq) * processor.period", instrument)
+        self.assertIn(
+            "float64 (voices[i].noteFreq) * float (processor.period)",
+            instrument,
+        )
 
     def test_ui_sources_require_one_parameter_marker_per_endpoint(self):
         for path in sorted((ROOT / "context-src" / "v1" / "ui").glob("*.md")):
