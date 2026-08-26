@@ -106,8 +106,9 @@ Section G defines the minimum creative bar every UI must clear, regardless of re
 
 14. **Canvas sizing -- CRITICAL (prevents infinite layout-growth loop):**
     - [NO] NEVER `canvas.width = canvas.clientWidth` or `canvas.height = canvas.clientHeight` **inside a `requestAnimationFrame` loop** -- this reads the layout size then writes it back, which can grow the document by 1px per frame if the canvas has no strict CSS height anchor, producing infinite downward scroll
-    - [OK] Size canvases ONCE in `connectedCallback()` using `offsetWidth` / `offsetHeight`, or use a `ResizeObserver`
-    - [OK] If you must resize each frame (e.g., for dynamic layouts), the canvas element MUST have an explicit CSS `width` and `height` in `px` or `%` with a constrained parent -- and still prefer ResizeObserver
+    - [NO] Never use `ResizeObserver` in generated Amorph UI code. The host treats ResizeObserver loop-delivery warnings as runtime errors, and observing a canvas while writing its width/height can retrigger the observer.
+    - [OK] Size canvases ONCE in `connectedCallback()` using `offsetWidth` / `offsetHeight`; use fixed backing dimensions as a fallback and let CSS scale the visible canvas with its constrained parent.
+    - [NO] Never resize a canvas on every frame. If the layout must remain responsive, keep the backing buffer fixed and use CSS `width: 100%; height: 100%` inside a constrained container.
     - [OK] Read `canvas.width` / `canvas.height` in the draw loop -- do NOT re-assign them there
 
 15. **Amorph host footguns (must avoid):**
@@ -394,9 +395,9 @@ class MyAlgoPatchView extends HTMLElement {
         // Request values AFTER listeners are attached (prevents missed first updates)
         this._controls.forEach((_, id) => this.pc.requestParameterValue(id));
 
-        // -- Canvas sizing (ONCE, not inside rAF) ------------------------------
+        // -- Canvas sizing (ONCE, not inside rAF or ResizeObserver) ------------
         // Set canvas.width/height here from offsetWidth/offsetHeight.
-        // NEVER do this inside the animation loop -- it causes layout-growth & scroll.
+        // NEVER use ResizeObserver or resize inside the animation loop.
         this.querySelectorAll("canvas").forEach(cv => {
             cv.width  = cv.offsetWidth  || parseInt(cv.style.width)  || 400;
             cv.height = cv.offsetHeight || parseInt(cv.style.height) || 300;
@@ -478,7 +479,8 @@ class MyAlgoPatchView extends HTMLElement {
 7. Remove every `addEndpointListener` registration in `disconnectedCallback`
 8. **Never `window.addEventListener('pointermove/pointerup')` for drag controls** -- use `element.setPointerCapture(e.pointerId)` + element-level listeners only. Window-level listeners are never removed and prevent proper cleanup.
 9. **Never `canvas.width = canvas.clientWidth` inside `requestAnimationFrame`** -- causes an infinite layout-growth loop and a scrolling UI. Size canvases ONCE in `connectedCallback` (e.g. `canvas.width = canvas.offsetWidth || 400`).
-10. **Never `attachShadow()`** -- light DOM (`this.innerHTML`) is required. Shadow DOM breaks body-level scroll suppression and is incompatible with the host WebView's global CSS resets.
-11. **Always include `body, html { overflow: hidden; margin: 0; }` at the top of every `<style>` block** -- the WebView default `body { margin: 8px }` produces a permanent scrollbar.
-12. **Map control type to parameter semantics** -- discrete/stepped values must use clickable discrete controls; continuous values use slider/dial.
-13. **Never monkey-patch existing Amorph bridge functions** (e.g. wrapping `window.__amorphProcessMidi`) -- set your handler directly and remove it on disconnect.
+10. **Never use `ResizeObserver`** -- observe/write feedback can emit a host-fatal loop-delivery error. One-time canvas backing-size setup plus CSS scaling is the supported pattern.
+11. **Never `attachShadow()`** -- light DOM (`this.innerHTML`) is required. Shadow DOM breaks body-level scroll suppression and is incompatible with the host WebView's global CSS resets.
+12. **Always include `body, html { overflow: hidden; margin: 0; }` at the top of every `<style>` block** -- the WebView default `body { margin: 8px }` produces a permanent scrollbar.
+13. **Map control type to parameter semantics** -- discrete/stepped values must use clickable discrete controls; continuous values use slider/dial.
+14. **Never monkey-patch existing Amorph bridge functions** (e.g. wrapping `window.__amorphProcessMidi`) -- set your handler directly and remove it on disconnect.
