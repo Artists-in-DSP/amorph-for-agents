@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260826-e"
+RELEASE = "preview-20260826-f"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -167,6 +167,10 @@ class ExternalContextTests(unittest.TestCase):
             "float64 (voices[i].noteFreq) * float (processor.period)",
             instrument,
         )
+
+        fx = (ROOT / "context-src" / "v1" / "dsp" / "fx.md").read_text(encoding="utf-8")
+        self.assertIn("do not collapse the wet path to identical left and right signals", fx)
+        self.assertIn("wetL == wetR", fx)
 
     def test_ui_sources_require_one_parameter_marker_per_endpoint(self):
         for path in sorted((ROOT / "context-src" / "v1" / "ui").glob("*.md")):

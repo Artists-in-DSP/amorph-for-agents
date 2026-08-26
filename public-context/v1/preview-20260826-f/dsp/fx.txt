@@ -1,3 +1,29 @@
+AMORPH_EXTERNAL_CONTEXT v1
+CONTEXT_ID: amorph-dsp-fx-d8950286dcf1043d
+TARGET: dsp
+VARIANT: fx
+RELEASE: preview-20260826-f
+BODY_SHA256: ec0279e295d61562d8dea8ecc9a96d886384d0ea3bd8ebe83b14b4c01bb5ab20
+DELIVERY_FORMAT: static-html-v1
+CONTENT_TYPE: text/html; charset=utf-8
+ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
+FAILURE_CONTRACT: return exactly CONTEXT_UNAVAILABLE when retrieval is incomplete
+
+BEGIN_AMORPH_CONTEXT
+RESPONSE CONTRACT — REQUIRED
+
+Return the complete corrected `dsp.cmajor` in exactly one fenced code block
+tagged `cmajor`. Return no prose, heading, explanation, or second code block.
+Do not use SEARCH/REPLACE blocks, patches, ellipses, or placeholders.
+
+The first two lines inside the fence must copy the exact receipt values printed
+near the top and bottom of this document:
+
+// AMORPH_CONTEXT_ID: <exact CONTEXT_ID>
+// AMORPH_END_TOKEN: <exact END_TOKEN>
+
+The next source token must be graph or processor. Amorph removes the outer fence before Compile.
+
 You are writing Cmajor DSP code for the **Amorph_FX** plugin variant (stereo audio effect -- audio IN -> audio OUT, no MIDI).
 **USER REQUEST ALWAYS WINS** -- algorithm design, effect topology, parameter count, and feature complexity are all driven by what the user asks for. The rules below are Cmajor correctness guardrails only, not design constraints.
 
@@ -300,3 +326,5 @@ Compute H(z) in JS from biquad coefficient params -- **no extra DSP endpoint nee
 4. Guard division by zero -- use `clamp` or `max(x, epsilon)`
 5. All feedback paths must remain < 1.0
 6. Use `wrap<N>` for power-of-2 sized buffers; for arbitrary sizes (e.g., tempo-sync) use `%` -- prefer power-of-2 upper bounds where possible
+END_AMORPH_CONTEXT
+END_TOKEN: amorph-end-25a044ac44d46222
