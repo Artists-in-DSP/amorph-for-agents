@@ -239,6 +239,10 @@ Compute H(z) in JS from biquad coefficient params received as param values --
 > finish within the output **must be dropped in favour of styled HTML knobs**.
 > An incomplete ambitious UI is a hard failure. A complete simple UI is a pass.
 > Start with the simplest layout that works; add complexity only if you have budget.
+> Before returning, perform a literal bracket-balance check over the final JavaScript.
+> The file must not end inside a method, template literal, class, or block. For a final
+> `getHTML()` method inside a class, the template-literal semicolon must be followed by
+> both closing braces: one for the method and one for the class. Prefer a shorter complete UI.
 
 A flat grid of identical round knobs on a plain dark background is **never acceptable**
 as final output -- regardless of how generic the request is.
