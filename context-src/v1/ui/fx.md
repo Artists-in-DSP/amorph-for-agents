@@ -55,10 +55,12 @@ Section G defines the minimum creative bar every UI must clear, regardless of re
    - `dblclick` resets to default
    - Vertical drag delta (`startY - clientY`); Shift = fine mode
    - Always clamp + quantize before applying
+    - The pointer-drag element must be discoverable as a control: give it `role="slider"` with `aria-label`, `aria-valuemin`, `aria-valuemax`, and a maintained `aria-valuenow` (a `.knob` or `.dial` class may also be used for styling)
    - [NO] NEVER `window.addEventListener` for `pointermove` / `pointerup` -- always attach to the **element** and call `element.setPointerCapture(e.pointerId)` in `pointerdown`
    - [OK] MUST call `e.preventDefault()` inside `pointerdown` -- without it the browser scrolls the page while dragging
 
 6. **Discrete control interaction contract (buttons/stepper/toggle):**
+    - Every clickable pad, toggle, segmented choice, and step control must be a real `<button type="button">`; a styled `<div>` is not a button
     - Click/tap changes exactly one valid step/state
     - Every action must map to a valid value in DSP range
     - Provide clear selected/active visual state
