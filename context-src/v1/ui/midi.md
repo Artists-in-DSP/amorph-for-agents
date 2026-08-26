@@ -36,9 +36,10 @@ Section G defines the minimum creative bar every UI must clear, regardless of re
 2. **Parameter endpoint IDs:** must be exactly `param1`, `param2`, ... -- never invent custom IDs.
 
 3. **Required module structure:**
-    - `class ParameterControl` (or multiple controls such as `DialControl`, `SliderControl`, `ButtonGroupControl`)
+   - Immediately after the receipt comments and `// WINDOW SIZE`, declare `export default function createPatchView (patchConnection)`
+   - The factory declaration comes before every class; it may reference the patch-view class because the factory is called only after module evaluation
+   - `class ParameterControl` (or multiple controls such as `DialControl`, `SliderControl`, `ButtonGroupControl`)
    - `class <Name>PatchView extends HTMLElement`
-   - `export default function createPatchView (patchConnection)`
 
 4. **Control-type selection (CRITICAL):**
     - Choose control type from DSP semantics, not aesthetics
@@ -140,7 +141,7 @@ Your response must contain **exactly one** fenced code block tagged `javascript`
 Return **exactly**:
 1. ONE JavaScript ES module
 2. `param1..paramN` naming throughout
-3. After the two required receipt comments, declare `// WINDOW SIZE: ...`; the next source token is `export` or `class`
+3. After the two required receipt comments, declare `// WINDOW SIZE: ...`. The next source declaration MUST be `export default function createPatchView (patchConnection)`; place every class after that factory.
 
 Before responding, silently verify every rule in section A is satisfied. Do not output the verification.
 
@@ -246,7 +247,9 @@ Compute H(z) in JS from biquad coefficient params received as param values --
 ## G) MINIMUM CREATIVE BAR
 
 > **CRITICAL -- File completeness overrides all creative ambition.**
-> The file MUST end with `export default function createPatchView (patchConnection)`.
+> The factory declaration comes before every class: immediately after the receipt comments and
+> `// WINDOW SIZE`, declare `export default function createPatchView (patchConnection)`.
+> Never defer the only required export to the end of a long file, where an output limit can remove it.
 > Any canvas drawing, animation loop, or complex visualization that you cannot
 > finish within the output **must be dropped in favour of styled HTML knobs**.
 > An incomplete ambitious UI is a hard failure. A complete simple UI is a pass.
@@ -263,7 +266,7 @@ Before writing CSS, answer these questions about the plugin:
 
 **Expected output size: 150-400 lines.** Aim for creativity within that budget.
 Never start a canvas animation loop unless you are certain you can complete the
-entire file -- including `createPatchView` -- without truncation.
+entire file without truncation. Prefer concise CSS and HTML over one-property-per-line expansion.
 
 **Visualization ideas by effect type (only if you can complete the whole file):**
 - reverb / delay -> animated decay waveform, particle scatter trail, IR tail meter
@@ -293,8 +296,16 @@ entire file -- including `createPatchView` -- without truncation.
 - Prefer sliders for readability; use dials only when they add clear value
 
 ```javascript
-// Amorph Custom UI -- AlgorithmName
 // WINDOW SIZE: 800x560
+
+export default function createPatchView (patchConnection) {
+    const name = "my-algo-patch-view";
+    if (!window.customElements.get(name))
+        window.customElements.define(name, class extends MyAlgoPatchView {
+            constructor () { super(patchConnection); }
+        });
+    return new (window.customElements.get(name))();
+}
 
 class ParameterControl {
     constructor ({ patchConnection, param, knob, valueLabel, formatValue, onChange,
@@ -449,15 +460,6 @@ class MyAlgoPatchView extends HTMLElement {
   <!-- repeat for param2..paramN -->
 </div>`;
     }
-}
-
-export default function createPatchView (patchConnection) {
-    const name = "my-algo-patch-view";
-    if (!window.customElements.get(name))
-        window.customElements.define(name, class extends MyAlgoPatchView {
-            constructor () { super(patchConnection); }
-        });
-    return new (window.customElements.get(name))();
 }
 ```
 
