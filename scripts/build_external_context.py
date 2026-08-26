@@ -14,7 +14,7 @@ from typing import Dict, Iterable, List, Tuple
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / "context-src" / "v1"
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
-DEFAULT_RELEASE = "preview-20260826-d"
+DEFAULT_RELEASE = "preview-20260826-e"
 
 TARGETS = ("dsp", "ui")
 VARIANTS = ("instrument", "fx", "midi")
@@ -57,7 +57,10 @@ def response_contract(target: str) -> str:
             "a method, template literal, class, or block. For a final `getHTML()` method "
             "inside a class, the template-literal semicolon must be followed by both closing "
             "braces: one for the method and one for the class. Prefer a shorter complete UI "
-            "over extra decorative code."
+            "over extra decorative code. Hard response budget: keep a newly generated complete "
+            "`index.js` under 10000 visible characters. Generate repeated controls or pads from "
+            "small data arrays, keep CSS compact, and remove visual extras before approaching "
+            "the budget. Never spend the budget on decoration and then omit required closers."
         )
         handoff = "Amorph removes the outer fence before loading the UI."
 
