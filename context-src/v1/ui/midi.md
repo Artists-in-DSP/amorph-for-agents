@@ -259,6 +259,10 @@ Compute H(z) in JS from biquad coefficient params received as param values --
 > The file must not end inside a method, template literal, class, or block. For a final
 > `getHTML()` method inside a class, the template-literal semicolon must be followed by
 > both closing braces: one for the method and one for the class. Prefer a shorter complete UI.
+> Hard response budget: keep a newly generated complete `index.js` under 10000 visible
+> characters. Generate repeated controls or pads from small data arrays, keep CSS compact,
+> and remove visual extras before approaching the budget. Never spend the budget on
+> decoration and then omit required closers.
 
 A flat grid of identical round knobs on a plain dark background is **never acceptable**
 as final output -- regardless of how generic the request is.

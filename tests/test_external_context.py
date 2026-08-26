@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260826-d"
+RELEASE = "preview-20260826-e"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -187,6 +187,9 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("literal bracket-balance check", text)
                 self.assertIn("one for the method and one for the class", text)
                 self.assertIn("Prefer a shorter complete UI", text)
+                self.assertIn("under 10000 visible", text)
+                self.assertIn("Generate repeated controls or pads from small data arrays", text)
+                self.assertIn("Never spend the budget on", text)
                 scaffold = text.split("```javascript\n", 1)[1].split("\n```", 1)[0]
                 self.assertLess(
                     scaffold.index("export default function createPatchView (patchConnection)"),
