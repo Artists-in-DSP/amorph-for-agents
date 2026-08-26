@@ -14,7 +14,7 @@ from typing import Dict, Iterable, List, Tuple
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / "context-src" / "v1"
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
-DEFAULT_RELEASE = "preview-20260826-a"
+DEFAULT_RELEASE = "preview-20260826-b"
 
 TARGETS = ("dsp", "ui")
 VARIANTS = ("instrument", "fx", "midi")
@@ -49,7 +49,10 @@ def response_contract(target: str) -> str:
         fence = "javascript"
         source_start = (
             "The next line must be `// WINDOW SIZE: <width>x<height>`. "
-            "The next source token after that comment must be class or export."
+            "The next source declaration after that comment must be "
+            "`export default function createPatchView (patchConnection)`. "
+            "Place the exported factory before every class so a long response cannot lose "
+            "the required entry point at the tail."
         )
         handoff = "Amorph removes the outer fence before loading the UI."
 

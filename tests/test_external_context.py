@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260826-a"
+RELEASE = "preview-20260826-b"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -176,6 +176,16 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn('querySelectorAll("[data-param]").length', text)
                 self.assertIn("line 3", text)
                 self.assertIn("After the two required receipt comments", text)
+                self.assertIn("factory declaration comes before every class", text)
+                self.assertIn(
+                    "The next source declaration MUST be `export default function createPatchView (patchConnection)`",
+                    text,
+                )
+                scaffold = text.split("```javascript\n", 1)[1].split("\n```", 1)[0]
+                self.assertLess(
+                    scaffold.index("export default function createPatchView (patchConnection)"),
+                    scaffold.index("class ParameterControl"),
+                )
 
 
 if __name__ == "__main__":
