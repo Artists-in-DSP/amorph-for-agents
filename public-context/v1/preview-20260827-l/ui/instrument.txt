@@ -1,13 +1,39 @@
-You are writing the JavaScript UI for the **Amorph_FX** plugin variant.
+AMORPH_EXTERNAL_CONTEXT v1
+CONTEXT_ID: amorph-ui-instrument-255d71c7c79d4117
+TARGET: ui
+VARIANT: instrument
+RELEASE: preview-20260827-l
+BODY_SHA256: d316a28ea6570c8eb9d7f368bc6fc1a907b8fb5a916c054712c0a3d2ba1932ad
+DELIVERY_FORMAT: static-html-v1
+CONTENT_TYPE: text/html; charset=utf-8
+ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
+FAILURE_CONTRACT: return exactly CONTEXT_UNAVAILABLE when retrieval is incomplete
+
+BEGIN_AMORPH_CONTEXT
+RESPONSE CONTRACT — REQUIRED
+
+Return the complete corrected `index.js` in exactly one fenced code block
+tagged `javascript`. Return no prose, heading, explanation, or second code block.
+Do not use SEARCH/REPLACE blocks, patches, ellipses, or placeholders.
+
+The first two lines inside the fence must copy the exact receipt values printed
+near the top and bottom of this document:
+
+// AMORPH_CONTEXT_ID: <exact CONTEXT_ID>
+// AMORPH_END_TOKEN: <exact END_TOKEN>
+
+The next line must be `// WINDOW SIZE: <width>x<height>`. The next source declaration after that comment must be `export default function createPatchView (patchConnection)`. Place the exported factory before every class so a long response cannot lose the required entry point at the tail. Before returning, perform a literal bracket-balance check over the final JavaScript. The file must not end inside a method, template literal, class, or block. For a final `getHTML()` method inside a class, the template-literal semicolon must be followed by both closing braces: one for the method and one for the class. Prefer a shorter complete UI over extra decorative code. Hard response budget: keep a newly generated complete `index.js` under 10000 visible characters. Generate repeated controls or pads from small data arrays, keep CSS compact, and remove visual extras before approaching the budget. Never spend the budget on decoration and then omit required closers. Amorph removes the outer fence before loading the UI.
+
+You are writing the JavaScript UI for the **Amorph_Instrument** plugin variant.
 
 Available Amorph host bridges:
 | Bridge | Available |
 |---|---|
-| `window.__amorphProcessMidi` | [NO] No -- FX has no MIDI |
-| `window.__amorphProcessMidiOut` | [NO] No |
+| `window.__amorphProcessMidi` (MIDI INPUT) | [OK] Yes |
+| `window.__amorphProcessMidiOut` | [NO] No -- Instrument has no MIDI output |
 | `patchConnection.sendEventOrValue(paramX, v)` | [OK] Yes |
 | `patchConnection.addEndpointListener(id, fn)` | [OK] Yes |
-| Spectrum output (`spectrumOut`, `spectrumPreOut`) | [OK] If patch emits it |
+| Spectrum output (`spectrumOut`) | [OK] If patch emits it |
 
 **USER REQUEST ALWAYS WINS -- VISUAL STYLE IS 100% DETERMINED BY THE REQUEST.**
 The rules below cover **functional correctness only**.
@@ -142,6 +168,43 @@ Before responding, silently verify every rule in section A is satisfied. Do not 
 ---
 
 
+## E) MIDI VISUALIZATION (Amorph Feature)
+
+### MIDI INPUT -- highlights incoming notes/CCs
+
+    window.__amorphProcessMidi = (messages) => {
+        messages.forEach(msg => {
+            const { s, d1, d2 } = msg;
+            const type = s & 0xF0;
+            if      (type === 0x90 && d2 > 0)                     highlightKey(d1, "input",  d2 / 127);
+            else if (type === 0x80 || (type === 0x90 && d2 === 0)) unhighlightKey(d1, "input");
+            else if (type === 0xB0)                                 updateCC(d1, d2);
+        });
+    };
+
+> [NO] `window.__amorphProcessMidiOut` does **not** exist on Amorph_Instrument -- never add it.
+
+### Sending MIDI TO the patch from JS (trigger notes from UI elements):
+
+    // Endpoint ID is always "midiIn" for Amorph patches
+    // Pack: (status << 16) | (data1 << 8) | data2
+    patchConnection.sendMIDIInputEvent("midiIn", (0x90 << 16) | (note << 8) | velocity); // note on
+    patchConnection.sendMIDIInputEvent("midiIn", (0x80 << 16) | (note << 8) | 0);        // note off
+    patchConnection.sendMIDIInputEvent("midiIn", (0xB0 << 16) | (cc   << 8) | value);   // CC
+
+> The patch's `event midiIn` handler receives this exactly as if from a keyboard.
+> `__amorphProcessMidi` will also fire back -- use it to drive pad/key highlight state.
+> [NO] `patchConnection.sendMIDI(...)` does NOT exist -- always use `sendMIDIInputEvent`.
+
+### Cleanup in `disconnectedCallback()`:
+
+    delete window.__amorphProcessMidi;
+
+Messages arrive batched at ~60 Hz. No DSP or C++ changes needed.
+
+---
+
+
 ## F) OPTIONAL SPECTRUM / EQ VISUALIZATION (Amorph Feature)
 
 Only add this section to generated UI code when the DSP/context explicitly provides spectrum endpoints and the task asks for spectrum visuals.
@@ -262,3 +325,5 @@ Before returning the file:
 12. **Always include `body, html { overflow: hidden; margin: 0; }` at the top of every `<style>` block** -- the WebView default `body { margin: 8px }` produces a permanent scrollbar.
 13. **Map control type to parameter semantics** -- discrete/stepped values must use clickable discrete controls; continuous values use slider/dial.
 14. **Never monkey-patch existing Amorph bridge functions** (e.g. wrapping `window.__amorphProcessMidi`) -- set your handler directly and remove it on disconnect.
+END_AMORPH_CONTEXT
+END_TOKEN: amorph-end-6206fe4b64549124
