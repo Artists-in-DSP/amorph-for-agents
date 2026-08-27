@@ -14,7 +14,7 @@ from typing import Dict, List, Tuple
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_RELEASE = "preview-20260827-o"
+DEFAULT_RELEASE = "preview-20260827-p"
 DEFAULT_AGENTS = (
     "Mozilla/5.0 AmorphContextQA/1.0",
     "ChatGPT-User",

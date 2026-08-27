@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260827-o"
+RELEASE = "preview-20260827-p"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -172,8 +172,14 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("**Modulo/division safety:**", text)
                 self.assertIn("`% max(1, count)`", text)
                 self.assertIn("every `/` and `%` divisor", text)
+                self.assertIn("syntax-based and does not infer safety from an outer branch", text)
+                self.assertIn("inspect every literal `/` and `%` occurrence", text)
 
         instrument = (ROOT / "context-src" / "v1" / "dsp" / "instrument.md").read_text(encoding="utf-8")
+        self.assertIn("**Polyphonic sum safety:**", instrument)
+        self.assertIn("never use a fixed multiplier such as `0.25`", instrument)
+        self.assertIn("`float(max(1, activeVoiceCount))`", instrument)
+
         self.assertNotIn("float64 (voices[i].noteFreq) * processor.period", instrument)
         self.assertIn(
             "float64 (voices[i].noteFreq) * float (processor.period)",
