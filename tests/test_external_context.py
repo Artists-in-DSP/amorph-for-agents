@@ -201,6 +201,8 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertNotIn("```javascript\n", text)
                 self.assertIn("## H) FINAL CONSTRUCTION AND AUDIT", text)
                 self.assertIn("declare exactly N data entries and render all N", text)
+                self.assertIn("one-octave chromatic keyboard has at least 12", text)
+                self.assertIn("N octaves have at least `12 * N` keys", text)
                 self.assertIn('real `<button type="button">`', text)
                 self.assertIn("Remove any unrequested generic dark-dashboard styling", text)
 

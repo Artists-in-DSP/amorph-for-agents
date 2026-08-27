@@ -273,10 +273,11 @@ Build from the user request, DSP endpoints, and the contracts above; do not copy
 Before returning the file:
 
 1. Extract every explicit quantity from the user request. For each requested count N, declare exactly N data entries and render all N. Never substitute a smaller representative subset.
-2. Render every clickable pad, toggle, choice, and step as a real `<button type="button">`. A clickable `<div>`, `role="button"`, `tabindex`, or a button-like class fails.
-3. Count the final DOM: `querySelectorAll("button").length` must satisfy every requested clickable count, and `querySelectorAll("[data-param]").length` must equal the DSP parameter count.
-4. Re-read the requested palette, layout, exclusions, and visual references. Remove any unrequested generic dark-dashboard styling.
-5. Verify the final source is complete, within the response budget, bracket-balanced, and contains the required factory, cleanup, host sync, and interaction paths.
+2. Translate musical ranges into literal counts before building controls: a one-octave chromatic keyboard has at least 12 distinct semitone keys, and N octaves have at least `12 * N` keys. Declare and render every key as its own data entry with its own `data-note`.
+3. Render every clickable pad, toggle, choice, and step as a real `<button type="button">`. A clickable `<div>`, `role="button"`, `tabindex`, or a button-like class fails.
+4. Count the final DOM: `querySelectorAll("button").length` must satisfy every requested clickable count, and `querySelectorAll("[data-param]").length` must equal the DSP parameter count.
+5. Re-read the requested palette, layout, exclusions, and visual references. Remove any unrequested generic dark-dashboard styling.
+6. Verify the final source is complete, within the response budget, bracket-balanced, and contains the required factory, cleanup, host sync, and interaction paths.
 
 ---
 
