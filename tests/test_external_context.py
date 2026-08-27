@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260827-p"
+RELEASE = "preview-20260827-q"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -145,6 +145,9 @@ class ExternalContextTests(unittest.TestCase):
             with self.subTest(path=path.name):
                 text = path.read_text(encoding="utf-8")
                 self.assertIn("do not use `let` anywhere in the returned source", text)
+                self.assertIn("Every host parameter endpoint ID must be the exact sequential form", text)
+                self.assertIn("invalid for Amorph even if Cmajor accepts them", text)
+                self.assertNotIn("custom names like `paramSnap`", text)
                 self.assertIn("preserve every existing endpoint, parameter", text)
                 self.assertIn("next sequential `paramN` ID", text)
                 self.assertIn("a Cmajor state initializer is not a substitute", text)
@@ -174,6 +177,13 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("every `/` and `%` divisor", text)
                 self.assertIn("syntax-based and does not infer safety from an outer branch", text)
                 self.assertIn("inspect every literal `/` and `%` occurrence", text)
+
+        for record in self.manifest["documents"]:
+            if record["target"] != "dsp":
+                continue
+            generated = (RELEASE_ROOT / record["audit_path"]).read_text(encoding="utf-8")
+            self.assertIn("Every host parameter endpoint ID must be the exact sequential form", generated)
+            self.assertIn("audit every `input event float` declaration", generated)
 
         instrument = (ROOT / "context-src" / "v1" / "dsp" / "instrument.md").read_text(encoding="utf-8")
         self.assertIn("**Polyphonic sum safety:**", instrument)
