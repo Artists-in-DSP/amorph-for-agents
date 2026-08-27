@@ -12,15 +12,6 @@ Available Amorph host bridges:
 **USER REQUEST ALWAYS WINS -- VISUAL STYLE IS 100% DETERMINED BY THE REQUEST.**
 The rules below cover **functional correctness only**.
 
-> **TEMPLATE BIAS WARNING** -- Section H contains a structural scaffold with placeholder colours and a
-> generic dark theme. That scaffold exists **only** to show class structure and wiring patterns.
-> **Its visual appearance (colors, knob shapes, layout, widget style) is irrelevant and must not
-> influence the output.** Producing a UI that looks like the section H template when the user asked
-> for something different is a failure, not a safe default.
->
-> Treat section H's CSS and HTML as if they are blank. Derive every visual decision -- colors, fonts,
-> shapes, widget types, layout structure, animations -- from the user's request and section G only.
-
 If the request mentions ANY aesthetic preference, honour it exactly and fully.
 Section G defines the minimum creative bar every UI must clear, regardless of request specificity.
 
@@ -238,188 +229,17 @@ entire file without truncation. Prefer concise CSS and HTML over one-property-pe
 
 ---
 
-## H) STRUCTURAL SCAFFOLD (wiring patterns only -- visuals are blank)
+## H) FINAL CONSTRUCTION AND AUDIT
 
-> **DO NOT copy any visual style from this scaffold.**
-> Colors, backgrounds, widget shapes, layout, and typography must come from the user's request and
-> section G. The CSS in `getHTML()` below uses `/* YOUR ... */` comments where real values must go.
-> If your output contains `#1a1a2e`, `#7c3aed`, `conic-gradient`, `repeat(4, 1fr)`, or any other
-> literal from this scaffold, that is a bug -- you copied the template's skin instead of creating one.
+Build from the user request, DSP endpoints, and the contracts above; do not copy a generic visual template.
 
-### Control choice quick guide (apply before writing code)
+Before returning the file:
 
-- If parameter is effectively ON/OFF (`0/1`) -> toggle button
-- If parameter is integer mode (`0..N`, waveform type, routing mode) -> segmented buttons or +/- stepper
-- If parameter is continuous (`float`) -> slider (default) or dial (only when space is tight)
-- Prefer sliders for readability; use dials only when they add clear value
-
-```javascript
-// WINDOW SIZE: 800x560
-
-export default function createPatchView (patchConnection) {
-    const name = "my-algo-patch-view";
-    if (!window.customElements.get(name))
-        window.customElements.define(name, class extends MyAlgoPatchView {
-            constructor () { super(patchConnection); }
-        });
-    return new (window.customElements.get(name))();
-}
-
-class ParameterControl {
-    constructor ({ patchConnection, param, knob, valueLabel, formatValue, onChange,
-                   min, max, step, defaultValue }) {
-        this.pc = patchConnection; this.param = param;
-        this.knob = knob; this.valueLabel = valueLabel;
-        this.formatValue = formatValue; this.onChange = onChange;
-        this.min = min; this.max = max; this.step = step; this.default = defaultValue;
-        this.value = defaultValue; this.dragging = false;
-        this.startY = 0; this.startVal = 0;
-        knob.addEventListener("pointerdown",   e => this.onPointerDown(e));
-        knob.addEventListener("pointermove",   e => this.onPointerMove(e));
-        knob.addEventListener("pointerup",     e => this.onPointerUp(e));
-        knob.addEventListener("pointercancel", e => this.onPointerUp(e));
-        knob.addEventListener("dblclick",      () => this.setValue(this.default, true));
-        // CRITICAL: call setValue (not just updateVisuals) so the value label is painted
-        // immediately with the default. Without this, labels show "--" until the host
-        // responds to requestParameterValue, which may be visually delayed or never happen.
-        this.setValue(this.default, false);
-    }
-    setValue (v, notify) {
-        v = this.quantize(this.clamp(v, this.min, this.max));
-        this.value = v;
-        this.updateVisuals();
-        if (this.valueLabel) this.valueLabel.textContent = this.formatValue(v);
-        if (this.onChange)   this.onChange(v);
-        if (notify)          this.pc.sendEventOrValue(this.param, v);
-    }
-    updateVisuals () {
-        const norm = (this.value - this.min) / (this.max - this.min || 1);
-        this.knob.style.setProperty("--norm", norm);
-    }
-    onPointerDown (e) {
-        this.dragging = true; this.startY = e.clientY; this.startVal = this.value;
-        // setPointerCapture routes future move/up to this element even when cursor leaves it.
-        // e.preventDefault() MUST come after setPointerCapture -- prevents browser page scroll.
-        this.knob.setPointerCapture(e.pointerId);
-        e.preventDefault();
-    }
-    onPointerMove (e) {
-        if (!this.dragging) return;
-        const sens = e.shiftKey ? 0.002 : 0.01;
-        this.setValue(this.startVal + (this.startY - e.clientY) * sens * (this.max - this.min), true);
-    }
-    onPointerUp (e) { this.dragging = false; this.knob.releasePointerCapture(e.pointerId); }
-    clamp    (v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
-    quantize (v)          { return this.step > 0 ? Math.round(v / this.step) * this.step : v; }
-}
-
-class MyAlgoPatchView extends HTMLElement {
-    constructor (patchConnection) {
-        super();
-        this.pc = patchConnection;
-        this._controls     = new Map();
-        this._animFrame    = null;
-        this._paramListener = null;
-        this.innerHTML = this.getHTML();
-    }
-
-    connectedCallback () {
-        // Build controls (control type can be dial/slider/buttons/toggle/stepper)
-        this.querySelectorAll(".control").forEach(node => {
-            const id   = node.dataset.param;
-            const min  = parseFloat(node.dataset.min  ?? 0);
-            const max  = parseFloat(node.dataset.max  ?? 1);
-            const step = parseFloat(node.dataset.step ?? 0);
-            const init = parseFloat(node.dataset.init ?? min);
-            const ctrl = new ParameterControl({
-                patchConnection: this.pc, param: id,
-                knob:       node.querySelector(".knob"),
-                valueLabel: node.querySelector(".value-label"),
-                formatValue: v => this.formatValue(id, v),
-                onChange:    v => this.updateDisplays(id, v),
-                min, max, step, defaultValue: init
-            });
-            this._controls.set(id, ctrl);
-            ctrl.setValue(init, false); // immediate first paint before host sync
-        });
-
-        // Host -> UI listener
-        // [WARN] addAllParameterListener callback receives ONE object: { endpointID, value }
-        //    NOT two separate arguments. Destructure correctly:
-        this._paramListener = ({ endpointID: id, value: v }) => this._controls.get(id)?.setValue(v, false);
-        this.pc.addAllParameterListener(this._paramListener);
-
-        // Request values AFTER listeners are attached (prevents missed first updates)
-        this._controls.forEach((_, id) => this.pc.requestParameterValue(id));
-
-        // -- Canvas sizing (ONCE, not inside rAF or ResizeObserver) ------------
-        // Set canvas.width/height here from offsetWidth/offsetHeight.
-        // NEVER use ResizeObserver or resize inside the animation loop.
-        this.querySelectorAll("canvas").forEach(cv => {
-            cv.width  = cv.offsetWidth  || parseInt(cv.style.width)  || 400;
-            cv.height = cv.offsetHeight || parseInt(cv.style.height) || 300;
-        });
-
-        this.startAnimationLoop();
-    }
-
-    disconnectedCallback () {
-        if (this._paramListener) this.pc.removeAllParameterListener(this._paramListener);
-        if (this._animFrame)     cancelAnimationFrame(this._animFrame);
-        // delete window.__amorphProcessMidi;        // uncomment if used
-        // delete window.__amorphProcessMidiOut;     // uncomment if used
-    }
-
-    startAnimationLoop () {
-        const loop = () => {
-            // Optional per-frame visual updates (meters/envelopes/etc.) go here.
-            this._animFrame = requestAnimationFrame(loop);
-        };
-        this._animFrame = requestAnimationFrame(loop);
-    }
-
-    formatValue (id, v) {
-        switch (id) {
-            case "param1": return v.toFixed(1) + " Hz";
-            default:       return v.toFixed(2);
-        }
-    }
-
-    updateDisplays (id, v) { /* update meters, readouts etc. */ }
-
-    getHTML () {
-        return `
-<style>
-  /* CRITICAL: override browser default body margin or the WebView scrolls */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { overflow: hidden; margin: 0; padding: 0; }
-  :host { display: block; width: 100%; height: 100%; overflow: hidden;
-          font-family: /* YOUR FONT */; background: /* YOUR BG COLOR */;
-          color: /* YOUR TEXT COLOR */;
-          user-select: none; -webkit-user-select: none; }
-
-  /* --- ALL LAYOUT, WIDGET, AND VISUAL STYLES: define from the user request --- */
-  /* Examples of what must come from the request, not from this template:         */
-  /*   - panel layout (grid / flex / absolute / custom)                           */
-  /*   - knob / slider / button shapes and sizes                                  */
-  /*   - color palette, gradients, borders, shadows                               */
-  /*   - typography (font-size, font-weight, font-family, text-transform)         */
-  /*   - canvas element sizing (assign from JS in connectedCallback)              */
-
-  canvas { display: block; }
-</style>
-<!-- YOUR HTML layout: panel structure, control divs with data-param/data-min/data-max/data-step/data-init -->
-<div class="panel">
-  <div class="control" data-param="param1" data-min="0" data-max="1" data-step="0" data-init="0.5">
-    <!-- YOUR widget markup: knob div / slider track+thumb / buttons / canvas etc. -->
-    <span class="value-label">--</span>
-    <span class="label">Param 1</span>
-  </div>
-  <!-- repeat for param2..paramN -->
-</div>`;
-    }
-}
-```
+1. Extract every explicit quantity from the user request. For each requested count N, declare exactly N data entries and render all N. Never substitute a smaller representative subset.
+2. Render every clickable pad, toggle, choice, and step as a real `<button type="button">`. A clickable `<div>`, `role="button"`, `tabindex`, or a button-like class fails.
+3. Count the final DOM: `querySelectorAll("button").length` must satisfy every requested clickable count, and `querySelectorAll("[data-param]").length` must equal the DSP parameter count.
+4. Re-read the requested palette, layout, exclusions, and visual references. Remove any unrequested generic dark-dashboard styling.
+5. Verify the final source is complete, within the response budget, bracket-balanced, and contains the required factory, cleanup, host sync, and interaction paths.
 
 ---
 
