@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260827-i"
+RELEASE = "preview-20260827-n"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -144,7 +144,7 @@ class ExternalContextTests(unittest.TestCase):
         for path in sorted((ROOT / "context-src" / "v1" / "dsp").glob("*.md")):
             with self.subTest(path=path.name):
                 text = path.read_text(encoding="utf-8")
-                self.assertIn("never declare a value with `let` inside a `for` or `while` body", text)
+                self.assertIn("do not use `let` anywhere in the returned source", text)
                 self.assertIn("preserve every existing endpoint, parameter", text)
                 self.assertIn("next sequential `paramN` ID", text)
                 self.assertIn("a Cmajor state initializer is not a substitute", text)
@@ -166,6 +166,9 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("**Immutable `let`:**", text)
                 self.assertIn("a `let` binding can never be assigned again", text)
                 self.assertIn("explicit typed mutable local", text)
+                self.assertIn("do not use `let` anywhere in the returned source", text)
+                self.assertIn("Never invent `.set(...)` or `.get(...)` array methods", text)
+                self.assertIn("write with `array.at(i) = value;`", text)
 
         instrument = (ROOT / "context-src" / "v1" / "dsp" / "instrument.md").read_text(encoding="utf-8")
         self.assertNotIn("float64 (voices[i].noteFreq) * processor.period", instrument)
@@ -200,6 +203,8 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("under 10000 visible", text)
                 self.assertIn("Generate repeated controls or pads from small data arrays", text)
                 self.assertIn("Never spend the budget on", text)
+                self.assertIn("must return an actual `HTMLElement` instance", text)
+                self.assertIn("Never return a class or constructor", text)
                 self.assertNotIn("## H) STRUCTURAL SCAFFOLD", text)
                 self.assertNotIn("```javascript\n", text)
                 self.assertIn("## H) FINAL CONSTRUCTION AND AUDIT", text)
