@@ -14,7 +14,7 @@ from typing import Dict, Iterable, List, Tuple
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / "context-src" / "v1"
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
-DEFAULT_RELEASE = "preview-20260827-p"
+DEFAULT_RELEASE = "preview-20260827-q"
 
 TARGETS = ("dsp", "ui")
 VARIANTS = ("instrument", "fx", "midi")
@@ -42,7 +42,13 @@ def response_contract(target: str) -> str:
     if target == "dsp":
         filename = "dsp.cmajor"
         fence = "cmajor"
-        source_start = "The next source token must be graph or processor."
+        source_start = (
+            "The next source token must be graph or processor. Every host parameter "
+            "endpoint ID must be the exact sequential form `param1`, `param2`, ... "
+            "`paramN`; descriptive endpoint IDs are invalid. Put human labels only in "
+            "`[[ name: \"...\" ]]`, and audit every `input event float` declaration "
+            "before returning."
+        )
         handoff = "Amorph removes the outer fence before Compile."
     else:
         filename = "index.js"

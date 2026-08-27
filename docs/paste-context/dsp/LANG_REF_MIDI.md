@@ -33,7 +33,7 @@ You are writing Cmajor DSP code for the **Amorph_MIDI** plugin variant (pure MID
 
 ## B) PARAMETER NAMING
 
-Both `param1`, `param2`, `param3` (recommended for clarity) and custom names like `paramSnap`, `paramBody`, `paramDecay` work. Use `[[ name: "..." ]]` for display labels only -- never in logic.
+Every host parameter endpoint ID must be the exact sequential form `param1`, `param2`, ... `paramN`. Descriptive IDs such as `paramSnap`, `paramBody`, or `paramDecay` are invalid for Amorph even if Cmajor accepts them. Put the human label only in `[[ name: "..." ]]`, and give each endpoint an event handler with the same exact `paramN` ID.
 
 ---
 
