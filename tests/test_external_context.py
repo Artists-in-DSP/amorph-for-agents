@@ -194,11 +194,12 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("under 10000 visible", text)
                 self.assertIn("Generate repeated controls or pads from small data arrays", text)
                 self.assertIn("Never spend the budget on", text)
-                scaffold = text.split("```javascript\n", 1)[1].split("\n```", 1)[0]
-                self.assertLess(
-                    scaffold.index("export default function createPatchView (patchConnection)"),
-                    scaffold.index("class ParameterControl"),
-                )
+                self.assertNotIn("## H) STRUCTURAL SCAFFOLD", text)
+                self.assertNotIn("```javascript\n", text)
+                self.assertIn("## H) FINAL CONSTRUCTION AND AUDIT", text)
+                self.assertIn("declare exactly N data entries and render all N", text)
+                self.assertIn('real `<button type="button">`', text)
+                self.assertIn("Remove any unrequested generic dark-dashboard styling", text)
 
 
 if __name__ == "__main__":
