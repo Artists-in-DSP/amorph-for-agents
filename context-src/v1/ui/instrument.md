@@ -29,6 +29,7 @@ Section G defines the minimum creative bar every UI must clear, regardless of re
 3. **Required module structure:**
    - Immediately after the receipt comments and `// WINDOW SIZE`, declare `export default function createPatchView (patchConnection)`
    - The factory declaration comes before every class; it may reference the patch-view class because the factory is called only after module evaluation
+   - The factory must return an actual `HTMLElement` instance. Never return a class or constructor from `createPatchView`; define or reuse the custom element and return `new (window.customElements.get(name))()`.
    - `class ParameterControl` (or multiple controls such as `DialControl`, `SliderControl`, `ButtonGroupControl`)
    - `class <Name>PatchView extends HTMLElement`
 
@@ -277,7 +278,7 @@ Before returning the file:
 3. Render every clickable pad, toggle, choice, and step as a real `<button type="button">`. A clickable `<div>`, `role="button"`, `tabindex`, or a button-like class fails.
 4. Count the final DOM: `querySelectorAll("button").length` must satisfy every requested clickable count, and `querySelectorAll("[data-param]").length` must equal the DSP parameter count.
 5. Re-read the requested palette, layout, exclusions, and visual references. Remove any unrequested generic dark-dashboard styling.
-6. Verify the final source is complete, within the response budget, bracket-balanced, and contains the required factory, cleanup, host sync, and interaction paths.
+6. Verify the final source is complete, within the response budget, bracket-balanced, and contains the required factory, cleanup, host sync, and interaction paths. The factory must return an actual `HTMLElement` instance; never return a class or constructor.
 
 ---
 
