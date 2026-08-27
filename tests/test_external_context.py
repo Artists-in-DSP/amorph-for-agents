@@ -160,6 +160,9 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("Never use bare `processor.period`", text)
                 self.assertIn("`float64(processor.period)`", text)
                 self.assertIn("`float dt = float(processor.period);`", text)
+                self.assertIn("**Final loop audit:**", text)
+                self.assertIn("No value declared inside a repeated loop body may use `let`", text)
+                self.assertIn("Do this literal audit after generating the complete file", text)
 
         instrument = (ROOT / "context-src" / "v1" / "dsp" / "instrument.md").read_text(encoding="utf-8")
         self.assertNotIn("float64 (voices[i].noteFreq) * processor.period", instrument)
