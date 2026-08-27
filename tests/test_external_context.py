@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260827-n"
+RELEASE = "preview-20260827-o"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -169,6 +169,9 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("do not use `let` anywhere in the returned source", text)
                 self.assertIn("Never invent `.set(...)` or `.get(...)` array methods", text)
                 self.assertIn("write with `array.at(i) = value;`", text)
+                self.assertIn("**Modulo/division safety:**", text)
+                self.assertIn("`% max(1, count)`", text)
+                self.assertIn("every `/` and `%` divisor", text)
 
         instrument = (ROOT / "context-src" / "v1" / "dsp" / "instrument.md").read_text(encoding="utf-8")
         self.assertNotIn("float64 (voices[i].noteFreq) * processor.period", instrument)
