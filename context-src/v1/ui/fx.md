@@ -60,7 +60,7 @@ Section G defines the minimum creative bar every UI must clear, regardless of re
    - [OK] MUST call `e.preventDefault()` inside `pointerdown` -- without it the browser scrolls the page while dragging
 
 6. **Discrete control interaction contract (buttons/stepper/toggle):**
-    - Every clickable pad, toggle, choice, or step must start with `<button type="button">`. Before returning, audit every click/pointer/key handler: a `<div>`, `role="button"`, `tabindex`, or button-like class fails. If N pads/choices are requested, the DOM must expose N buttons; loops must emit button tags.
+    - Every clickable pad/toggle/choice/step starts with `<button type="button">`; `<div>`, `role="button"`, `tabindex`, and button-like classes fail. For N requested pads/choices, declare N data entries, map each to a button, and audit `querySelectorAll("button").length >= N`.
     - Click/tap changes exactly one valid step/state
     - Every action must map to a valid value in DSP range
     - Provide clear selected/active visual state
