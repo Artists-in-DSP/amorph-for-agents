@@ -1,0 +1,81 @@
+{
+  "audit_content_type": "text/plain; charset=utf-8",
+  "delivery_format": "static-html-v1",
+  "documents": [
+    {
+      "audit_path": "dsp/instrument.txt",
+      "body_sha256": "71c12c070016664d752f8acb62aaac256e08b72d213002910276375b581d595e",
+      "canonical_text_sha256": "adc1323cbb1cd3f2e1b5fc7e2de7a442e0985b38bc804f94446fec11a1e68589",
+      "html_bytes": 17079,
+      "html_path": "dsp/instrument.html",
+      "html_sha256": "976ca8063986cb1fc916b32dd5c2c4aff8a6edc8c8b0a3961d9df083dd7cad45",
+      "path": "dsp/instrument.html",
+      "target": "dsp",
+      "variant": "instrument",
+      "visible_text_bytes": 16484
+    },
+    {
+      "audit_path": "dsp/fx.txt",
+      "body_sha256": "bcc64f3af972ed6abb40a3f9166d1657c116aff7015ffab16679a0846b93b0fb",
+      "canonical_text_sha256": "82d8c7f16615ae9ca35f3d77a6f3e6f86f88f697585493857bdf3306a439a48f",
+      "html_bytes": 17131,
+      "html_path": "dsp/fx.html",
+      "html_sha256": "eb2338bb99d5346eeb10d2c09c0c140b56397c8d71d880785ef1378fa0a11827",
+      "path": "dsp/fx.html",
+      "target": "dsp",
+      "variant": "fx",
+      "visible_text_bytes": 16538
+    },
+    {
+      "audit_path": "dsp/midi.txt",
+      "body_sha256": "734ddfaab83e52f8d0d28a4660ce7cd662ef8494611f4078bc64f21c8437757a",
+      "canonical_text_sha256": "8a10c56533fa1537489fe70b37f728c7b0afb5a59f4e79e485fca026eca791f8",
+      "html_bytes": 13435,
+      "html_path": "dsp/midi.html",
+      "html_sha256": "e74efe81ea9c34c1edddd7c3aaa4cbac209835a452252b0821063c6d52b3d9b9",
+      "path": "dsp/midi.html",
+      "target": "dsp",
+      "variant": "midi",
+      "visible_text_bytes": 12974
+    },
+    {
+      "audit_path": "ui/instrument.txt",
+      "body_sha256": "18979e01a735dc4b28e049ffb47e891014b5854d30f15321bbcd53b81be27905",
+      "canonical_text_sha256": "7d077163c728fac9e6c71c69c395b9f7c786767749923340bdefda520b43d85d",
+      "html_bytes": 21538,
+      "html_path": "ui/instrument.html",
+      "html_sha256": "4ca41c72a79520fce90bef3aaf4ab88c5cf812fe4509958175fb04fa84d165b2",
+      "path": "ui/instrument.html",
+      "target": "ui",
+      "variant": "instrument",
+      "visible_text_bytes": 20851
+    },
+    {
+      "audit_path": "ui/fx.txt",
+      "body_sha256": "888884c4f1b88ebb81032837d2cbd24e78e2242fa4b2414773beb146d296a295",
+      "canonical_text_sha256": "f02e62218e90826b8ab8242d9b7d6a140fae5a9be00fc9a6fd7cfcb6bbf132a3",
+      "html_bytes": 19854,
+      "html_path": "ui/fx.html",
+      "html_sha256": "db9e72713070874cd5c8a3b1eb78c18d4df7dc3d6888d321800a31f06203a598",
+      "path": "ui/fx.html",
+      "target": "ui",
+      "variant": "fx",
+      "visible_text_bytes": 19272
+    },
+    {
+      "audit_path": "ui/midi.txt",
+      "body_sha256": "ef2762b9c59f1d795ba42743f2cc0f8fc3947d14603765f7d708611be13b5fe0",
+      "canonical_text_sha256": "3e7a21fbbac6e7e2423256934f00d7538678903722c40f328633664c94329ba0",
+      "html_bytes": 22348,
+      "html_path": "ui/midi.html",
+      "html_sha256": "563802b2d65a03177dd99a490d2c0ef4da79ce5ca7c0b584245ba2ddd1be7de0",
+      "path": "ui/midi.html",
+      "target": "ui",
+      "variant": "midi",
+      "visible_text_bytes": 21647
+    }
+  ],
+  "model_content_type": "text/html; charset=utf-8",
+  "release": "preview-20260827-k",
+  "schema_version": 2
+}
