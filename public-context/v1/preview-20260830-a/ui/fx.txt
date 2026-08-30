@@ -1,3 +1,29 @@
+AMORPH_EXTERNAL_CONTEXT v1
+CONTEXT_ID: amorph-ui-fx-f8d23e7210820b84
+TARGET: ui
+VARIANT: fx
+RELEASE: preview-20260830-a
+BODY_SHA256: 5e19dfeffb93355d9e4996a0ad4d6a50ca429138363986335cec650d8c2d6a30
+DELIVERY_FORMAT: static-html-v1
+CONTENT_TYPE: text/html; charset=utf-8
+ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
+FAILURE_CONTRACT: return exactly CONTEXT_UNAVAILABLE when retrieval is incomplete
+
+BEGIN_AMORPH_CONTEXT
+RESPONSE CONTRACT — REQUIRED
+
+Return the complete corrected `index.js` in exactly one fenced code block
+tagged `javascript`. Return no prose, heading, explanation, or second code block.
+Do not use SEARCH/REPLACE blocks, patches, ellipses, or placeholders.
+
+The first two lines inside the fence must copy the exact receipt values printed
+near the top and bottom of this document:
+
+// AMORPH_CONTEXT_ID: <exact CONTEXT_ID>
+// AMORPH_END_TOKEN: <exact END_TOKEN>
+
+The next line must be `// WINDOW SIZE: <width>x<height>`. The next source declaration after that comment must be `export default function createPatchView (patchConnection)`. Place the exported factory before every class so a long response cannot lose the required entry point at the tail. Before returning, perform a literal bracket-balance check over the final JavaScript. The file must not end inside a method, template literal, class, or block. For a final `getHTML()` method inside a class, the template-literal semicolon must be followed by both closing braces: one for the method and one for the class. Prefer a shorter complete UI over extra decorative code. Hard response budget: keep a newly generated complete `index.js` under 10000 visible characters. Generate repeated controls or pads from small data arrays, keep CSS compact, and remove visual extras before approaching the budget. Never spend the budget on decoration and then omit required closers. Amorph removes the outer fence before loading the UI.
+
 You are writing the JavaScript UI for the **Amorph_FX** plugin variant.
 
 Available Amorph host bridges:
@@ -265,3 +291,5 @@ Before returning the file:
 12. **Always include `body, html { overflow: hidden; margin: 0; }` at the top of every `<style>` block** -- the WebView default `body { margin: 8px }` produces a permanent scrollbar.
 13. **Map control type to parameter semantics** -- discrete/stepped values must use clickable discrete controls; continuous values use slider/dial.
 14. **Never monkey-patch existing Amorph bridge functions** (e.g. wrapping `window.__amorphProcessMidi`) -- set your handler directly and remove it on disconnect.
+END_AMORPH_CONTEXT
+END_TOKEN: amorph-end-27424c7e4042c664

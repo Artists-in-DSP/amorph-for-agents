@@ -50,6 +50,8 @@ Section G defines the minimum creative bar every UI must clear, regardless of re
     - The pointer-drag element must be discoverable as a control: give it `role="slider"` with `aria-label`, `aria-valuemin`, `aria-valuemax`, and a maintained `aria-valuenow` (a `.knob` or `.dial` class may also be used for styling)
    - [NO] NEVER `window.addEventListener` for `pointermove` / `pointerup` -- always attach to the **element** and call `element.setPointerCapture(e.pointerId)` in `pointerdown`
    - [OK] MUST call `e.preventDefault()` inside `pointerdown` -- without it the browser scrolls the page while dragging
+   - If DSP metadata declares `mid`, drag and render in normalised position space. Use `power = Math.log((mid-min)/(max-min)) / Math.log(0.5)`, raw value `min + (max-min) * Math.pow(norm, power)`, and the inverse for display position. `mid` must land at `norm === 0.5`; never invent or use `skew`.
+   - A dB parameter remains linear in its declared dB values unless DSP explicitly declares `mid`; do not apply frequency curvature just because the unit is dB.
 
 6. **Discrete control interaction contract (buttons/stepper/toggle):**
     - Every clickable pad/toggle/choice/step starts with `<button type="button">`; `<div>`, `role="button"`, `tabindex`, and button-like classes fail. For N requested pads/choices, declare N data entries, map each to a button, and audit `querySelectorAll("button").length >= N`.
@@ -72,7 +74,7 @@ Section G defines the minimum creative bar every UI must clear, regardless of re
    5. notify host **only** when `notify === true`
 
 9. **DOM/data binding:** build controls from `.control` nodes with `data-param`, `data-min`,
-    `data-max`, `data-step`, `data-init`, `data-control` (`dial|slider|buttons|toggle|stepper`). Store in a `Map` keyed by `"paramX"`.
+    `data-max`, optional `data-mid`, `data-step`, `data-init`, `data-control` (`dial|slider|buttons|toggle|stepper`). Store in a `Map` keyed by `"paramX"`.
     - Each DSP parameter must appear on exactly ONE DOM element with `data-param`: the `.control` wrapper.
     - NEVER repeat `data-param` on knob, track, button, label, or readout descendants; use classes, `aria-*`, or `data-readout-for` there instead.
     - Before responding, verify `querySelectorAll("[data-param]").length` equals the DSP parameter count and the unique IDs are exactly `param1..paramN`.

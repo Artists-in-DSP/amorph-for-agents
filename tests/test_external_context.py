@@ -7,9 +7,11 @@ import unittest
 from html.parser import HTMLParser
 from pathlib import Path
 
+from scripts.build_external_context import compose_source
+
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260827-q"
+RELEASE = "preview-20260830-a"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -50,6 +52,8 @@ class ExternalContextTests(unittest.TestCase):
         records = self.manifest["documents"]
         self.assertEqual(2, self.manifest["schema_version"])
         self.assertEqual("static-html-v1", self.manifest["delivery_format"])
+        self.assertEqual("1.0.3175", self.manifest["cmajor_sdk_version"])
+        self.assertEqual("core-dsp-v1", self.manifest["knowledge_profile"])
         self.assertEqual(6, len(records))
         self.assertEqual(
             {
@@ -95,7 +99,8 @@ class ExternalContextTests(unittest.TestCase):
                 context_match = re.search(r"^CONTEXT_ID: (\S+)$", text, re.MULTILINE)
                 end_match = re.search(r"^END_TOKEN: (\S+)$", text, re.MULTILINE)
 
-                self.assertLess(len(raw), 30_000)
+                budget = 18_000 if record["target"] == "dsp" and record["variant"] == "midi" else 24_000
+                self.assertLessEqual(len(raw), budget)
                 self.assertNotIn(b"\x00", raw)
                 self.assertNotIn("\r", text)
                 self.assertNotIn("http://", text)
@@ -143,7 +148,7 @@ class ExternalContextTests(unittest.TestCase):
     def test_dsp_sources_cover_observed_generalised_failures(self):
         for path in sorted((ROOT / "context-src" / "v1" / "dsp").glob("*.md")):
             with self.subTest(path=path.name):
-                text = path.read_text(encoding="utf-8")
+                text = compose_source("dsp", path.stem)
                 self.assertIn("do not use `let` anywhere in the returned source", text)
                 self.assertIn("Every host parameter endpoint ID must be the exact sequential form", text)
                 self.assertIn("invalid for Amorph even if Cmajor accepts them", text)
@@ -232,6 +237,59 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("N octaves have at least `12 * N` keys", text)
                 self.assertIn('real `<button type="button">`', text)
                 self.assertIn("Remove any unrequested generic dark-dashboard styling", text)
+
+    def test_dsp_foundations_are_version_pinned_and_semantically_complete(self):
+        shared = (ROOT / "context-src" / "v1" / "shared" / "core-dsp-foundations.md").read_text(
+            encoding="utf-8"
+        )
+        for required in (
+            "Cmajor `1.0.3175`",
+            "Never emit `skew`",
+            "mid: 1000",
+            "dBtoGain",
+            "tpt::svf",
+            "true Q",
+            "PolyblepState",
+            "proportional in pitch space",
+            "sample-rate\nindependent",
+            "equal-power",
+        ):
+            self.assertIn(required, shared)
+
+        for variant in ("instrument", "fx"):
+            composed = compose_source("dsp", variant)
+            self.assertNotIn("{{CORE_DSP_FOUNDATIONS}}", composed)
+            self.assertIn("Cmajor `1.0.3175`", composed)
+            self.assertIn("Never emit `skew`", composed)
+
+        instrument = compose_source("dsp", "instrument")
+        self.assertNotIn(
+            "float cutoff = clamp (2000.0f + resonance * 4000.0f",
+            instrument,
+        )
+
+    def test_ui_sources_define_the_same_mid_mapping_as_cmajor(self):
+        for path in sorted((ROOT / "context-src" / "v1" / "ui").glob("*.md")):
+            with self.subTest(path=path.name):
+                text = path.read_text(encoding="utf-8")
+                self.assertIn("data-mid", text)
+                self.assertIn("Math.log(0.5)", text)
+                self.assertIn("Math.pow(norm, power)", text)
+                self.assertIn("A dB parameter remains linear", text)
+
+    def test_exact_sdk_semantic_fixture_set_is_complete(self):
+        fixture_root = ROOT / "tests" / "fixtures" / "cmajor"
+        fixtures = {path.name: path.read_text(encoding="utf-8") for path in fixture_root.glob("*.cmajor")}
+        self.assertEqual(
+            {"filter_gain.cmajor", "subtractive_synth.cmajor", "kick_drum.cmajor", "stereo_reverb_delay.cmajor"},
+            set(fixtures),
+        )
+        self.assertTrue(all("[[ main ]]" in source for source in fixtures.values()))
+        self.assertTrue(all("skew:" not in source for source in fixtures.values()))
+        self.assertIn("mid: 1000.0", fixtures["filter_gain.cmajor"])
+        self.assertIn("PolyblepState", fixtures["subtractive_synth.cmajor"])
+        self.assertIn("pitchEnvelope", fixtures["kick_drum.cmajor"])
+        self.assertIn("fraction", fixtures["stereo_reverb_delay.cmajor"])
 
 
 if __name__ == "__main__":

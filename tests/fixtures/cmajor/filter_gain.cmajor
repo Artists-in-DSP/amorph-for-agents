@@ -1,0 +1,40 @@
+processor FoundationFilterGain [[ main ]]
+{
+    input stream float<2> in;
+    output stream float<2> out;
+
+    input event float param1 [[ name: "Cutoff", min: 0.0, max: 20000.0,
+                                mid: 1000.0, init: 1000.0, unit: "Hz" ]];
+    input event float param2 [[ name: "Resonance", min: 0.0, max: 1.0,
+                                init: 0.25 ]];
+    input event float param3 [[ name: "Output", min: -24.0, max: 6.0,
+                                init: 0.0, unit: "dB" ]];
+
+    float cutoffHz = 1000.0f;
+    float resonanceAmount = 0.25f;
+    float outputDb = 0.0f;
+    std::filters (float)::tpt::svf::Implementation filterL, filterR;
+
+    event param1 (float v) { cutoffHz = clamp (v, 0.0f, 20000.0f); }
+    event param2 (float v) { resonanceAmount = clamp (v, 0.0f, 1.0f); }
+    event param3 (float v) { outputDb = clamp (v, -24.0f, 6.0f); }
+
+    void main()
+    {
+        filterL = std::filters (float)::tpt::svf::create (
+            std::filters (float)::tpt::svf::Mode::lowPass,
+            processor.frequency, 1000.0, 0.707);
+        filterR = filterL;
+
+        loop
+        {
+            float safeCutoff = clamp (cutoffHz, 0.0f, float (processor.frequency) * 0.45f);
+            float safeQ = 0.5f + resonanceAmount * resonanceAmount * 11.5f;
+            filterL.setFrequency (processor.frequency, float64 (safeCutoff), float64 (safeQ));
+            filterR.setFrequency (processor.frequency, float64 (safeCutoff), float64 (safeQ));
+            float gain = float (std::levels::dBtoGain (outputDb));
+            out <- float<2> (filterL.process (in[0]), filterR.process (in[1])) * gain;
+            advance();
+        }
+    }
+}
