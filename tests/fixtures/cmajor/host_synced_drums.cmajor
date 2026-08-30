@@ -1,0 +1,85 @@
+processor FoundationHostSyncedDrums [[ main ]]
+{
+    input event std::midi::Message midiIn;
+    input event float transportIn;
+    output stream float<2> out;
+
+    int transportSlot = 0;
+    bool hostPlaying = false;
+    float hostBpm = 120.0f;
+    int hostNumerator = 4;
+    int hostDenominator = 4;
+    float currentPpq = 0.0f;
+    float hostBarStartPpq = 0.0f;
+    int lastStepIndex = -1;
+    float clickEnvelope = 0.0f;
+
+    event midiIn (std::midi::Message message)
+    {
+        if (message.isNoteOn()) clickEnvelope = 1.0f;
+    }
+
+    event transportIn (float value)
+    {
+        if (transportSlot == 0)
+        {
+            bool nextPlaying = value > 0.5f;
+            if (nextPlaying != hostPlaying) lastStepIndex = -1;
+            hostPlaying = nextPlaying;
+        }
+        else if (transportSlot == 1)
+        {
+            hostBpm = clamp (value, 20.0f, 999.0f);
+        }
+        else if (transportSlot == 2)
+        {
+            hostNumerator = max (1, int (value + 0.5f));
+        }
+        else if (transportSlot == 3)
+        {
+            hostDenominator = max (1, int (value + 0.5f));
+        }
+        else if (transportSlot == 4)
+        {
+            currentPpq = value;
+        }
+        else
+        {
+            hostBarStartPpq = value;
+        }
+
+        transportSlot = (transportSlot + 1) % 6;
+    }
+
+    void main()
+    {
+        loop
+        {
+            float sampleRate = max (1.0f, float (processor.frequency));
+
+            if (hostPlaying)
+            {
+                float barPhasePpq = currentPpq - hostBarStartPpq;
+                int stepIndex = int (floor (float64 (barPhasePpq / 0.25f)));
+
+                if (stepIndex != lastStepIndex)
+                {
+                    lastStepIndex = stepIndex;
+                    clickEnvelope = 1.0f;
+                }
+
+                currentPpq += hostBpm / 60.0f / sampleRate;
+            }
+            else
+            {
+                lastStepIndex = -1;
+            }
+
+            float clickDecay = float (exp (-1.0 / float64 (0.01f * sampleRate)));
+            clickEnvelope *= clickDecay;
+            float sample = clickEnvelope * 0.25f;
+            out <- float<2> (sample, sample);
+            advance();
+        }
+    }
+}

@@ -22,8 +22,8 @@ def main() -> int:
         raise SystemExit(f"invalid Cmajor SDK/runtime path: {sdk}")
 
     fixtures = sorted((ROOT / "tests" / "fixtures" / "cmajor").glob("*.cmajor"))
-    if len(fixtures) != 4:
-        raise SystemExit(f"expected 4 semantic fixtures, found {len(fixtures)}")
+    if len(fixtures) != 5:
+        raise SystemExit(f"expected 5 semantic fixtures, found {len(fixtures)}")
 
     with tempfile.TemporaryDirectory(prefix="amorph-cmajor-fixtures-") as temp:
         compiler = Path(temp) / "cmajor_fixture_compiler"

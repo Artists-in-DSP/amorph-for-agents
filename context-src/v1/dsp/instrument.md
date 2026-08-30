@@ -41,6 +41,8 @@ The MIDI endpoint is always `midiIn`. Match note-off with a stored `int noteNumb
 
 {{CORE_DSP_FOUNDATIONS}}
 
+{{HOST_TRANSPORT_CONTRACT}}
+
 ### Instrument-specific standard-library facts
 
 - `std::notes::noteToFrequency(n)` converts MIDI note to Hz.

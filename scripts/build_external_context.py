@@ -14,7 +14,7 @@ from typing import Dict, Iterable, List, Tuple
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / "context-src" / "v1"
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
-DEFAULT_RELEASE = "preview-20260830-a"
+DEFAULT_RELEASE = "preview-20260830-b"
 CMAJOR_SDK_VERSION = "1.0.3175"
 KNOWLEDGE_PROFILE = "core-dsp-v1"
 
@@ -42,15 +42,24 @@ def normalise_source(path: Path) -> str:
 
 def compose_source(target: str, variant: str) -> str:
     source = normalise_source(SOURCE_ROOT / target / f"{variant}.md")
-    token = "{{CORE_DSP_FOUNDATIONS}}"
+    core_token = "{{CORE_DSP_FOUNDATIONS}}"
+    transport_token = "{{HOST_TRANSPORT_CONTRACT}}"
 
     if target == "dsp" and variant in ("instrument", "fx"):
-        if source.count(token) != 1:
-            raise ValueError(f"{target}/{variant} must contain exactly one {token}")
+        if source.count(core_token) != 1:
+            raise ValueError(f"{target}/{variant} must contain exactly one {core_token}")
         shared = normalise_source(SOURCE_ROOT / "shared" / "core-dsp-foundations.md")
-        source = source.replace(token, shared.rstrip())
-    elif token in source:
-        raise ValueError(f"unexpected {token} in {target}/{variant}")
+        source = source.replace(core_token, shared.rstrip())
+    elif core_token in source:
+        raise ValueError(f"unexpected {core_token} in {target}/{variant}")
+
+    if target == "dsp":
+        if source.count(transport_token) != 1:
+            raise ValueError(f"{target}/{variant} must contain exactly one {transport_token}")
+        transport = normalise_source(SOURCE_ROOT / "shared" / "host-transport.md")
+        source = source.replace(transport_token, transport.rstrip())
+    elif transport_token in source:
+        raise ValueError(f"unexpected {transport_token} in {target}/{variant}")
 
     return source
 
