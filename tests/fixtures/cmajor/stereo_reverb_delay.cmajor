@@ -1,0 +1,44 @@
+processor FoundationStereoReverbDelay [[ main ]]
+{
+    input stream float<2> in;
+    output stream float<2> out;
+    input event float param1 [[ name: "Time", min: 20.0, max: 900.0, mid: 180.0,
+                                init: 180.0, unit: "ms" ]];
+    input event float param2 [[ name: "Feedback", min: 0.0, max: 0.92, init: 0.55 ]];
+    input event float param3 [[ name: "Mix", min: 0.0, max: 100.0, init: 25.0, unit: "%" ]];
+
+    float timeMs = 180.0f;
+    float feedback = 0.55f;
+    float mixPercent = 25.0f;
+    float[48000] delayL, delayR;
+    int writeIndex = 0;
+
+    event param1 (float v) { timeMs = clamp (v, 20.0f, 900.0f); }
+    event param2 (float v) { feedback = clamp (v, 0.0f, 0.92f); }
+    event param3 (float v) { mixPercent = clamp (v, 0.0f, 100.0f); }
+
+    void main()
+    {
+        loop
+        {
+            float delayFrames = clamp (timeMs * 0.001f * float (processor.frequency), 1.0f, 47998.0f);
+            float readPosition = float (writeIndex) - delayFrames;
+            if (readPosition < 0.0f) readPosition += 48000.0f;
+            int indexA = int (readPosition);
+            int indexB = (indexA + 1) % 48000;
+            float fraction = readPosition - float (indexA);
+            float wetL = delayL.at (indexA) + (delayL.at (indexB) - delayL.at (indexA)) * fraction;
+            float wetR = delayR.at (indexA) + (delayR.at (indexB) - delayR.at (indexA)) * fraction;
+            delayL.at (writeIndex) = in[0] + wetR * feedback;
+            delayR.at (writeIndex) = in[1] + wetL * feedback;
+            writeIndex = (writeIndex + 1) % 48000;
+
+            float mix = mixPercent * 0.01f;
+            float theta = mix * float (pi) * 0.5f;
+            float dryGain = float (cos (float64 (theta)));
+            float wetGain = float (sin (float64 (theta)));
+            out <- in * dryGain + float<2> (wetL, wetR) * wetGain;
+            advance();
+        }
+    }
+}

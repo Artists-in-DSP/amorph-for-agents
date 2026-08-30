@@ -1,0 +1,43 @@
+processor FoundationKickDrum [[ main ]]
+{
+    output stream float<2> out;
+    input event float param1 [[ name: "Trigger", min: 0.0, max: 1.0, init: 0.0 ]];
+    input event float param2 [[ name: "Tune", min: 35.0, max: 90.0, mid: 55.0,
+                                init: 55.0, unit: "Hz" ]];
+    input event float param3 [[ name: "Decay", min: 40.0, max: 1500.0, mid: 300.0,
+                                init: 350.0, unit: "ms" ]];
+
+    float tuneHz = 55.0f;
+    float decayMs = 350.0f;
+    float envelope = 0.0f;
+    float pitchEnvelope = 0.0f;
+    std::oscillators::PolyblepState oscillator;
+
+    event param1 (float v)
+    {
+        if (v > 0.5f)
+        {
+            envelope = 1.0f;
+            pitchEnvelope = 1.0f;
+        }
+    }
+    event param2 (float v) { tuneHz = clamp (v, 35.0f, 90.0f); }
+    event param3 (float v) { decayMs = clamp (v, 40.0f, 1500.0f); }
+
+    void main()
+    {
+        loop
+        {
+            float decaySeconds = max (0.04f, decayMs * 0.001f);
+            float ampCoefficient = float (exp (-1.0 / float64 (decaySeconds * float (processor.frequency))));
+            float pitchCoefficient = float (exp (-1.0 / float64 (0.025f * float (processor.frequency))));
+            envelope *= ampCoefficient;
+            pitchEnvelope *= pitchCoefficient;
+            float instantaneousHz = tuneHz * float (pow (2.0, float64 (pitchEnvelope * 2.0f)));
+            oscillator.setFrequency (processor.frequency, float64 (instantaneousHz));
+            float sample = oscillator.nextSine() * envelope * 0.7f;
+            out <- float<2> (sample, sample);
+            advance();
+        }
+    }
+}
