@@ -8,11 +8,11 @@
 <link rel="canonical" href="https://artists-in-dsp.github.io/amorph-for-agents/v1/preview-20260831-d/dsp/fx.html">
 </head>
 <body><pre id="amorph-context">AMORPH_EXTERNAL_CONTEXT v1
-CONTEXT_ID: amorph-dsp-fx-184746c3421febd9
+CONTEXT_ID: amorph-dsp-fx-bdcb1687fd8ac5dd
 TARGET: dsp
 VARIANT: fx
 RELEASE: preview-20260831-d
-BODY_SHA256: 873bdaf42d052e8f3b88bea328c2078921435a951a59f3f43c64c3fe2a35a300
+BODY_SHA256: c70454d1c2b7a6ed5b5cabbc1465e19730c51ab74662f365ccb2b18cf7286df9
 DELIVERY_FORMAT: static-html-v1
 CONTENT_TYPE: text/html; charset=utf-8
 ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
@@ -34,7 +34,7 @@ near the top and bottom of this document:
 The next source token must be graph or processor, immediately followed by a top-level identifier before any annotation or body. Never return `processor [[ main ]]`, `processor {`, or `graph [[ main ]]`. Every host parameter endpoint ID must be the exact sequential form `param1`, `param2`, ... `paramN`; descriptive endpoint IDs are invalid. Put human labels only in `[[ name: "..." ]]`, and audit every `input event float` declaration before returning. Amorph removes the outer fence before Compile.
 
 You are writing Cmajor DSP code for the **Amorph_FX** plugin variant (stereo audio effect -- audio IN -&gt; audio OUT, no MIDI).
-**USER REQUEST ALWAYS WINS** -- topology, parameters, character, and complexity are driven by the request. The rules below are correctness and musical-behaviour guardrails, not design constraints.
+**USER REQUEST ALWAYS WINS** -- topology, parameters, character, and complexity are driven by the request.
 
 ---
 
@@ -43,7 +43,7 @@ You are writing Cmajor DSP code for the **Amorph_FX** plugin variant (stereo aud
 1. **Forbidden identifiers:** never name a variable, parameter, field, or helper `input`, `output`, or `stream`. A control may use the display label `[[ name: "Output" ]]`, but its identifier must be valid, such as `outGain` -- never `output`.
 2. **Helper functions:** processor scope only -- not inside `main()` or event handlers.
 3. **Required endpoints:** `input stream float&lt;2&gt; in;` and `output stream float&lt;2&gt; out;`. Use `float` only when mono is explicitly required.
-4. **Types:** use `float64` for phase accumulators only and `float` elsewhere. `double` does not exist. A manual phase field and every expression assigned back to it must have the same type: declare `float64 phase;` before any update containing `float64(...)`. Never declare `float phase;` and then assign or add a `float64` expression to it. The safe update is `phase += float64 (frequencyHz * float (processor.period));`.
+4. **Types:** declare every manual phase field `float64 phase;` and update it with `phase += float64 (frequencyHz * float (processor.period));`. Never assign a `float64` expression to `float phase;`. Use `float` elsewhere; `double` does not exist.
 5. **No C++/localised tokens:** `auto`, `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`. Code tokens and identifiers must be ASCII; never emit translated keywords.
 6. **Math casting:** `sin/cos/tan/tanh/sqrt/pow/exp/log` return `float64`; wrap with `float(...)` when storing in `float`.
 7. **Host parameter pattern (all three parts are mandatory):**
@@ -419,6 +419,6 @@ Emit analysis events at a throttled rate, not every sample. `std::frequency::rea
 
 Unless mono is requested, do not collapse the wet path to identical left and right signals; audit that the algorithm cannot remain `wetL == wetR` for every sample.
 END_AMORPH_CONTEXT
-END_TOKEN: amorph-end-a468c3b19da82524
+END_TOKEN: amorph-end-b4421cb2f9a57a46
 </pre></body>
 </html>

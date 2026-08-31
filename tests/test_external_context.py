@@ -11,7 +11,7 @@ from scripts.build_external_context import compose_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260831-c"
+RELEASE = "preview-20260831-d"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -191,9 +191,8 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("every `/` and `%` divisor", text)
                 self.assertIn("syntax-based and does not infer safety from an outer branch", text)
                 self.assertIn("inspect every literal `/` and `%` occurrence", text)
-                self.assertIn("manual phase field and every expression assigned back to it must have the same type", text)
-                self.assertIn("Never declare `float phase;`", text)
-                self.assertIn("declare `float64 phase;`", text)
+                self.assertIn("declare every manual phase field `float64 phase;`", text)
+                self.assertIn("Never assign a `float64` expression to `float phase;`", text)
                 self.assertIn("input event float transportIn;", text)
                 self.assertIn("Amorph does not populate `std::timeline::*` endpoints", text)
                 self.assertIn("play, bpm, numerator, denominator, ppq, barStart", text)
@@ -228,17 +227,14 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("`float(max(1, activeVoiceCount))`", instrument)
 
         self.assertNotIn("float64 (voices[i].noteFreq) * processor.period", instrument)
-        self.assertIn(
-            "float64 (voices[i].noteFreq * float (processor.period))",
-            instrument,
-        )
+        self.assertIn("float64 (frequencyHz * float (processor.period))", instrument)
         self.assertIn("Never poll `midiIn.available()`", instrument)
         self.assertIn("`midiIn.read()` in `main`", instrument)
         self.assertIn("Choose exactly one MIDI architecture", instrument)
-        self.assertIn("Never connect `std::midi::MPEConverter` to a processor endpoint typed `std::midi::Message`", instrument)
+        self.assertIn("Never connect `MPEConverter` to a Message endpoint", instrument)
         self.assertIn("`midiIn -> std::midi::MPEConverter -> synth.midiIn` is invalid", instrument)
-        self.assertIn("count the existing `paramN` declarations", instrument)
-        self.assertIn("a requested new control must appear as `param5` in all four places", instrument)
+        self.assertIn("Count existing `paramN` declarations", instrument)
+        self.assertIn("the new control must be `param5` in all four places", instrument)
 
         midi = (ROOT / "context-src" / "v1" / "dsp" / "midi.md").read_text(encoding="utf-8")
         self.assertIn("`% heldCount` is forbidden", midi)
