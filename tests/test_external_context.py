@@ -11,7 +11,7 @@ from scripts.build_external_context import compose_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260831-b"
+RELEASE = "preview-20260831-c"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -165,6 +165,8 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("`processor [[ main ]]`", text)
                 self.assertIn("`processor {`", text)
                 self.assertIn("follows the name; it never replaces it", text)
+                self.assertIn("`auto`", text)
+                self.assertIn("identifiers must be ASCII", text)
                 self.assertNotIn("`select(cond, a, b)`", text)
                 self.assertIn("Vector-only masked selection", text)
                 self.assertIn("For scalar values use `cond ? a : b`", text)
@@ -227,6 +229,8 @@ class ExternalContextTests(unittest.TestCase):
             "float64 (voices[i].noteFreq) * float (processor.period)",
             instrument,
         )
+        self.assertIn("Never poll `midiIn.available()`", instrument)
+        self.assertIn("`midiIn.read()` in `main`", instrument)
 
         fx = (ROOT / "context-src" / "v1" / "dsp" / "fx.md").read_text(encoding="utf-8")
         self.assertIn("do not collapse the wet path to identical left and right signals", fx)
@@ -241,6 +245,8 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("line 3", text)
                 self.assertIn("After the two required receipt comments", text)
                 self.assertIn("factory declaration comes before every class", text)
+                self.assertIn("`view.patchConnection = patchConnection`", text)
+                self.assertIn("unless the returned element received this assignment", text)
                 self.assertIn(
                     "The next source declaration MUST be `export default function createPatchView (patchConnection)`",
                     text,

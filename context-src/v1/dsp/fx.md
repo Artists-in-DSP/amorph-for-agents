@@ -9,7 +9,7 @@ You are writing Cmajor DSP code for the **Amorph_FX** plugin variant (stereo aud
 2. **Helper functions:** processor scope only -- not inside `main()` or event handlers.
 3. **Required endpoints:** `input stream float<2> in;` and `output stream float<2> out;`. Use `float` only when mono is explicitly required.
 4. **Types:** use `float64` for phase accumulators only and `float` elsewhere. `double` does not exist.
-5. **No C++ tokens:** `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`.
+5. **No C++/localised tokens:** `auto`, `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`. Code tokens and identifiers must be ASCII; never emit translated keywords.
 6. **Math casting:** `sin/cos/tan/tanh/sqrt/pow/exp/log` return `float64`; wrap with `float(...)` when storing in `float`.
 7. **Host parameter pattern (all three parts are mandatory):**
 
