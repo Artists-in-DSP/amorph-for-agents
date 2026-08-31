@@ -30,6 +30,7 @@ Section G defines the minimum creative bar every UI must clear, regardless of re
    - Immediately after the receipt comments and `// WINDOW SIZE`, declare `export default function createPatchView (patchConnection)`
    - The factory declaration comes before every class; it may reference the patch-view class because the factory is called only after module evaluation
    - The factory must return an actual `HTMLElement` instance. Never return a class or constructor from `createPatchView`; define or reuse the custom element and return `new (window.customElements.get(name))()`.
+   - Before returning that element, assign `view.patchConnection = patchConnection`. Never call a `patchConnection` method from `connectedCallback()` unless the returned element received this assignment.
    - `class ParameterControl` (or multiple controls such as `DialControl`, `SliderControl`, `ButtonGroupControl`)
    - `class <Name>PatchView extends HTMLElement`
 
