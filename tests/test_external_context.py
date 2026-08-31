@@ -99,7 +99,10 @@ class ExternalContextTests(unittest.TestCase):
                 context_match = re.search(r"^CONTEXT_ID: (\S+)$", text, re.MULTILINE)
                 end_match = re.search(r"^END_TOKEN: (\S+)$", text, re.MULTILINE)
 
-                budget = 18_000 if record["target"] == "dsp" and record["variant"] == "midi" else 24_000
+                # MIDI now carries the same complete host-transport and named
+                # musical-division contract as audio variants. Keep it below
+                # 20 KB while the richer Instrument/FX documents stay below 24 KB.
+                budget = 20_000 if record["target"] == "dsp" and record["variant"] == "midi" else 24_000
                 self.assertLessEqual(len(raw), budget)
                 self.assertNotIn(b"\x00", raw)
                 self.assertNotIn("\r", text)
