@@ -11,7 +11,7 @@ from scripts.build_external_context import compose_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260830-b"
+RELEASE = "preview-20260831-a"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -99,7 +99,10 @@ class ExternalContextTests(unittest.TestCase):
                 context_match = re.search(r"^CONTEXT_ID: (\S+)$", text, re.MULTILINE)
                 end_match = re.search(r"^END_TOKEN: (\S+)$", text, re.MULTILINE)
 
-                budget = 18_000 if record["target"] == "dsp" and record["variant"] == "midi" else 24_000
+                # MIDI now carries the same complete host-transport and named
+                # musical-division contract as audio variants. Keep it below
+                # 20 KB while the richer Instrument/FX documents stay below 24 KB.
+                budget = 20_000 if record["target"] == "dsp" and record["variant"] == "midi" else 24_000
                 self.assertLessEqual(len(raw), budget)
                 self.assertNotIn(b"\x00", raw)
                 self.assertNotIn("\r", text)
@@ -186,10 +189,18 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("Amorph does not populate `std::timeline::*` endpoints", text)
                 self.assertIn("play, bpm, numerator, denominator, ppq, barStart", text)
                 self.assertIn("currentPpq = value;", text)
+                self.assertIn("if (value < currentPpq) lastStepIndex = -1;", text)
+                self.assertIn("if (value != hostBarStartPpq) lastStepIndex = -1;", text)
+                self.assertIn("same local step", text)
                 self.assertIn("Apply a valid host BPM immediately", text)
                 self.assertIn("periodSeconds = divisionQuarterNotes * 60.0f", text)
                 self.assertIn("`delayTimeParam * 0.25f`", text)
                 self.assertIn("**not BPM sync**", text)
+                self.assertIn('text: "1/16|1/8T|1/8|1/4T|1/4|1/2|1/1|1 bar"', text)
+                self.assertIn("never arbitrary values", text)
+                self.assertIn("0.121413", text)
+                self.assertIn("getDivisionQuarterNotes()", text)
+                self.assertIn("not phase-locked", text)
                 self.assertNotIn("search_components(\"transport ppq parser\")", text)
                 self.assertNotIn("Patches/StartupMidiLive/dsp.cmajor", text)
 
@@ -307,8 +318,14 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("fraction", fixtures["stereo_reverb_delay.cmajor"])
         self.assertIn("input event float transportIn;", fixtures["host_synced_drums.cmajor"])
         self.assertIn("currentPpq = value;", fixtures["host_synced_drums.cmajor"])
+        self.assertIn("value < currentPpq", fixtures["host_synced_drums.cmajor"])
+        self.assertIn("value != hostBarStartPpq", fixtures["host_synced_drums.cmajor"])
         self.assertNotIn("std::timeline::", fixtures["host_synced_drums.cmajor"])
+        self.assertIn('text: "1/16|1/8T|1/8|1/4T|1/4|1/2|1/1|1 bar"', fixtures["host_synced_drums.cmajor"])
+        self.assertIn("currentPpq - hostBarStartPpq", fixtures["host_synced_drums.cmajor"])
+        self.assertIn("lastStepIndex = -1", fixtures["host_synced_drums.cmajor"])
         self.assertIn("input event float transportIn;", fixtures["tempo_synced_delay.cmajor"])
+        self.assertIn("text:", fixtures["tempo_synced_delay.cmajor"])
         self.assertIn("60.0f / max (20.0f, hostBpm)", fixtures["tempo_synced_delay.cmajor"])
         self.assertNotIn("delayTimeParam * 0.25f", fixtures["tempo_synced_delay.cmajor"])
 

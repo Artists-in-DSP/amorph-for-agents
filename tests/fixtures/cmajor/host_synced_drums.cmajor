@@ -2,6 +2,8 @@ processor FoundationHostSyncedDrums [[ main ]]
 {
     input event std::midi::Message midiIn;
     input event float transportIn;
+    input event float param1 [[ name: "Rate", min: 0, max: 7, init: 0, step: 1,
+                                text: "1/16|1/8T|1/8|1/4T|1/4|1/2|1/1|1 bar" ]];
     output stream float<2> out;
 
     int transportSlot = 0;
@@ -12,11 +14,17 @@ processor FoundationHostSyncedDrums [[ main ]]
     float currentPpq = 0.0f;
     float hostBarStartPpq = 0.0f;
     int lastStepIndex = -1;
-    float clickEnvelope = 0.0f;
+    int divisionIndex = 0;
 
     event midiIn (std::midi::Message message)
     {
-        if (message.isNoteOn()) clickEnvelope = 1.0f;
+        // A real drum instrument would update held/trigger state here.
+    }
+
+    event param1 (float value)
+    {
+        divisionIndex = clamp (int (value + 0.5f), 0, 7);
+        lastStepIndex = -1;
     }
 
     event transportIn (float value)
@@ -41,14 +49,28 @@ processor FoundationHostSyncedDrums [[ main ]]
         }
         else if (transportSlot == 4)
         {
+            if (value < currentPpq) lastStepIndex = -1;
             currentPpq = value;
         }
         else
         {
+            if (value != hostBarStartPpq) lastStepIndex = -1;
             hostBarStartPpq = value;
         }
 
         transportSlot = (transportSlot + 1) % 6;
+    }
+
+    float getDivisionQuarterNotes()
+    {
+        if (divisionIndex == 0) return 0.25f;
+        if (divisionIndex == 1) return 1.0f / 3.0f;
+        if (divisionIndex == 2) return 0.5f;
+        if (divisionIndex == 3) return 2.0f / 3.0f;
+        if (divisionIndex == 4) return 1.0f;
+        if (divisionIndex == 5) return 2.0f;
+        if (divisionIndex == 6) return 4.0f;
+        return float (hostNumerator) * 4.0f / float (max (1, hostDenominator));
     }
 
     void main()
@@ -56,16 +78,18 @@ processor FoundationHostSyncedDrums [[ main ]]
         loop
         {
             float sampleRate = max (1.0f, float (processor.frequency));
+            bool triggerThisSample = false;
 
             if (hostPlaying)
             {
                 float barPhasePpq = currentPpq - hostBarStartPpq;
-                int stepIndex = int (floor (float64 (barPhasePpq / 0.25f)));
+                float stepLength = max (0.0001f, getDivisionQuarterNotes());
+                int stepIndex = int (floor (float64 (barPhasePpq / stepLength)));
 
                 if (stepIndex != lastStepIndex)
                 {
                     lastStepIndex = stepIndex;
-                    clickEnvelope = 1.0f;
+                    triggerThisSample = true;
                 }
 
                 currentPpq += hostBpm / 60.0f / sampleRate;
@@ -75,9 +99,7 @@ processor FoundationHostSyncedDrums [[ main ]]
                 lastStepIndex = -1;
             }
 
-            float clickDecay = float (exp (-1.0 / float64 (0.01f * sampleRate)));
-            clickEnvelope *= clickDecay;
-            float sample = clickEnvelope * 0.25f;
+            float sample = triggerThisSample ? 0.25f : 0.0f;
             out <- float<2> (sample, sample);
             advance();
         }

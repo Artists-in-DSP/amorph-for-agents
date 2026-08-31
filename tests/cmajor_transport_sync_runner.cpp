@@ -118,13 +118,81 @@ bool runScenario (const std::string& sourcePath,
               << " measured=" << peakFrame << " peak=" << peak << "\n";
     return passed;
 }
+
+bool runClockScenario (const std::string& sourcePath,
+                       const std::string& source,
+                       uint32_t sessionID)
+{
+    cmaj::DiagnosticMessageList messages;
+    cmaj::Program program;
+    auto engine = cmaj::Engine::create();
+    engine.setBuildSettings (cmaj::BuildSettings().setFrequency (sampleRate).setSessionID (sessionID));
+    if (! program.parse (messages, sourcePath, source)
+        || ! engine.load (messages, program, {}, {}))
+    {
+        std::cerr << "FAIL PPQ clock compile\n" << messages.toString() << "\n";
+        return false;
+    }
+
+    const auto outputHandle = engine.getEndpointHandle ("out");
+    const auto transportHandle = engine.getEndpointHandle ("transportIn");
+    const auto divisionHandle = engine.getEndpointHandle ("param1");
+    if (! engine.link (messages))
+    {
+        std::cerr << "FAIL PPQ clock link\n" << messages.toString() << "\n";
+        return false;
+    }
+
+    auto performer = engine.createPerformer();
+    bool allPassed = true;
+
+    auto packet = [&] (const char* name, bool playing, float bpm,
+                       int numerator, int denominator, float ppq,
+                       float barStart, bool expectedTrigger,
+                       int division = -1)
+    {
+        performer.setBlockSize (1);
+        if (division >= 0)
+            performer.addInputEvent (divisionHandle, 0, float (division));
+        performer.addInputEvent (transportHandle, 0, playing ? 1.0f : 0.0f);
+        performer.addInputEvent (transportHandle, 0, bpm);
+        performer.addInputEvent (transportHandle, 0, float (numerator));
+        performer.addInputEvent (transportHandle, 0, float (denominator));
+        performer.addInputEvent (transportHandle, 0, ppq);
+        performer.addInputEvent (transportHandle, 0, barStart);
+        performer.advance();
+
+        float output[2] = {};
+        performer.copyOutputFrames (outputHandle, output, 1);
+        const bool triggered = std::abs (output[0]) > 0.2f || std::abs (output[1]) > 0.2f;
+        const bool passed = triggered == expectedTrigger;
+        std::cout << (passed ? "PASS " : "FAIL ") << name
+                  << " ppq=" << ppq << " expectedTrigger=" << expectedTrigger
+                  << " measured=" << triggered << "\n";
+        allPassed = passed && allPassed;
+    };
+
+    packet ("grid start", true, 120.0f, 4, 4, 0.0f, 0.0f, true, 0);
+    packet ("same sixteenth", true, 120.0f, 4, 4, 0.10f, 0.0f, false);
+    packet ("next sixteenth", true, 120.0f, 4, 4, 0.25f, 0.0f, true);
+    packet ("forward seek re-lock", true, 120.0f, 4, 4, 8.0f, 8.0f, true);
+    packet ("same post-seek step", true, 120.0f, 4, 4, 8.10f, 8.0f, false);
+    packet ("loop backward re-lock", true, 120.0f, 4, 4, 0.0f, 0.0f, true);
+    packet ("stopped transport", false, 120.0f, 4, 4, 0.10f, 0.0f, false);
+    packet ("restart re-lock", true, 120.0f, 4, 4, 0.10f, 0.0f, true);
+    packet ("three-four bar start", true, 120.0f, 3, 4, 12.0f, 12.0f, true, 7);
+    packet ("inside three-four bar", true, 120.0f, 3, 4, 14.0f, 12.0f, false);
+    packet ("next three-four bar", true, 120.0f, 3, 4, 15.0f, 15.0f, true);
+    return allPassed;
+}
 }
 
 int main (int argc, char** argv)
 {
-    if (argc != 3)
+    if (argc != 4)
     {
-        std::cerr << "usage: cmajor_transport_sync_runner <libCmajPerformer> <fixture>\n";
+        std::cerr << "usage: cmajor_transport_sync_runner <libCmajPerformer>"
+                     " <delay-fixture> <clock-fixture>\n";
         return 2;
     }
 
@@ -155,5 +223,15 @@ int main (int argc, char** argv)
     uint32_t sessionID = 9000;
     for (const auto& scenario : scenarios)
         allPassed = runScenario (argv[2], buffer.str(), scenario, sessionID++) && allPassed;
+
+    std::ifstream clockInput (argv[3], std::ios::binary);
+    std::ostringstream clockBuffer;
+    clockBuffer << clockInput.rdbuf();
+    if (! clockInput.is_open())
+    {
+        std::cerr << "failed to read fixture: " << argv[3] << "\n";
+        return 2;
+    }
+    allPassed = runClockScenario (argv[3], clockBuffer.str(), sessionID++) && allPassed;
     return allPassed ? 0 : 1;
 }
