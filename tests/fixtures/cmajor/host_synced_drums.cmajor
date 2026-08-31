@@ -11,8 +11,8 @@ processor FoundationHostSyncedDrums [[ main ]]
     float hostBpm = 120.0f;
     int hostNumerator = 4;
     int hostDenominator = 4;
-    float currentPpq = 0.0f;
-    float hostBarStartPpq = 0.0f;
+    float64 currentPpq = 0.0;
+    float64 hostBarStartPpq = 0.0;
     int lastStepIndex = -1;
     int divisionIndex = 0;
 
@@ -49,12 +49,11 @@ processor FoundationHostSyncedDrums [[ main ]]
         }
         else if (transportSlot == 4)
         {
-            currentPpq = value;
+            currentPpq = float64 (value);
         }
         else
         {
-            if (abs (value - hostBarStartPpq) > 0.001f) lastStepIndex = -1;
-            hostBarStartPpq = value;
+            hostBarStartPpq = float64 (value);
         }
 
         transportSlot = (transportSlot + 1) % 6;
@@ -76,14 +75,12 @@ processor FoundationHostSyncedDrums [[ main ]]
     {
         loop
         {
-            float sampleRate = max (1.0f, float (processor.frequency));
             bool triggerThisSample = false;
 
             if (hostPlaying)
             {
-                float barPhasePpq = currentPpq - hostBarStartPpq;
-                float stepLength = max (0.0001f, getDivisionQuarterNotes());
-                int stepIndex = int (floor (float64 (barPhasePpq / stepLength)));
+                float64 stepLength = max (0.0001, float64 (getDivisionQuarterNotes()));
+                int stepIndex = int (floor (currentPpq / stepLength));
 
                 if (stepIndex != lastStepIndex)
                 {
@@ -91,7 +88,7 @@ processor FoundationHostSyncedDrums [[ main ]]
                     triggerThisSample = true;
                 }
 
-                currentPpq += hostBpm / 60.0f / sampleRate;
+                currentPpq += float64 (hostBpm) / 60.0 / processor.frequency;
             }
             else
             {

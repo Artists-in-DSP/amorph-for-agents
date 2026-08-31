@@ -1,0 +1,333 @@
+AMORPH_EXTERNAL_CONTEXT v1
+CONTEXT_ID: amorph-ui-instrument-bb55ea5d6b503d43
+TARGET: ui
+VARIANT: instrument
+RELEASE: preview-20260831-f
+BODY_SHA256: aaad8a6370cd48b41c653939656ffe82c35b2912fcc3e28e024e5f2b3b6f970e
+DELIVERY_FORMAT: static-html-v1
+CONTENT_TYPE: text/html; charset=utf-8
+ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
+FAILURE_CONTRACT: return exactly CONTEXT_UNAVAILABLE when retrieval is incomplete
+
+BEGIN_AMORPH_CONTEXT
+RESPONSE CONTRACT — REQUIRED
+
+Return the complete corrected `index.js` in exactly one fenced code block
+tagged `javascript`. Return no prose, heading, explanation, or second code block.
+Do not use SEARCH/REPLACE blocks, patches, ellipses, or placeholders.
+
+The first two lines inside the fence must copy the exact receipt values printed
+near the top and bottom of this document:
+
+// AMORPH_CONTEXT_ID: <exact CONTEXT_ID>
+// AMORPH_END_TOKEN: <exact END_TOKEN>
+
+The next line must be `// WINDOW SIZE: <width>x<height>`. The next source declaration after that comment must be `export default function createPatchView (patchConnection)`. Place the exported factory before every class so a long response cannot lose the required entry point at the tail. Before returning, perform a literal bracket-balance check over the final JavaScript. The file must not end inside a method, template literal, class, or block. For a final `getHTML()` method inside a class, the template-literal semicolon must be followed by both closing braces: one for the method and one for the class. Prefer a shorter complete UI over extra decorative code. Hard response budget: keep a newly generated complete `index.js` under 10000 visible characters. Generate repeated controls or pads from small data arrays, keep CSS compact, and remove visual extras before approaching the budget. Never spend the budget on decoration and then omit required closers. Amorph removes the outer fence before loading the UI.
+
+You are writing the JavaScript UI for the **Amorph_Instrument** plugin variant.
+
+Available Amorph host bridges:
+| Bridge | Available |
+|---|---|
+| `window.__amorphProcessMidi` (MIDI INPUT) | [OK] Yes |
+| `window.__amorphProcessMidiOut` | [NO] No -- Instrument has no MIDI output |
+| `patchConnection.sendEventOrValue(paramX, v)` | [OK] Yes |
+| `patchConnection.addEndpointListener(id, fn)` | [OK] Yes |
+| Spectrum output (`spectrumOut`) | [OK] If patch emits it |
+
+**USER REQUEST ALWAYS WINS -- VISUAL STYLE IS 100% DETERMINED BY THE REQUEST.**
+The rules below cover **functional correctness only**.
+
+If the request mentions ANY aesthetic preference, honour it exactly and fully.
+Section G defines the minimum creative bar every UI must clear, regardless of request specificity.
+
+---
+
+## A) HARD RULES (read before anything else)
+
+1. **Language / stack:**
+   - Plain JavaScript (ES6+) -- ES module syntax
+   - Web Components API (`class ... extends HTMLElement`)
+   - [NO] No TypeScript, React, Vue, Svelte, or any external UI library
+
+2. **Parameter endpoint IDs:** must be exactly `param1`, `param2`, ... -- never invent custom IDs.
+
+3. **Required module structure:**
+   - Immediately after the receipt comments and `// WINDOW SIZE`, declare `export default function createPatchView (patchConnection)`
+   - The factory declaration comes before every class; it may reference the patch-view class because the factory is called only after module evaluation
+   - The factory must return an actual `HTMLElement` instance. Never return a class or constructor from `createPatchView`; define or reuse the custom element and return `new (window.customElements.get(name))()`.
+   - Before returning that element, assign `view.patchConnection = patchConnection`. Never call a `patchConnection` method from `connectedCallback()` unless the returned element received this assignment.
+   - `class ParameterControl` (or multiple controls such as `DialControl`, `SliderControl`, `ButtonGroupControl`)
+   - `class <Name>PatchView extends HTMLElement`
+
+4. **Control-type selection (CRITICAL):**
+    - Choose control type from DSP semantics, not aesthetics
+    - **Discrete / stepped params** (integers, enums, mode selectors, waveform index, on/off)
+      -> use **buttons / segmented controls / stepper (+/-) / toggle / select**
+    - **Continuous params** (float ranges)
+      -> use **slider or dial**
+    - [NO] Do NOT represent clearly discrete states with a free-running dial
+    - [OK] If `step >= 1` or values are enumerated, default to clickable discrete controls
+
+5. **Continuous control interaction contract (dial/slider):**
+   - `pointerdown` / `pointermove` / `pointerup` / `pointercancel`
+   - `dblclick` resets to default
+   - Vertical drag delta (`startY - clientY`); Shift = fine mode
+   - Always clamp + quantize before applying
+    - The pointer-drag element must be discoverable as a control: give it `role="slider"` with `aria-label`, `aria-valuemin`, `aria-valuemax`, and a maintained `aria-valuenow` (a `.knob` or `.dial` class may also be used for styling)
+   - [NO] NEVER `window.addEventListener` for `pointermove` / `pointerup` -- always attach to the **element** and call `element.setPointerCapture(e.pointerId)` in `pointerdown`
+   - [OK] MUST call `e.preventDefault()` inside `pointerdown` -- without it the browser scrolls the page while dragging
+   - If DSP metadata declares `mid`, drag and render in normalised position space. Use `power = Math.log((mid-min)/(max-min)) / Math.log(0.5)`, raw value `min + (max-min) * Math.pow(norm, power)`, and the inverse for display position. `mid` must land at `norm === 0.5`; never invent or use `skew`.
+   - A dB parameter remains linear in its declared dB values unless DSP explicitly declares `mid`; do not apply frequency curvature just because the unit is dB.
+
+6. **Discrete control interaction contract (buttons/stepper/toggle):**
+    - Every clickable pad/toggle/choice/step starts with `<button type="button">`; `<div>`, `role="button"`, `tabindex`, and button-like classes fail. For N requested pads/choices, declare N data entries, map each to a button, and audit `querySelectorAll("button").length >= N`.
+    - Click/tap changes exactly one valid step/state
+    - Every action must map to a valid value in DSP range
+    - Provide clear selected/active visual state
+    - Optional keyboard support: Enter/Space toggles, Arrow keys step ±1
+
+7. **Host communication contract:**
+   - User edits -> `patchConnection.sendEventOrValue("paramX", value)`
+   - Host updates -> `patchConnection.addAllParameterListener(listener)`
+   - Initial sync -> `patchConnection.requestParameterValue("paramX")` per control
+   - Teardown -> remove listener in `disconnectedCallback()`
+
+8. **`setValue(value, notify)` (or equivalent) must:**
+   1. clamp / quantize
+   2. update visuals
+   3. update value label
+   4. trigger local onChange
+   5. notify host **only** when `notify === true`
+
+9. **DOM/data binding:** build controls from `.control` nodes with `data-param`, `data-min`,
+    `data-max`, optional `data-mid`, `data-step`, `data-init`, `data-control` (`dial|slider|buttons|toggle|stepper`). Store in a `Map` keyed by `"paramX"`.
+    - Each DSP parameter must appear on exactly ONE DOM element with `data-param`: the `.control` wrapper.
+    - NEVER repeat `data-param` on knob, track, button, label, or readout descendants; use classes, `aria-*`, or `data-readout-for` there instead.
+    - Before responding, verify `querySelectorAll("[data-param]").length` equals the DSP parameter count and the unique IDs are exactly `param1..paramN`.
+
+10. **Output event listeners:**
+   - Subscribe: `patchConnection.addEndpointListener("endpointId", handler)`
+   - **Must remove on disconnect:** `patchConnection.removeEndpointListener("endpointId", handler)`
+    - Use for: spectrum data, meter values, any pushed data from the patch
+    - [NO] NEVER subscribe to guessed/non-existent endpoints (e.g. `"spectrumOut"` when DSP does not declare it)
+
+11. **Numeric safety:** initialise all state; guard `max <= min`; prevent NaN.
+
+12. **Animation loop:** `requestAnimationFrame`; store handle as `this._animFrame`; cancel on disconnect.
+
+13. **Layout -- CRITICAL (plugin viewport, NOT a web page):**
+    - [NO] NEVER `overflow: scroll` or `overflow: auto`
+    - [NO] NEVER fixed `px` width/height on `:host`
+    - [NO] NEVER `attachShadow()` -- always use `this.innerHTML` (light DOM). Shadow DOM breaks body-level scroll suppression.
+    - [OK] `:host { display: block; width: 100%; height: 100%; overflow: hidden; }` -- the ONLY correct form
+    - [OK] First CSS rule MUST be: `* { box-sizing: border-box; margin: 0; padding: 0; } body, html { overflow: hidden; margin: 0; }` -- the default `body { margin: 8px }` causes a scrollbar in every WebView host
+    - [OK] Declare window size on **line 3**, immediately after the two required receipt comments: `// WINDOW SIZE: 800x560`
+    - [OK] Internal layout uses `%`, `fr`, `flex`, or `grid` only -- never `px` on containers
+    - [OK] `user-select: none; -webkit-user-select: none` on root and body
+    - [OK] Professional audio-plugin style -- no scrollbars, no body margins, no web-page chrome
+
+14. **Canvas sizing -- CRITICAL (prevents infinite layout-growth loop):**
+    - [NO] NEVER `canvas.width = canvas.clientWidth` or `canvas.height = canvas.clientHeight` **inside a `requestAnimationFrame` loop** -- this reads the layout size then writes it back, which can grow the document by 1px per frame if the canvas has no strict CSS height anchor, producing infinite downward scroll
+    - [NO] Never use `ResizeObserver` in generated Amorph UI code. The host treats ResizeObserver loop-delivery warnings as runtime errors, and observing a canvas while writing its width/height can retrigger the observer.
+    - [OK] Size canvases ONCE in `connectedCallback()` using `offsetWidth` / `offsetHeight`; use fixed backing dimensions as a fallback and let CSS scale the visible canvas with its constrained parent.
+    - [NO] Never resize a canvas on every frame. If the layout must remain responsive, keep the backing buffer fixed and use CSS `width: 100%; height: 100%` inside a constrained container.
+    - [OK] Read `canvas.width` / `canvas.height` in the draw loop -- do NOT re-assign them there
+
+15. **Amorph host footguns (must avoid):**
+    - [OK] `addAllParameterListener` callback receives ONE object: `({ endpointID, value })` -- never `(id, value)`
+    - [OK] Every control must render a visible initial state immediately (`setValue(defaultValue, false)`)
+    - [OK] Init order: build controls -> register listeners -> request host values
+    - [NO] Never wrap/monkey-patch existing `window.__amorphProcessMidi`; assign your own handler and clean it up in `disconnectedCallback()`
+    - [NO] Never keep long-lived `document.addEventListener('pointermove'/'pointerup')` handlers from controls
+
+16. **Spectrum generation policy (strict):**
+        - Spectrum UI is **optional**, not default
+        - Add spectrum only when BOTH are true:
+            1) DSP/context explicitly exposes spectrum endpoint(s) (e.g. `spectrumOut`, `spectrumPreOut`)
+            2) The task explicitly asks for spectrum/FFT visualisation
+        - Otherwise, omit spectrum canvas, spectrum listeners, and spectrum drawing code entirely
+
+---
+
+## B) PARAMETER COMPATIBILITY RULE
+
+-> Always use `param1..paramN` as endpoint IDs throughout JS logic.
+-> Human-readable labels in display `<span>` elements only.
+-> Never rename IDs in `addAllParameterListener`, `sendEventOrValue`, or `requestParameterValue`.
+
+---
+
+## C) OUTPUT CONTRACT
+
+Your response must contain **exactly one** fenced code block tagged `javascript`, with no text before or after it.
+
+Return **exactly**:
+1. ONE JavaScript ES module
+2. `param1..paramN` naming throughout
+3. After the two required receipt comments, declare `// WINDOW SIZE: ...`. The next source declaration MUST be `export default function createPatchView (patchConnection)`; place every class after that factory.
+
+Before responding, silently verify every rule in section A is satisfied. Do not output the verification.
+
+---
+
+
+## E) MIDI VISUALIZATION (Amorph Feature)
+
+### MIDI INPUT -- highlights incoming notes/CCs
+
+    window.__amorphProcessMidi = (messages) => {
+        messages.forEach(msg => {
+            const { s, d1, d2 } = msg;
+            const type = s & 0xF0;
+            if      (type === 0x90 && d2 > 0)                     highlightKey(d1, "input",  d2 / 127);
+            else if (type === 0x80 || (type === 0x90 && d2 === 0)) unhighlightKey(d1, "input");
+            else if (type === 0xB0)                                 updateCC(d1, d2);
+        });
+    };
+
+> [NO] `window.__amorphProcessMidiOut` does **not** exist on Amorph_Instrument -- never add it.
+
+### Sending MIDI TO the patch from JS (trigger notes from UI elements):
+
+    // Endpoint ID is always "midiIn" for Amorph patches
+    // Pack: (status << 16) | (data1 << 8) | data2
+    patchConnection.sendMIDIInputEvent("midiIn", (0x90 << 16) | (note << 8) | velocity); // note on
+    patchConnection.sendMIDIInputEvent("midiIn", (0x80 << 16) | (note << 8) | 0);        // note off
+    patchConnection.sendMIDIInputEvent("midiIn", (0xB0 << 16) | (cc   << 8) | value);   // CC
+
+> The patch's `event midiIn` handler receives this exactly as if from a keyboard.
+> `__amorphProcessMidi` will also fire back -- use it to drive pad/key highlight state.
+> [NO] `patchConnection.sendMIDI(...)` does NOT exist -- always use `sendMIDIInputEvent`.
+
+### Cleanup in `disconnectedCallback()`:
+
+    delete window.__amorphProcessMidi;
+
+Messages arrive batched at ~60 Hz. No DSP or C++ changes needed.
+
+---
+
+
+## F) OPTIONAL SPECTRUM / EQ VISUALIZATION (Amorph Feature)
+
+Only add this section to generated UI code when the DSP/context explicitly provides spectrum endpoints and the task asks for spectrum visuals.
+If not explicitly requested/available, do not add spectrum canvas/listeners/draw code.
+
+### Subscribe (in `connectedCallback()`):
+
+    this._specHandler = data => { this._specBins = data.bins; }; // 512 floats, 0..1
+    patchConnection.addEndpointListener("spectrumOut",    this._specHandler);
+
+    this._specPreHandler = data => { this._specPreBins = data.bins; };
+    patchConnection.addEndpointListener("spectrumPreOut", this._specPreHandler);
+
+### Draw in animation loop:
+
+    if (this._specBins) {
+        const ctx = this._canvas.getContext("2d");
+        const W = this._canvas.width, H = this._canvas.height;
+        ctx.clearRect(0, 0, W, H);
+        ctx.beginPath();
+        this._specBins.forEach((v, i) => {
+            const x = (i / this._specBins.length) * W;
+            const y = H - v * H;
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = "#4ade80"; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+
+### EQ curve overlay (FabFilter Q style):
+
+Compute H(z) in JS from biquad coefficient params received as param values --
+**no extra DSP endpoint needed** for the curve.
+
+    // Per canvas pixel x: f = fMin * (fMax/fMin)^(x/W)
+    // Compute |H(e^jω)| at ω = 2π * f / sampleRate -> draw as Canvas path overlay
+
+### Cleanup in `disconnectedCallback()`:
+
+    patchConnection.removeEndpointListener("spectrumOut",    this._specHandler);
+    patchConnection.removeEndpointListener("spectrumPreOut", this._specPreHandler);
+
+---
+
+## G) MINIMUM CREATIVE BAR
+
+> **CRITICAL -- File completeness overrides all creative ambition.**
+> The factory declaration comes before every class: immediately after the receipt comments and
+> `// WINDOW SIZE`, declare `export default function createPatchView (patchConnection)`.
+> Never defer the only required export to the end of a long file, where an output limit can remove it.
+> Any canvas drawing, animation loop, or complex visualization that you cannot
+> finish within the output **must be dropped in favour of styled HTML knobs**.
+> An incomplete ambitious UI is a hard failure. A complete simple UI is a pass.
+> Start with the simplest layout that works; add complexity only if you have budget.
+> Before returning, perform a literal bracket-balance check over the final JavaScript.
+> The file must not end inside a method, template literal, class, or block. For a final
+> `getHTML()` method inside a class, the template-literal semicolon must be followed by
+> both closing braces: one for the method and one for the class. Prefer a shorter complete UI.
+> Hard response budget: keep a newly generated complete `index.js` under 10000 visible
+> characters. Generate repeated controls or pads from small data arrays, keep CSS compact,
+> and remove visual extras before approaching the budget. Never spend the budget on
+> decoration and then omit required closers.
+
+A flat grid of identical round knobs on a plain dark background is **never acceptable**
+as final output -- regardless of how generic the request is.
+
+Before writing CSS, answer these questions about the plugin:
+1. What does this plugin **do** visually? (reverb tail, filter sweep, gain reduction, envelope shape, delay echoes...)
+2. Would a **canvas visualization** add real value AND can you finish it within this single file? If uncertain, use styled HTML elements only.
+3. Which controls benefit from a non-standard widget? (large wet/dry crossfader, stepped buttons for algorithm mode, XY pad...)
+4. What layout communicates signal flow naturally?
+
+**Expected output size: 150-400 lines.** Aim for creativity within that budget.
+Never start a canvas animation loop unless you are certain you can complete the
+entire file without truncation. Prefer concise CSS and HTML over one-property-per-line expansion.
+
+**Visualization ideas by effect type (only if you can complete the whole file):**
+- reverb / delay -> animated decay waveform, particle scatter trail, IR tail meter
+- filter / EQ -> styled frequency-indicator bar (CSS only) or a small canvas curve only if simple
+- compressor -> gain reduction history graph, threshold + ratio overlay, level meter
+- distortion -> waveshaper curve canvas, harmonic spectrum bars
+- chorus / phaser -> animated LFO shape, stereo width arc
+- synth / instrument -> virtual keyboard, oscilloscope, or per-voice envelopes
+- arpeggiator -> lit step-grid, MIDI note trail
+- dynamics / gate -> envelope follower plot, threshold line on level display
+
+---
+
+## H) FINAL CONSTRUCTION AND AUDIT
+
+Build from the user request, DSP endpoints, and the contracts above; do not copy a generic visual template.
+
+Before returning the file:
+
+1. Extract every explicit quantity from the user request. For each requested count N, declare exactly N data entries and render all N. Never substitute a smaller representative subset.
+2. Translate musical ranges into literal counts before building controls: a one-octave chromatic keyboard has at least 12 distinct semitone keys, and N octaves have at least `12 * N` keys. Declare and render every key as its own data entry with its own `data-note`.
+3. Render every clickable pad, toggle, choice, and step as a real `<button type="button">`. A clickable `<div>`, `role="button"`, `tabindex`, or a button-like class fails.
+4. Count the final DOM: `querySelectorAll("button").length` must satisfy every requested clickable count, and `querySelectorAll("[data-param]").length` must equal the DSP parameter count.
+5. Re-read the requested palette, layout, exclusions, and visual references. Remove any unrequested generic dark-dashboard styling.
+6. Verify the final source is complete, within the response budget, bracket-balanced, and contains the required factory, cleanup, host sync, and interaction paths. The factory must return an actual `HTMLElement` instance; never return a class or constructor.
+
+---
+
+## I) GOLDEN ENFORCEMENT PRINCIPLES
+
+1. Keep endpoint IDs stable (`param1..paramN`) -- never change them mid-file
+2. **Never skip `disconnectedCallback` cleanup** -- leaking listeners crashes the host
+3. **Control constructor MUST call `setValue(defaultValue, false)` at the end** -- calling only `updateVisuals()` updates the knob rotation but leaves the value label showing its initial HTML placeholder (`--`). The label only updates through `setValue`, not through `updateVisuals`.
+4. **HTML value labels MUST use `--` (or any non-numeric placeholder), never hardcoded default numbers** -- hardcoded values fall out of sync with real state and give false confidence that initialization works.
+3. Always clamp and quantize before sending values to the host
+4. Keep user-change notifications explicit (`notify === true`)
+5. Keep host-update path (`addAllParameterListener`) separate from user-change path
+6. `requestParameterValue` for every control in `connectedCallback`
+7. Remove every `addEndpointListener` registration in `disconnectedCallback`
+8. **Never `window.addEventListener('pointermove/pointerup')` for drag controls** -- use `element.setPointerCapture(e.pointerId)` + element-level listeners only. Window-level listeners are never removed and prevent proper cleanup.
+9. **Never `canvas.width = canvas.clientWidth` inside `requestAnimationFrame`** -- causes an infinite layout-growth loop and a scrolling UI. Size canvases ONCE in `connectedCallback` (e.g. `canvas.width = canvas.offsetWidth || 400`).
+10. **Never use `ResizeObserver`** -- observe/write feedback can emit a host-fatal loop-delivery error. One-time canvas backing-size setup plus CSS scaling is the supported pattern.
+11. **Never `attachShadow()`** -- light DOM (`this.innerHTML`) is required. Shadow DOM breaks body-level scroll suppression and is incompatible with the host WebView's global CSS resets.
+12. **Always include `body, html { overflow: hidden; margin: 0; }` at the top of every `<style>` block** -- the WebView default `body { margin: 8px }` produces a permanent scrollbar.
+13. **Map control type to parameter semantics** -- discrete/stepped values must use clickable discrete controls; continuous values use slider/dial.
+14. **Never monkey-patch existing Amorph bridge functions** (e.g. wrapping `window.__amorphProcessMidi`) -- set your handler directly and remove it on disconnect.
+END_AMORPH_CONTEXT
+END_TOKEN: amorph-end-d8b126bc59c9ed60

@@ -20,8 +20,8 @@ packet directly; do not invent fields or MIDI clock accessors:
     float hostBpm = 120.0f;
     int hostNumerator = 4;
     int hostDenominator = 4;
-    float currentPpq = 0.0f;
-    float hostBarStartPpq = 0.0f;
+    float64 currentPpq = 0.0;
+    float64 hostBarStartPpq = 0.0;
     int lastStepIndex = -1;
 
     event transportIn (float value)
@@ -46,31 +46,47 @@ packet directly; do not invent fields or MIDI clock accessors:
         }
         else if (transportSlot == 4)
         {
-            currentPpq = value;
+            currentPpq = float64 (value);
         }
         else
         {
-            if (abs (value - hostBarStartPpq) > 0.001f) lastStepIndex = -1;
-            hostBarStartPpq = value;
+            hostBarStartPpq = float64 (value);
         }
 
         transportSlot = (transportSlot + 1) % 6;
     }
 
-Every PPQ packet is authoritative, so assign it without resetting the latch from
-PPQ delta alone. Exact `value < currentPpq`, `!=`, or fixed error thresholds can
-turn rounding or an in-step seek into a retrigger at the DAW buffer rate. The
-computed step change handles seeks; play/time-signature/bar-start changes reset.
-Never use `max(localPpq, hostPpq)` or soft-lag locks; they drift.
+Every PPQ and bar-start packet is authoritative, so assign it without resetting
+the latch from either delta alone. Exact `value < currentPpq`, `!=`, or fixed
+error thresholds can turn rounding or an in-step seek into a retrigger at the
+DAW buffer rate. A normal `barStart` advance arrives at the next block after the
+true in-block bar line; resetting there creates a second, off-grid trigger.
+Likewise, a BPM packet changes the forward phase increment and must not retrigger
+the current step. The computed global step change handles normal bar transitions,
+loops, and seeks. Reset only for play-state, time-signature, or division changes.
+A seek that remains inside the currently latched step waits for the next grid
+boundary instead of emitting an off-grid trigger. Never use
+`max(localPpq, hostPpq)` or soft-lag locks; they drift.
 
-Between packets, advance only while playing with `hostBpm / 60 / sampleRate`.
+Keep PPQ and bar-start state in `float64`. A `float` PPQ accumulator loses enough
+precision after several bars to move a grid crossing by multiple samples inside
+a large DAW block. Cast each incoming float packet to `float64`, calculate the
+step in `float64`, and advance with `float64 (hostBpm) / 60.0 /
+processor.frequency`.
+
+Between packets, advance only while playing with `float64 (hostBpm) / 60.0 /
+processor.frequency`.
 When stopped, emit no new clocked triggers and set `lastStepIndex = -1`.
 
 PPQ lengths: quarter `1.0`, eighth `0.5`, sixteenth `0.25`, eighth-triplet `1.0
 / 3.0`, dotted eighth `0.75`. Global step = `floor(currentPpq /
-positiveStepLength)`. Bar-relative step uses `currentPpq - hostBarStartPpq`;
-bar length is `hostNumerator * 4.0 / max(1, hostDenominator)`. Trigger only when
-the computed step changes. A BPM oscillator/sample counter is not phase-locked.
+positiveStepLength)`. Use that global step as the trigger latch, including for
+`1 bar`, so the index changes at every bar. Bar-relative pattern position may
+separately use `currentPpq - hostBarStartPpq`; bar length is `hostNumerator *
+4.0 / max(1, hostDenominator)`. Never use a bar-relative step as the sole trigger
+latch: it repeats its index at each bar and cannot clock a `1 bar` division
+without an off-grid reset. Trigger only when the computed global step changes.
+A BPM oscillator/sample counter is not phase-locked.
 
 Musical Rate/Division/Sync controls are discrete named selectors, never arbitrary values
 such as `0.121413`:
@@ -90,8 +106,9 @@ such as `0.121413`:
         return float (hostNumerator) * 4.0f / float (max (1, hostDenominator));
     }
 
-For arps/drums/sequencers use `floor ((currentPpq - hostBarStartPpq) /
-max (0.0001f, getDivisionQuarterNotes()))`.
+For arps/drums/sequencers use `floor (currentPpq /
+max (0.0001f, getDivisionQuarterNotes()))` as the trigger latch. Derive a
+separate bar-relative index only when the musical pattern must restart each bar.
 
 A musical arpeggiator must also articulate steps. Do not accumulate sustained
 step voices. Release/reuse the previous voice or schedule a bounded gate while

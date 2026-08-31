@@ -212,7 +212,11 @@ std::vector<uint32_t> renderClockWithBlockSize (const std::string& sourcePath,
     }
 
     auto performer = engine.createPerformer();
-    const uint32_t totalFrames = sampleRate * 2;
+    // Cross two normal 4/4 bar boundaries. A barStart-based latch reset would
+    // add a second trigger at the first block after frames 96000 and 192000.
+    // Stop away from the following sixteenth boundary so float rounding at the
+    // exclusive render endpoint cannot be misclassified as an extra trigger.
+    const uint32_t totalFrames = sampleRate * 4 + 11000;
     uint32_t framesDone = 0;
     double ppq = 0.0;
     bool sentDivision = false;
@@ -254,7 +258,7 @@ bool runBlockSizeClockScenario (const std::string& sourcePath,
                                 uint32_t sessionID)
 {
     const uint32_t blockSizes[] = { 31, 64, 257, 511 };
-    const uint32_t expectedCount = 16;
+    const uint32_t expectedCount = 34;
     bool allPassed = true;
 
     for (auto blockSize : blockSizes)
@@ -272,6 +276,11 @@ bool runBlockSizeClockScenario (const std::string& sourcePath,
                                  ? measuredFrame - expectedFrame
                                  : expectedFrame - measuredFrame;
                 passed = passed && error <= 2;
+                if (error > 2)
+                    std::cout << "MISMATCH block=" << blockSize
+                              << " step=" << i
+                              << " expected=" << expectedFrame
+                              << " measured=" << measuredFrame << "\n";
             }
         }
 
