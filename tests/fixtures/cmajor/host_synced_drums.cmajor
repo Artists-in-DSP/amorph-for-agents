@@ -49,12 +49,11 @@ processor FoundationHostSyncedDrums [[ main ]]
         }
         else if (transportSlot == 4)
         {
-            if (value < currentPpq) lastStepIndex = -1;
             currentPpq = value;
         }
         else
         {
-            if (value != hostBarStartPpq) lastStepIndex = -1;
+            if (abs (value - hostBarStartPpq) > 0.001f) lastStepIndex = -1;
             hostBarStartPpq = value;
         }
 

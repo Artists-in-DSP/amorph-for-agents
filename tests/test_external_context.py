@@ -11,7 +11,7 @@ from scripts.build_external_context import compose_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260831-d"
+RELEASE = "preview-20260831-e"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -197,9 +197,13 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("Amorph does not populate `std::timeline::*` endpoints", text)
                 self.assertIn("play, bpm, numerator, denominator, ppq, barStart", text)
                 self.assertIn("currentPpq = value;", text)
-                self.assertIn("if (value < currentPpq) lastStepIndex = -1;", text)
-                self.assertIn("if (value != hostBarStartPpq) lastStepIndex = -1;", text)
-                self.assertIn("same local step", text)
+                self.assertIn("abs (value - hostBarStartPpq) > 0.001f", text)
+                self.assertIn("without resetting the latch from", text)
+                self.assertIn("PPQ delta alone", text)
+                self.assertIn("Exact `value < currentPpq`, `!=`, or fixed error thresholds", text)
+                self.assertIn("retrigger at the DAW buffer rate", text)
+                self.assertIn("**Buffer-size audit:**", text)
+                self.assertIn("31, 64, 257, and 511 frames", text)
                 self.assertIn("Apply a valid host BPM immediately", text)
                 self.assertIn("periodSeconds = divisionQuarterNotes * 60.0f", text)
                 self.assertIn("`delayTimeParam * 0.25f`", text)
@@ -235,6 +239,8 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("`midiIn -> std::midi::MPEConverter -> synth.midiIn` is invalid", instrument)
         self.assertIn("Count existing `paramN` declarations", instrument)
         self.assertIn("the new control must be `param5` in all four places", instrument)
+        self.assertIn("A musical arpeggiator must also articulate steps", compose_source("dsp", "instrument"))
+        self.assertIn("physically held MIDI-note set separate", compose_source("dsp", "instrument"))
 
         midi = (ROOT / "context-src" / "v1" / "dsp" / "midi.md").read_text(encoding="utf-8")
         self.assertIn("`% heldCount` is forbidden", midi)
@@ -337,8 +343,9 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("fraction", fixtures["stereo_reverb_delay.cmajor"])
         self.assertIn("input event float transportIn;", fixtures["host_synced_drums.cmajor"])
         self.assertIn("currentPpq = value;", fixtures["host_synced_drums.cmajor"])
-        self.assertIn("value < currentPpq", fixtures["host_synced_drums.cmajor"])
-        self.assertIn("value != hostBarStartPpq", fixtures["host_synced_drums.cmajor"])
+        self.assertIn("abs (value - hostBarStartPpq) > 0.001f", fixtures["host_synced_drums.cmajor"])
+        self.assertNotIn("value < currentPpq", fixtures["host_synced_drums.cmajor"])
+        self.assertNotIn("positionError", fixtures["host_synced_drums.cmajor"])
         self.assertNotIn("std::timeline::", fixtures["host_synced_drums.cmajor"])
         self.assertIn('text: "1/16|1/8T|1/8|1/4T|1/4|1/2|1/1|1 bar"', fixtures["host_synced_drums.cmajor"])
         self.assertIn("currentPpq - hostBarStartPpq", fixtures["host_synced_drums.cmajor"])
