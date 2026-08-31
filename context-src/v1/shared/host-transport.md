@@ -46,10 +46,12 @@ packet directly; do not invent fields or MIDI clock accessors:
         }
         else if (transportSlot == 4)
         {
+            if (value < currentPpq) lastStepIndex = -1;
             currentPpq = value;
         }
         else
         {
+            if (value != hostBarStartPpq) lastStepIndex = -1;
             hostBarStartPpq = value;
         }
 
@@ -58,8 +60,11 @@ packet directly; do not invent fields or MIDI clock accessors:
 
 Every received PPQ value is authoritative. Always assign it exactly as shown,
 even when it moves backwards or differs only slightly from the locally advanced
-value. Never use `max(localPpq, hostPpq)`, a one-sided deadband, or a soft-lag
-lock. Those patterns drift and then jump after tempo changes, seeks, or loops.
+value. A backward PPQ packet or changed bar-start value must reset the step latch
+before the next sample; otherwise a loop/downbeat that has the same local step
+number as the previous bar is silently skipped. Never use `max(localPpq,
+hostPpq)`, a one-sided deadband, or a soft-lag lock. Those patterns drift and
+then jump after tempo changes, seeks, or loops.
 
 Between packets only, advance `currentPpq` while playing using
 `hostBpm / 60 / sampleRate`. A BPM parameter is fallback-only when free-running
@@ -74,6 +79,39 @@ Use PPQ lengths: quarter `1.0`, eighth `0.5`, sixteenth `0.25`, eighth-triplet
 step index changes. Recalculate from the authoritative PPQ after start, seek,
 loop, tempo automation, and time-signature changes; never let a local sample
 counter become the source of truth.
+
+Whenever the user asks for a musical Rate, Division, Sync Time, arp rate, or
+sequencer step, expose a **discrete named selector**, not a continuous beat
+value. The UI must show musical labels such as `1/4`, never arbitrary values
+such as `0.121413`:
+
+    input event float param1 [[ name: "Rate", min: 0, max: 7, init: 4, step: 1,
+                                text: "1/16|1/8T|1/8|1/4T|1/4|1/2|1/1|1 bar" ]];
+    int divisionIndex = 4;
+    event param1 (float value)
+    {
+        divisionIndex = clamp (int (value + 0.5f), 0, 7);
+        lastStepIndex = -1;
+    }
+
+    float getDivisionQuarterNotes()
+    {
+        if (divisionIndex == 0) return 0.25f;
+        if (divisionIndex == 1) return 1.0f / 3.0f;
+        if (divisionIndex == 2) return 0.5f;
+        if (divisionIndex == 3) return 2.0f / 3.0f;
+        if (divisionIndex == 4) return 1.0f;
+        if (divisionIndex == 5) return 2.0f;
+        if (divisionIndex == 6) return 4.0f;
+        return float (hostNumerator) * 4.0f / float (max (1, hostDenominator));
+    }
+
+For arps, drums, and sequencers, derive the step from authoritative PPQ:
+`floor ((currentPpq - hostBarStartPpq) / max (0.0001f,
+getDivisionQuarterNotes()))`. Reset `lastStepIndex` when the division changes,
+transport starts/stops, or a new position packet seeks/loops backward. A
+sample counter or BPM-only oscillator can follow tempo but is not phase-locked
+to the DAW grid.
 
 For tempo-synchronised delays, LFO periods, envelopes, and other time-based DSP,
 the musical division must be converted from quarter-note units using the host

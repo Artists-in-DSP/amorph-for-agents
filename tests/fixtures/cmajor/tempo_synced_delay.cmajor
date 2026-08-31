@@ -2,7 +2,8 @@ processor FoundationTempoSyncedDelay [[ main ]]
 {
     input stream float<2> in;
     input event float transportIn;
-    input event float param1 [[ name: "Division", min: 0.0, max: 7.0, init: 2.0, step: 1.0 ]];
+    input event float param1 [[ name: "Division", min: 0.0, max: 7.0, init: 2.0, step: 1.0,
+                                text: "1/16|1/8|1/4|1/2|1/1|1/8T|1/8D|1/4T" ]];
     input event float param2 [[ name: "Feedback", min: 0.0, max: 0.95, init: 0.0 ]];
     input event float param3 [[ name: "Mix", min: 0.0, max: 1.0, init: 1.0 ]];
     output stream float<2> out;

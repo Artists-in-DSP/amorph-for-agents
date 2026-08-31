@@ -22,7 +22,8 @@ def main() -> int:
         raise SystemExit(f"invalid Cmajor SDK/runtime path: {sdk}")
 
     source = ROOT / "tests" / "cmajor_transport_sync_runner.cpp"
-    fixture = ROOT / "tests" / "fixtures" / "cmajor" / "tempo_synced_delay.cmajor"
+    delay_fixture = ROOT / "tests" / "fixtures" / "cmajor" / "tempo_synced_delay.cmajor"
+    clock_fixture = ROOT / "tests" / "fixtures" / "cmajor" / "host_synced_drums.cmajor"
     with tempfile.TemporaryDirectory(prefix="amorph-cmajor-transport-") as temp:
         runner = Path(temp) / "cmajor_transport_sync_runner"
         command = [
@@ -30,7 +31,10 @@ def main() -> int:
             f"-I{sdk / 'include'}", str(source), "-o", str(runner),
         ]
         subprocess.run(command, check=True)
-        subprocess.run([str(runner), str(library), str(fixture)], check=True)
+        subprocess.run(
+            [str(runner), str(library), str(delay_fixture), str(clock_fixture)],
+            check=True,
+        )
 
     print(f"PASS: deterministic host-tempo sync scenarios with {sdk.name}")
     return 0
