@@ -11,7 +11,7 @@ from scripts.build_external_context import compose_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260830-a"
+RELEASE = "preview-20260830-b"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -182,6 +182,16 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("every `/` and `%` divisor", text)
                 self.assertIn("syntax-based and does not infer safety from an outer branch", text)
                 self.assertIn("inspect every literal `/` and `%` occurrence", text)
+                self.assertIn("input event float transportIn;", text)
+                self.assertIn("Amorph does not populate `std::timeline::*` endpoints", text)
+                self.assertIn("play, bpm, numerator, denominator, ppq, barStart", text)
+                self.assertIn("currentPpq = value;", text)
+                self.assertIn("Apply a valid host BPM immediately", text)
+                self.assertIn("periodSeconds = divisionQuarterNotes * 60.0f", text)
+                self.assertIn("`delayTimeParam * 0.25f`", text)
+                self.assertIn("**not BPM sync**", text)
+                self.assertNotIn("search_components(\"transport ppq parser\")", text)
+                self.assertNotIn("Patches/StartupMidiLive/dsp.cmajor", text)
 
         for record in self.manifest["documents"]:
             if record["target"] != "dsp":
@@ -259,8 +269,13 @@ class ExternalContextTests(unittest.TestCase):
         for variant in ("instrument", "fx"):
             composed = compose_source("dsp", variant)
             self.assertNotIn("{{CORE_DSP_FOUNDATIONS}}", composed)
+            self.assertNotIn("{{HOST_TRANSPORT_CONTRACT}}", composed)
             self.assertIn("Cmajor `1.0.3175`", composed)
             self.assertIn("Never emit `skew`", composed)
+
+        midi = compose_source("dsp", "midi")
+        self.assertNotIn("{{HOST_TRANSPORT_CONTRACT}}", midi)
+        self.assertIn("input event float transportIn;", midi)
 
         instrument = compose_source("dsp", "instrument")
         self.assertNotIn(
@@ -281,7 +296,7 @@ class ExternalContextTests(unittest.TestCase):
         fixture_root = ROOT / "tests" / "fixtures" / "cmajor"
         fixtures = {path.name: path.read_text(encoding="utf-8") for path in fixture_root.glob("*.cmajor")}
         self.assertEqual(
-            {"filter_gain.cmajor", "subtractive_synth.cmajor", "kick_drum.cmajor", "stereo_reverb_delay.cmajor"},
+            {"filter_gain.cmajor", "host_synced_drums.cmajor", "kick_drum.cmajor", "stereo_reverb_delay.cmajor", "subtractive_synth.cmajor", "tempo_synced_delay.cmajor"},
             set(fixtures),
         )
         self.assertTrue(all("[[ main ]]" in source for source in fixtures.values()))
@@ -290,6 +305,16 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("PolyblepState", fixtures["subtractive_synth.cmajor"])
         self.assertIn("pitchEnvelope", fixtures["kick_drum.cmajor"])
         self.assertIn("fraction", fixtures["stereo_reverb_delay.cmajor"])
+        self.assertIn("input event float transportIn;", fixtures["host_synced_drums.cmajor"])
+        self.assertIn("currentPpq = value;", fixtures["host_synced_drums.cmajor"])
+        self.assertNotIn("std::timeline::", fixtures["host_synced_drums.cmajor"])
+        self.assertIn("input event float transportIn;", fixtures["tempo_synced_delay.cmajor"])
+        self.assertIn("60.0f / max (20.0f, hostBpm)", fixtures["tempo_synced_delay.cmajor"])
+        self.assertNotIn("delayTimeParam * 0.25f", fixtures["tempo_synced_delay.cmajor"])
+
+    def test_transport_sync_runtime_gate_is_present(self):
+        self.assertTrue((ROOT / "scripts" / "verify_cmajor_transport_sync.py").is_file())
+        self.assertTrue((ROOT / "tests" / "cmajor_transport_sync_runner.cpp").is_file())
 
 
 if __name__ == "__main__":

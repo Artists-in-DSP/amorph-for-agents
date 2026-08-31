@@ -40,6 +40,8 @@ Every host parameter endpoint ID must be the exact sequential form `param1`, `pa
 
 {{CORE_DSP_FOUNDATIONS}}
 
+{{HOST_TRANSPORT_CONTRACT}}
+
 ### FX-specific standard-library facts
 
 - Use `std::filters (float<2>)::tpt::svf::Processor` for a graph, or one `Implementation` per channel when custom processing/state is required.
