@@ -11,7 +11,7 @@ from scripts.build_external_context import compose_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260831-a"
+RELEASE = "preview-20260831-b"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -161,6 +161,10 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("a Cmajor state initializer is not a substitute", text)
                 self.assertIn("preserves the existing intended/audible default", text)
                 self.assertIn("After the two required receipt comments", text)
+                self.assertIn("requires an identifier", text)
+                self.assertIn("`processor [[ main ]]`", text)
+                self.assertIn("`processor {`", text)
+                self.assertIn("follows the name; it never replaces it", text)
                 self.assertNotIn("`select(cond, a, b)`", text)
                 self.assertIn("Vector-only masked selection", text)
                 self.assertIn("For scalar values use `cond ? a : b`", text)
@@ -210,6 +214,8 @@ class ExternalContextTests(unittest.TestCase):
             generated = (RELEASE_ROOT / record["audit_path"]).read_text(encoding="utf-8")
             self.assertIn("Every host parameter endpoint ID must be the exact sequential form", generated)
             self.assertIn("audit every `input event float` declaration", generated)
+            self.assertIn("immediately followed by a top-level identifier", generated)
+            self.assertIn("Never return `processor [[ main ]]`", generated)
 
         instrument = (ROOT / "context-src" / "v1" / "dsp" / "instrument.md").read_text(encoding="utf-8")
         self.assertIn("**Polyphonic sum safety:**", instrument)

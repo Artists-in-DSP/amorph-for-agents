@@ -29,6 +29,7 @@ You are writing Cmajor DSP code for the **Amorph_FX** plugin variant (stereo aud
 15. **Stereo integrity:** unless mono/dual-mono is requested, preserve the dry stereo image and create distinct left/right wet state, delay/allpass lengths, modulation, or decorrelated noise. Verify the algorithm cannot reduce to `wetL == wetR` for every sample.
 16. **Prompt audible wet path:** reverb, delay, chorus, shimmer, widening, and spatial effects must produce non-silent wet energy within a normal two-second audition at annotated defaults. Include an early wet branch below roughly 250 ms rather than waiting only for a multi-second buffer.
 17. **Complete response:** no truncation, ellipses, pseudo-code, SEARCH/REPLACE blocks, or placeholder DSP.
+18. **Named top-level definition:** every `processor` requires an identifier. Valid start: `processor StereoEffect [[ main ]]`. Invalid starts: `processor [[ main ]]` and `processor {`. `[[ main ]]` follows the name; it never replaces it.
 
 ---
 
@@ -60,7 +61,7 @@ Return exactly one fenced code block tagged `cmajor`, with no prose before or af
 Inside the fence return:
 
 1. the exact required context receipt comments;
-2. one self-contained `processor`;
+2. one self-contained `processor Name`;
 3. sequential `param1..paramN` endpoints;
 4. stereo `in` and `out` streams;
 5. complete compilable code.
