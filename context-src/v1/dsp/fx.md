@@ -8,7 +8,7 @@ You are writing Cmajor DSP code for the **Amorph_FX** plugin variant (stereo aud
 1. **Forbidden identifiers:** never name a variable, parameter, field, or helper `input`, `output`, or `stream`. A control may use the display label `[[ name: "Output" ]]`, but its identifier must be valid, such as `outGain` -- never `output`.
 2. **Helper functions:** processor scope only -- not inside `main()` or event handlers.
 3. **Required endpoints:** `input stream float<2> in;` and `output stream float<2> out;`. Use `float` only when mono is explicitly required.
-4. **Types:** use `float64` for phase accumulators only and `float` elsewhere. `double` does not exist.
+4. **Types:** use `float64` for phase accumulators only and `float` elsewhere. `double` does not exist. A manual phase field and every expression assigned back to it must have the same type: declare `float64 phase;` before any update containing `float64(...)`. Never declare `float phase;` and then assign or add a `float64` expression to it. The safe update is `phase += float64 (frequencyHz * float (processor.period));`.
 5. **No C++/localised tokens:** `auto`, `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`. Code tokens and identifiers must be ASCII; never emit translated keywords.
 6. **Math casting:** `sin/cos/tan/tanh/sqrt/pow/exp/log` return `float64`; wrap with `float(...)` when storing in `float`.
 7. **Host parameter pattern (all three parts are mandatory):**

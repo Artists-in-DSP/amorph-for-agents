@@ -8,7 +8,7 @@ You are writing Cmajor DSP code for the **Amorph_Instrument** plugin variant (MI
 1. **Forbidden identifiers:** never name a variable, parameter, field, or helper `input`, `output`, or `stream`. A control may use the display label `[[ name: "Output" ]]`, but its identifier must be valid, such as `outGain` -- never `output`.
 2. **Helper functions:** processor scope only -- not inside `main()` or event handlers.
 3. **Required endpoints:** `input event std::midi::Message midiIn;` and `output stream float out;` (or `float<2>` for stereo).
-4. **Types:** use `float64` for phase accumulators only and `float` elsewhere. `double` does not exist.
+4. **Types:** use `float64` for phase accumulators only and `float` elsewhere. `double` does not exist. A manual phase field and every expression assigned back to it must have the same type: declare `float64 phase;` before any update containing `float64(...)`. Never declare `float phase;` and then assign or add a `float64` expression to it. The safe update is `phase += float64 (frequencyHz * float (processor.period));`.
 5. **No C++/localised tokens:** `auto`, `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`. Code tokens and identifiers must be ASCII; never emit translated keywords.
 6. **Math casting:** `sin/cos/tan/tanh/sqrt/pow/exp/log` return `float64`; wrap with `float(...)` when storing in `float`.
 7. **Host parameter pattern (all three parts are mandatory):**
@@ -22,7 +22,7 @@ You are writing Cmajor DSP code for the **Amorph_Instrument** plugin variant (MI
 8. **Fixed arrays:** `float[1024] buf;`; read with `array.at(i)` and write with `array.at(i) = value;`. Never invent `.set(...)` or `.get(...)` array methods. No unsized arrays, runtime-sized arrays, `.size`, or JavaScript collection APIs.
 9. **Audio loop:** write `out <- value;` and then `advance();` on every iteration.
 10. **Typed locals only:** do not use `let` anywhere in the returned source. Use explicit mutable locals such as `float x`, `int count`, or `bool found`. Before responding, search the answer for `let`; required count zero.
-11. **Edit-mode preservation:** when current code is supplied, return the complete revised file and preserve every existing endpoint, parameter, and requested feature unless explicitly removed. Add a parameter with the next sequential `paramN` ID and include its endpoint, state, and event handler.
+11. **Edit-mode preservation:** when current code is supplied, return the complete revised file and preserve every existing endpoint, parameter, and requested feature unless explicitly removed. Before answering, count the existing `paramN` declarations and verify the same IDs still exist in the returned file. Add each requested control with the next sequential `paramN` ID and include its endpoint, state, event handler, and DSP use; for example, if current code has `param1..param4`, a requested new control must appear as `param5` in all four places.
 12. **Period casting:** every occurrence of `processor.period` must appear inside `float(processor.period)` or `float (processor.period)`. Never use bare `processor.period` or `float64(processor.period)`. A safe alias is `float dt = float(processor.period);`.
 13. **Modulo/division safety:** every `/` and `%` divisor must be provably nonzero before any event fires. Amorph lint is syntax-based and does not infer safety from an outer branch. Use `% max(1, count)` and a positive epsilon for floating division; inspect every literal `/` and `%` occurrence before returning.
 14. **Polyphonic sum safety:** track `activeVoiceCount`; divide by `float(max(1, activeVoiceCount))`, then keep at least 20% headroom or use a bounded soft clip. Never use a fixed multiplier such as `0.25` for a variable voice sum.
@@ -46,7 +46,7 @@ The MIDI endpoint is always `midiIn`. Match note-off with a stored `int noteNumb
 ### Instrument-specific standard-library facts
 
 - `std::notes::noteToFrequency(n)` converts MIDI note to Hz.
-- A graph voice allocator requires `midiIn -> std::midi::MPEConverter -> voiceAllocator`; never wire a raw `std::midi::Message` directly to `NoteOn/NoteOff` input.
+- Choose exactly one MIDI architecture. A direct processor declares `input event std::midi::Message midiIn;` and handles it in `event midiIn`; wire raw `midiIn` directly to that processor if it is inside a graph. A graph voice allocator instead requires `midiIn -> std::midi::MPEConverter -> voiceAllocator`, whose downstream endpoints are `NoteOn`, `NoteOff`, and other MPE event types. Never connect `std::midi::MPEConverter` to a processor endpoint typed `std::midi::Message`; `midiIn -> std::midi::MPEConverter -> synth.midiIn` is invalid when `synth.midiIn` is a Message endpoint. Never wire a raw `std::midi::Message` directly to `NoteOn/NoteOff` input.
 - Handle MIDI only in `event midiIn (std::midi::Message msg)`. Never poll `midiIn.available()` or call `midiIn.read()` in `main`.
 - Use one `std::oscillators::PolyblepState` and one filter state per voice. Never share phase, envelope, or filter state across active voices.
 - Adjustable ADSR stages belong in each voice. Note-on enters attack, then decay/sustain; note-off enters release; deactivate only after release falls below a small threshold.
@@ -82,8 +82,10 @@ For a subtractive/polyphonic instrument, the complete code should normally conta
 6. smoothed cutoff in Hz, proportional envelope/LFO modulation, bounded true Q, and TPT SVF processing;
 7. active-voice normalization, output dB conversion, headroom, and finite bounded output.
 
-For a manual phase accumulator, the approved period form is
-`phase += float64 (voices[i].noteFreq) * float (processor.period);`.
+For a manual phase accumulator, declare the state as `float64 phase;` and use
+`phase += float64 (voices[i].noteFreq * float (processor.period));`.
+The declaration and update are a required pair; a `float phase` cannot receive
+the `float64` result of a phase update.
 
 Do not use the Cutoff control as an unrelated resonance or envelope-depth value. Do not label a `0..1` control "Resonance" and feed it directly to a true-Q argument. Do not implement a requested resonant synth as two crude one-poles with arbitrary feedback when the bundled TPT SVF fits.
 

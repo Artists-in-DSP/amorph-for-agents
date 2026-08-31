@@ -191,6 +191,9 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("every `/` and `%` divisor", text)
                 self.assertIn("syntax-based and does not infer safety from an outer branch", text)
                 self.assertIn("inspect every literal `/` and `%` occurrence", text)
+                self.assertIn("manual phase field and every expression assigned back to it must have the same type", text)
+                self.assertIn("Never declare `float phase;`", text)
+                self.assertIn("declare `float64 phase;`", text)
                 self.assertIn("input event float transportIn;", text)
                 self.assertIn("Amorph does not populate `std::timeline::*` endpoints", text)
                 self.assertIn("play, bpm, numerator, denominator, ppq, barStart", text)
@@ -226,11 +229,19 @@ class ExternalContextTests(unittest.TestCase):
 
         self.assertNotIn("float64 (voices[i].noteFreq) * processor.period", instrument)
         self.assertIn(
-            "float64 (voices[i].noteFreq) * float (processor.period)",
+            "float64 (voices[i].noteFreq * float (processor.period))",
             instrument,
         )
         self.assertIn("Never poll `midiIn.available()`", instrument)
         self.assertIn("`midiIn.read()` in `main`", instrument)
+        self.assertIn("Choose exactly one MIDI architecture", instrument)
+        self.assertIn("Never connect `std::midi::MPEConverter` to a processor endpoint typed `std::midi::Message`", instrument)
+        self.assertIn("`midiIn -> std::midi::MPEConverter -> synth.midiIn` is invalid", instrument)
+        self.assertIn("count the existing `paramN` declarations", instrument)
+        self.assertIn("a requested new control must appear as `param5` in all four places", instrument)
+
+        midi = (ROOT / "context-src" / "v1" / "dsp" / "midi.md").read_text(encoding="utf-8")
+        self.assertIn("`% heldCount` is forbidden", midi)
 
         fx = (ROOT / "context-src" / "v1" / "dsp" / "fx.md").read_text(encoding="utf-8")
         self.assertIn("do not collapse the wet path to identical left and right signals", fx)
