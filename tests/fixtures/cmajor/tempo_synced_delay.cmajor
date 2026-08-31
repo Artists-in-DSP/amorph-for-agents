@@ -1,0 +1,77 @@
+processor FoundationTempoSyncedDelay [[ main ]]
+{
+    input stream float<2> in;
+    input event float transportIn;
+    input event float param1 [[ name: "Division", min: 0.0, max: 7.0, init: 2.0, step: 1.0 ]];
+    input event float param2 [[ name: "Feedback", min: 0.0, max: 0.95, init: 0.0 ]];
+    input event float param3 [[ name: "Mix", min: 0.0, max: 1.0, init: 1.0 ]];
+    output stream float<2> out;
+
+    int transportSlot = 0;
+    bool hostPlaying = false;
+    float hostBpm = 120.0f;
+    int hostNumerator = 4;
+    int hostDenominator = 4;
+    float currentPpq = 0.0f;
+    float hostBarStartPpq = 0.0f;
+
+    int divisionIndex = 2;
+    float feedback = 0.0f;
+    float mix = 1.0f;
+
+    float[192000] delayLeft;
+    float[192000] delayRight;
+    int writeIndex = 0;
+
+    event param1 (float value) { divisionIndex = clamp (int (value + 0.5f), 0, 7); }
+    event param2 (float value) { feedback = clamp (value, 0.0f, 0.95f); }
+    event param3 (float value) { mix = clamp (value, 0.0f, 1.0f); }
+
+    event transportIn (float value)
+    {
+        if (transportSlot == 0) hostPlaying = value > 0.5f;
+        else if (transportSlot == 1) hostBpm = clamp (value, 20.0f, 999.0f);
+        else if (transportSlot == 2) hostNumerator = max (1, int (value + 0.5f));
+        else if (transportSlot == 3) hostDenominator = max (1, int (value + 0.5f));
+        else if (transportSlot == 4) currentPpq = value;
+        else hostBarStartPpq = value;
+        transportSlot = (transportSlot + 1) % 6;
+    }
+
+    float getDivisionQuarterNotes()
+    {
+        if (divisionIndex == 0) return 0.25f;
+        if (divisionIndex == 1) return 0.5f;
+        if (divisionIndex == 2) return 1.0f;
+        if (divisionIndex == 3) return 2.0f;
+        if (divisionIndex == 4) return 4.0f;
+        if (divisionIndex == 5) return 1.0f / 3.0f;
+        if (divisionIndex == 6) return 0.75f;
+        return 2.0f / 3.0f;
+    }
+
+    void main()
+    {
+        loop
+        {
+            float sampleRate = max (1.0f, float (processor.frequency));
+            float periodSeconds = getDivisionQuarterNotes() * 60.0f / max (20.0f, hostBpm);
+            int delaySamples = clamp (int (periodSeconds * sampleRate + 0.5f), 1, 191999);
+            int readIndex = writeIndex - delaySamples;
+            if (readIndex < 0) readIndex += 192000;
+
+            float<2> inputFrame = in;
+            float delayedLeft = delayLeft.at (readIndex);
+            float delayedRight = delayRight.at (readIndex);
+            delayLeft.at (writeIndex) = inputFrame[0] + delayedLeft * feedback;
+            delayRight.at (writeIndex) = inputFrame[1] + delayedRight * feedback;
+
+            writeIndex = (writeIndex + 1) % 192000;
+            if (hostPlaying) currentPpq += hostBpm / 60.0f / sampleRate;
+
+            out <- inputFrame * (1.0f - mix)
+                 + float<2> (delayedLeft, delayedRight) * mix;
+            advance();
+        }
+    }
+}

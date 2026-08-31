@@ -1,9 +1,9 @@
 AMORPH_EXTERNAL_CONTEXT v1
-CONTEXT_ID: amorph-dsp-instrument-ebcc163f52e42c95
+CONTEXT_ID: amorph-dsp-instrument-9ed40ec34e4ee94f
 TARGET: dsp
 VARIANT: instrument
 RELEASE: preview-20260830-b
-BODY_SHA256: 0c8226fb58013f1315de405d662a3874dffa24f45a8f085d79748d76da33989c
+BODY_SHA256: 7c5a2973a3313d9b7e24e3ad311b515a8c92e4449a24b7e4c0e485fec02eebb5
 DELIVERY_FORMAT: static-html-v1
 CONTENT_TYPE: text/html; charset=utf-8
 ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
@@ -272,10 +272,9 @@ value. Never use `max(localPpq, hostPpq)`, a one-sided deadband, or a soft-lag
 lock. Those patterns drift and then jump after tempo changes, seeks, or loops.
 
 Between packets only, advance `currentPpq` while playing using
-`hostBpm / 60 / sampleRate`. Host BPM overrides any manual BPM control while
-playing; a BPM parameter is fallback-only when free-running was explicitly
-requested. When stopped, emit no new clocked triggers by default and set
-`lastStepIndex = -1` so restart immediately re-aligns.
+`hostBpm / 60 / sampleRate`. A BPM parameter is fallback-only when free-running
+was explicitly requested. When stopped, emit no new sequencer/drum triggers by
+default and set `lastStepIndex = -1` so restart immediately re-aligns.
 
 Use PPQ lengths: quarter `1.0`, eighth `0.5`, sixteenth `0.25`, eighth-triplet
 `1.0 / 3.0`, dotted eighth `0.75`. For a global clock use
@@ -285,6 +284,23 @@ Use PPQ lengths: quarter `1.0`, eighth `0.5`, sixteenth `0.25`, eighth-triplet
 step index changes. Recalculate from the authoritative PPQ after start, seek,
 loop, tempo automation, and time-signature changes; never let a local sample
 counter become the source of truth.
+
+For tempo-synchronised delays, LFO periods, envelopes, and other time-based DSP,
+the musical division must be converted from quarter-note units using the host
+BPM received in every packet:
+
+    float divisionQuarterNotes = 1.0f; // quarter=1, eighth=0.5, dotted eighth=0.75
+    float periodSeconds = divisionQuarterNotes * 60.0f / max (20.0f, hostBpm);
+    int periodSamples = clamp (int (periodSeconds * sampleRate + 0.5f),
+                               1, maxBufferSamples - 1);
+
+Apply a valid host BPM immediately whether transport is playing or stopped, so
+tempo-synchronised effect tails and the next start already use the correct
+length. The play flag gates new clocked triggers; it does not turn a delay tail
+off. A selector such as `DelayTime` 0..7 is only a division index: map it to
+quarter-note units first, then use the formula above. `delayTimeParam * 0.25f`,
+a fixed seconds table, or any calculation that does not contain `hostBpm` is
+**not BPM sync**.
 
 Host-synced MIDI generators may schedule note events from `main()`; this is the
 intentional exception to the event-only MIDI rule. Held-note bookkeeping remains
@@ -359,4 +375,4 @@ Emit analysis events at a throttled rate, not every sample. `std::frequency::rea
 
 The polyphonic rule is literal: never use a fixed multiplier such as `0.25` for a variable voice sum.
 END_AMORPH_CONTEXT
-END_TOKEN: amorph-end-f4c068f9fe879727
+END_TOKEN: amorph-end-7281703086affb22

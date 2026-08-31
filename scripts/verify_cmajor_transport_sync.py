@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Compile semantic fixtures with the exact Cmajor SDK")
+    parser = argparse.ArgumentParser(description="Run deterministic Cmajor host-tempo sync scenarios")
     parser.add_argument("--sdk", type=Path, default=os.environ.get("CMAJOR_SDK_PATH"))
     args = parser.parse_args()
     if not args.sdk:
@@ -21,21 +21,18 @@ def main() -> int:
     if not (sdk / "include" / "cmajor" / "API" / "cmaj_Engine.h").is_file() or not library.is_file():
         raise SystemExit(f"invalid Cmajor SDK/runtime path: {sdk}")
 
-    fixtures = sorted((ROOT / "tests" / "fixtures" / "cmajor").glob("*.cmajor"))
-    if len(fixtures) != 6:
-        raise SystemExit(f"expected 6 semantic fixtures, found {len(fixtures)}")
-
-    with tempfile.TemporaryDirectory(prefix="amorph-cmajor-fixtures-") as temp:
-        compiler = Path(temp) / "cmajor_fixture_compiler"
+    source = ROOT / "tests" / "cmajor_transport_sync_runner.cpp"
+    fixture = ROOT / "tests" / "fixtures" / "cmajor" / "tempo_synced_delay.cmajor"
+    with tempfile.TemporaryDirectory(prefix="amorph-cmajor-transport-") as temp:
+        runner = Path(temp) / "cmajor_transport_sync_runner"
         command = [
             os.environ.get("CXX", "clang++"), "-std=c++17", "-DCMAJOR_DLL=1",
-            f"-I{sdk / 'include'}", str(ROOT / "tests" / "cmajor_fixture_compiler.cpp"),
-            "-o", str(compiler),
+            f"-I{sdk / 'include'}", str(source), "-o", str(runner),
         ]
         subprocess.run(command, check=True)
-        subprocess.run([str(compiler), str(library), *(str(path) for path in fixtures)], check=True)
+        subprocess.run([str(runner), str(library), str(fixture)], check=True)
 
-    print(f"PASS: {len(fixtures)} semantic Cmajor fixtures with {sdk.name}")
+    print(f"PASS: deterministic host-tempo sync scenarios with {sdk.name}")
     return 0
 
 
