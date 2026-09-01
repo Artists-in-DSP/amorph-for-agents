@@ -95,5 +95,7 @@ Do not use the Cutoff control as an unrelated resonance or envelope-depth value.
 5. Each voice owns its state, note-off matching is integer-based, and a changing voice sum is normalized by active count.
 6. Cutoff, resonance/Q, time, dB, mix, pan, pitch, and modulation values have the musical semantics requested by the user.
 7. The annotated defaults produce audible, non-clipping output and `0 dB` means unity gain.
+8. Manual oscillators use one phase unit consistently; a cycles phase reaches `sin`/`cos` only after multiplication by `twoPi`.
+9. For conventional drums, check the kick body is in its intended bass band and the snare/hat retain brighter energy; audible output alone is not enough.
 
 The polyphonic rule is literal: never use a fixed multiplier such as `0.25` for a variable voice sum.

@@ -105,5 +105,6 @@ Emit analysis events at a throttled rate, not every sample. `std::frequency::rea
 5. Cutoff, resonance/Q, time, dB, mix, pan, pitch, and modulation values have the musical semantics requested by the user.
 6. Stereo effects preserve or intentionally transform stereo rather than accidentally collapsing it.
 7. The annotated defaults produce prompt audible wet output without clipping and `0 dB` means unity gain.
+8. A compressor measurably attenuates above-threshold material; a reverb produces delayed, diffuse, finite-decay stereo energy and stays within the total fixed-state budget.
 
 Unless mono is requested, do not collapse the wet path to identical left and right signals; audit that the algorithm cannot remain `wetL == wetR` for every sample.

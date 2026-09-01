@@ -11,7 +11,7 @@ from scripts.build_external_context import compose_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260831-f"
+RELEASE = "preview-20260901-a"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -306,6 +306,13 @@ class ExternalContextTests(unittest.TestCase):
             "proportional in pitch space",
             "sample-rate\nindependent",
             "equal-power",
+            "Calling `sin (phase)` on a cycles phase is wrong",
+            "`40..100 Hz`",
+            "substantial bright/noise energy",
+            "measurable dB gain reduction",
+            "sum near or below `131072` floats",
+            "host compile stall",
+            "Compilation and non-silence are necessary, not sufficient",
         ):
             self.assertIn(required, shared)
 
