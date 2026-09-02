@@ -245,6 +245,9 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("**Polyphonic sum safety:**", instrument)
         self.assertIn("never use a fixed multiplier such as `0.25`", instrument)
         self.assertIn("`float(max(1, activeVoiceCount))`", instrument)
+        self.assertIn("at most `0.5f`", instrument)
+        self.assertIn("at least 6 dB internal headroom", instrument)
+        self.assertIn("Active-count normalisation alone is insufficient", instrument)
 
         self.assertNotIn("float64 (voices[i].noteFreq) * processor.period", instrument)
         self.assertIn("float64 (frequencyHz * float (processor.period))", instrument)
