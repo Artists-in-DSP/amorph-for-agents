@@ -54,22 +54,6 @@ The MIDI endpoint is always `midiIn`. Match note-off with a stored `int noteNumb
 
 ---
 
-## D) OUTPUT CONTRACT
-
-Return exactly one fenced code block tagged `cmajor`, with no prose before or after it.
-
-Inside the fence return:
-
-1. the exact required context receipt comments;
-2. `graph Main [[ main ]]` with processor definitions, or a self-contained `processor Name`;
-3. sequential `param1..paramN` endpoints;
-4. `midiIn` input and audio `out`;
-5. complete compilable code.
-
-After the two required receipt comments, the next source token must be `graph` or `processor`. Before responding, silently verify every rule in section A.
-
----
-
 ## E) REFERENCE ARCHITECTURE CHECKLIST
 
 For a subtractive/polyphonic instrument, the complete code should normally contain:
@@ -97,5 +81,6 @@ Do not use the Cutoff control as an unrelated resonance or envelope-depth value.
 7. The annotated defaults produce audible, non-clipping output and `0 dB` means unity gain.
 8. Manual oscillators use one phase unit consistently; a cycles phase reaches `sin`/`cos` only after multiplication by `twoPi`.
 9. For conventional drums, check the kick body is in its intended bass band and the snare/hat retain brighter energy; audible output alone is not enough.
+10. Search the final source for `processor.currentTime`, `Math.`, `uint`, and `unsigned`; every count must be zero. Noise uses the verified RNG pattern and tonal drum bodies own phase.
 
 The polyphonic rule is literal: never use a fixed multiplier such as `0.25` for a variable voice sum.

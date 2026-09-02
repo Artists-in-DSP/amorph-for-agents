@@ -70,12 +70,17 @@ add `frequencyHz * float (processor.period)`, wrap at `1.0`, then evaluate
 `sin (float64 (twoPi * phase))`. Calling `sin (phase)` on a cycles phase is wrong
 by `twoPi`. Radians instead add `twoPi * frequencyHz * dt` and wrap at `twoPi`.
 
-`processor.currentTime` does not exist in Cmajor `1.0.3175`. For elapsed time,
-own and advance a `float64` phase or sample counter in `main()`. For noise,
-prefer a processor-scope `std::random::RNG rng`, seed it once at the start of
-`main()` with `processor.id` or `processor.session`, and call
-`rng.getBipolar()` or `rng.getUnipolar()`. Do not fake noise with floating-point
-`%`; `fmod(x, y)` or `remainder(x, y)` is required for floating remainders.
+Hard compatibility audit: the returned source must contain zero occurrences of
+`processor.currentTime`, `Math.`, `uint`, or `unsigned`. The only processor
+properties here are `frequency`, `period`, `id`, and `session`. For elapsed time,
+own a processor-scope `float64 phase`, advance it in `main()` with
+`phase += float64 (frequencyHz * float (processor.period))`, wrap at `1.0`, and
+evaluate `sin (float64 (twoPi) * phase)`.
+
+For noise declare processor-scope `std::random::RNG rng;`, seed once before the
+loop with `rng.seed (int64 (processor.session));`, then call `rng.getBipolar()`
+or `rng.getUnipolar()`. Floating-point `%` is invalid; use `fmod`/`remainder`
+only when an actual floating remainder is needed.
 
 ### Musical modulation, envelopes, and smoothing
 

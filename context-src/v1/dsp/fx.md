@@ -54,22 +54,6 @@ Every host parameter endpoint ID must be the exact sequential form `param1`, `pa
 
 ---
 
-## D) OUTPUT CONTRACT
-
-Return exactly one fenced code block tagged `cmajor`, with no prose before or after it.
-
-Inside the fence return:
-
-1. the exact required context receipt comments;
-2. one self-contained `processor Name`;
-3. sequential `param1..paramN` endpoints;
-4. stereo `in` and `out` streams;
-5. complete compilable code.
-
-After the two required receipt comments, the next source token must be `processor`. Before responding, silently verify every rule in section A.
-
----
-
 ## E) REFERENCE ARCHITECTURE CHECKLIST
 
 For a filter/gain effect, the complete code should normally contain:
@@ -106,5 +90,6 @@ Emit analysis events at a throttled rate, not every sample. `std::frequency::rea
 6. Stereo effects preserve or intentionally transform stereo rather than accidentally collapsing it.
 7. The annotated defaults produce prompt audible wet output without clipping and `0 dB` means unity gain.
 8. A compressor measurably attenuates above-threshold material; a reverb produces delayed, diffuse, finite-decay stereo energy and stays within the total fixed-state budget.
+9. Search the final source for `processor.currentTime`, `Math.`, `uint`, and `unsigned`; every count must be zero. Noise uses the verified RNG pattern and time-varying DSP owns phase.
 
 Unless mono is requested, do not collapse the wet path to identical left and right signals; audit that the algorithm cannot remain `wetL == wetR` for every sample.

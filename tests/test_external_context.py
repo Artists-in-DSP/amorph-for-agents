@@ -11,7 +11,7 @@ from scripts.build_external_context import compose_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260902-a"
+RELEASE = "preview-20260902-b"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -162,7 +162,10 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("next sequential `paramN` ID", text)
                 self.assertIn("a Cmajor state initializer is not a substitute", text)
                 self.assertIn("preserves the existing intended/audible default", text)
-                self.assertIn("After the two required receipt comments", text)
+                if path.stem in ("instrument", "fx"):
+                    self.assertNotIn("## D) OUTPUT CONTRACT", text)
+                else:
+                    self.assertIn("## D) OUTPUT CONTRACT", text)
                 self.assertIn("requires an identifier", text)
                 self.assertIn("`processor [[ main ]]`", text)
                 self.assertIn("`processor {`", text)
@@ -309,10 +312,11 @@ class ExternalContextTests(unittest.TestCase):
             "sample-rate\nindependent",
             "equal-power",
             "Calling `sin (phase)` on a cycles phase is wrong",
-            "`processor.currentTime` does not exist",
-            "`std::random::RNG rng`",
+            "zero occurrences of\n`processor.currentTime`",
+            "The only processor\nproperties here are `frequency`, `period`, `id`, and `session`",
+            "`std::random::RNG rng;`",
             "`rng.getBipolar()`",
-            "floating-point\n`%`",
+            "Floating-point `%` is invalid",
             "`40..100 Hz`",
             "substantial bright/noise energy",
             "measurable dB gain reduction",
@@ -339,6 +343,8 @@ class ExternalContextTests(unittest.TestCase):
         self.assertLessEqual(len(host_transport), 2_800)
 
         instrument = compose_source("dsp", "instrument")
+        self.assertNotIn("## D) OUTPUT CONTRACT", instrument)
+        self.assertIn("every count must be zero", instrument)
         self.assertNotIn(
             "float cutoff = clamp (2000.0f + resonance * 4000.0f",
             instrument,
