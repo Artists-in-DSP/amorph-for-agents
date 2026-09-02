@@ -78,6 +78,11 @@ own a processor-scope `float64 phase`, advance it in `main()` with
 `phase += float64 (frequencyHz * float (processor.period))`, wrap at `1.0`, and
 evaluate `sin (float64 (twoPi) * phase)`.
 
+Do not use `external` for an internal constant or storage field. An external
+value is supplied by the host and cannot have an initializer, so
+`external int voiceCount = 8;` is invalid. For a fixed internal count write
+`const int voiceCount = 8;`; for mutable processor state write `int voiceCount = 8;`.
+
 For noise declare processor-scope `std::random::RNG rng;`, seed once before the
 loop with `rng.seed (int64 (processor.session));`, then call `rng.getBipolar()`
 or `rng.getUnipolar()`. Floating-point `%` is invalid; use `fmod`/`remainder`

@@ -200,6 +200,8 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("every `/` and `%` divisor", text)
                 self.assertIn("syntax-based and does not infer safety from an outer branch", text)
                 self.assertIn("inspect every literal `/` and `%` occurrence", text)
+                self.assertIn("`external int voiceCount = 8;` is invalid", text)
+                self.assertIn("`const int voiceCount = 8;`", text)
                 self.assertIn("declare every manual phase field `float64 phase;`", text)
                 self.assertIn("Never assign a `float64` expression to `float phase;`", text)
                 self.assertIn("input event float transportIn;", text)
