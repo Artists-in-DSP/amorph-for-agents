@@ -384,6 +384,11 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("rng.getBipolar()", fixtures["noise_time.cmajor"])
         self.assertNotIn("processor.currentTime", fixtures["noise_time.cmajor"])
         self.assertIn("fraction", fixtures["stereo_reverb_delay.cmajor"])
+        self.assertIn("allpassOutL", fixtures["stereo_reverb_delay.cmajor"])
+        self.assertIn(
+            "stageInL + allpassCoefficient * allpassOutL",
+            fixtures["stereo_reverb_delay.cmajor"],
+        )
         self.assertIn("input event float transportIn;", fixtures["host_synced_drums.cmajor"])
         self.assertIn("float64 currentPpq", fixtures["host_synced_drums.cmajor"])
         self.assertIn("currentPpq = float64 (value);", fixtures["host_synced_drums.cmajor"])
@@ -398,6 +403,15 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("text:", fixtures["tempo_synced_delay.cmajor"])
         self.assertIn("60.0f / max (20.0f, hostBpm)", fixtures["tempo_synced_delay.cmajor"])
         self.assertNotIn("delayTimeParam * 0.25f", fixtures["tempo_synced_delay.cmajor"])
+
+    def test_reverb_recipe_requires_real_delay_buffer_allpass_state(self):
+        core = (ROOT / "context-src" / "v1" / "shared" / "core-dsp-foundations.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("A Schroeder all-pass stage requires a delay buffer", core)
+        self.assertIn("apBuffer.at (apIndex) = stageIn + coefficient * allpassOut", core)
+        self.assertIn("A scalar previous-sample variable is not a reverb all-pass stage", core)
+        self.assertIn("-g * x + state + g * x", core)
 
     def test_transport_sync_runtime_gate_is_present(self):
         self.assertTrue((ROOT / "scripts" / "verify_cmajor_transport_sync.py").is_file())

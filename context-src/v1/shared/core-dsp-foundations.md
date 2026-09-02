@@ -121,6 +121,17 @@ Use these recipes without overriding requested behaviour:
 - **Reverb:** unequal delays, damped feedback, all-pass/comb diffusion, and
   cross-coupled stereo below unity. One feedback delay is an echo. An impulse must
   yield multiple arrivals, distinct stereo wet output, and a finite decaying tail.
+  A Schroeder all-pass stage requires a delay buffer and uses this recurrence
+  (repeat it with separate buffers, indices, and unequal lengths for each stage):
+
+      float delayed = apBuffer.at (apIndex);
+      float allpassOut = delayed - coefficient * stageIn;
+      apBuffer.at (apIndex) = stageIn + coefficient * allpassOut;
+      apIndex = (apIndex + 1) % allpassLength;
+
+  Keep `abs (coefficient) < 1.0f` and make `allpassLength` a positive compile-time
+  constant. A scalar previous-sample variable is not a reverb all-pass stage.
+  Reject algebraically cancelling expressions such as `-g * x + state + g * x`.
 - **Delay/chorus:** preserve dry stereo, interpolate fractional reads, smooth time,
   and use distinct/cross-coupled L/R trajectories. Never resize buffers at runtime.
 - **Dynamics:** smooth a rectified/RMS envelope; compute gain reduction in dB and
