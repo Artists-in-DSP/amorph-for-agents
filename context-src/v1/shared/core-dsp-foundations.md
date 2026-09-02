@@ -61,9 +61,9 @@ SVF Q is true Q and must exceed zero. Map a friendly `0..1` Resonance explicitly
     float r = clamp (resonanceAmount, 0.0f, 1.0f);
     float safeQ = 0.5f + r * r * 11.5f;  // 0.5 .. 12.0 true Q
 
-Use `std::oscillators::PolyblepState` per voice instead of a naive saw/square
-ramp. Set its frequency, then call its `nextSawtooth()`, `nextSquare()`,
-`nextTriangle()`, or `nextSine()`.
+Use `std::oscillators::PolyblepState` per voice. Set with
+`osc.setFrequency (processor.frequency, float64 (frequencyHz));`, call
+`nextSawtooth()`, `nextSquare()`, `nextTriangle()`, or `nextSine()`.
 
 For a manual oscillator, use one unit consistently. Prefer cycles `[0, 1)`:
 add `frequencyHz * float (processor.period)`, wrap at `1.0`, then evaluate

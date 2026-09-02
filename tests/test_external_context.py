@@ -11,7 +11,7 @@ from scripts.build_external_context import compose_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260902-d"
+RELEASE = "preview-20260902-e"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -312,6 +312,7 @@ class ExternalContextTests(unittest.TestCase):
             "tpt::svf",
             "true Q",
             "PolyblepState",
+            "osc.setFrequency (processor.frequency, float64 (frequencyHz))",
             "proportional in pitch space",
             "sample-rate\nindependent",
             "equal-power",
