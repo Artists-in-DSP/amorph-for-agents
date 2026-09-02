@@ -14,7 +14,7 @@ from typing import Dict, Iterable, List, Tuple
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / "context-src" / "v1"
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
-DEFAULT_RELEASE = "preview-20260901-a"
+DEFAULT_RELEASE = "preview-20260902-a"
 CMAJOR_SDK_VERSION = "1.0.3175"
 KNOWLEDGE_PROFILE = "core-dsp-v1"
 

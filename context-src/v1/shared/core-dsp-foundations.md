@@ -70,6 +70,13 @@ add `frequencyHz * float (processor.period)`, wrap at `1.0`, then evaluate
 `sin (float64 (twoPi * phase))`. Calling `sin (phase)` on a cycles phase is wrong
 by `twoPi`. Radians instead add `twoPi * frequencyHz * dt` and wrap at `twoPi`.
 
+`processor.currentTime` does not exist in Cmajor `1.0.3175`. For elapsed time,
+own and advance a `float64` phase or sample counter in `main()`. For noise,
+prefer a processor-scope `std::random::RNG rng`, seed it once at the start of
+`main()` with `processor.id` or `processor.session`, and call
+`rng.getBipolar()` or `rng.getUnipolar()`. Do not fake noise with floating-point
+`%`; `fmod(x, y)` or `remainder(x, y)` is required for floating remainders.
+
 ### Musical modulation, envelopes, and smoothing
 
 Filter envelope/LFO modulation should be proportional in pitch space so its
