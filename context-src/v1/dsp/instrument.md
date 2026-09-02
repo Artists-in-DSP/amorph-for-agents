@@ -18,7 +18,7 @@ You are writing Cmajor DSP code for the **Amorph_Instrument** plugin variant (MI
        float cutoffHz = 1000.0f;
        event param1 (float v) { cutoffHz = v; }
 
-   `mid` is optional but `name`, `min`, `max`, and `init` are required. Never emit `skew`. Do not put a trailing comma before `]]`; write `init: Z ]]`, never `init: Z, ]]`. Amorph and plugin hosts apply the annotated `init` after compile and during QA; a Cmajor state initializer is not a substitute. In edit mode, add missing metadata with an `init` that preserves the existing intended/audible default.
+   `mid` is optional but `name`, `min`, `max`, and `init` are required. Never emit `skew`. Do not put a trailing comma before `]]`; write `init: Z ]]`, never `init: Z, ]]`. Put every endpoint declaration in one contiguous block at processor start, before any state, struct, handler, or function. Never interleave endpoint/state/handler groups. Amorph and plugin hosts apply the annotated `init` after compile and during QA; a Cmajor state initializer is not a substitute. In edit mode, add missing metadata with an `init` that preserves the existing intended/audible default.
 8. **Fixed arrays:** `float[1024] buf;`; read with `array.at(i)` and write with `array.at(i) = value;`. Never invent `.set(...)` or `.get(...)` array methods. No unsized arrays, runtime-sized arrays, `.size`, or JavaScript collection APIs.
 9. **Audio loop:** write `out <- value;` and then `advance();` on every iteration.
 10. **Typed locals only:** do not use `let` anywhere in the returned source. Use explicit mutable locals such as `float x`, `int count`, or `bool found`. Before responding, search the answer for `let`; required count zero.
@@ -81,6 +81,5 @@ Do not use the Cutoff control as an unrelated resonance or envelope-depth value.
 7. The annotated defaults produce audible, non-clipping output and `0 dB` means unity gain.
 8. Manual oscillators use one phase unit consistently; a cycles phase reaches `sin`/`cos` only after multiplication by `twoPi`.
 9. For conventional drums, check the kick body is in its intended bass band and the snare/hat retain brighter energy; audible output alone is not enough.
-10. Search the final source for `processor.currentTime`, `Math.`, `uint`, and `unsigned`; every count must be zero. Noise uses the verified RNG pattern and tonal drum bodies own phase.
 
 The polyphonic rule is literal: never use a fixed multiplier such as `0.25` for a variable voice sum.

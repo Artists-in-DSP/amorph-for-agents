@@ -11,7 +11,7 @@ from scripts.build_external_context import compose_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260902-c"
+RELEASE = "preview-20260902-d"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -161,6 +161,8 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("preserve every existing endpoint, parameter", text)
                 self.assertIn("next sequential `paramN` ID", text)
                 self.assertIn("a Cmajor state initializer is not a substitute", text)
+                self.assertIn("Put every endpoint declaration in one contiguous block", text)
+                self.assertIn("Never interleave endpoint/state/handler groups", text)
                 self.assertIn("preserves the existing intended/audible default", text)
                 if path.stem in ("instrument", "fx"):
                     self.assertNotIn("## D) OUTPUT CONTRACT", text)
@@ -347,7 +349,7 @@ class ExternalContextTests(unittest.TestCase):
 
         instrument = compose_source("dsp", "instrument")
         self.assertNotIn("## D) OUTPUT CONTRACT", instrument)
-        self.assertIn("every count must be zero", instrument)
+        self.assertIn("must contain zero occurrences", instrument)
         self.assertNotIn(
             "float cutoff = clamp (2000.0f + resonance * 4000.0f",
             instrument,

@@ -18,7 +18,7 @@ You are writing Cmajor DSP code for the **Amorph_FX** plugin variant (stereo aud
        float cutoffHz = 1000.0f;
        event param1 (float v) { cutoffHz = v; }
 
-   `mid` is optional but `name`, `min`, `max`, and `init` are required. Never emit `skew`. Do not put a trailing comma before `]]`; write `init: Z ]]`, never `init: Z, ]]`. Amorph and plugin hosts apply the annotated `init` after compile and during QA; a Cmajor state initializer is not a substitute. In edit mode, add missing metadata with an `init` that preserves the existing intended/audible default.
+   `mid` is optional but `name`, `min`, `max`, and `init` are required. Never emit `skew`. Do not put a trailing comma before `]]`; write `init: Z ]]`, never `init: Z, ]]`. Put every endpoint declaration in one contiguous block at processor start, before any state, struct, handler, or function. Never interleave endpoint/state/handler groups. Amorph and plugin hosts apply the annotated `init` after compile and during QA; a Cmajor state initializer is not a substitute. In edit mode, add missing metadata with an `init` that preserves the existing intended/audible default.
 8. **Fixed arrays:** `float[65536] buf;`; read with `array.at(i)` and write with `array.at(i) = value;`. Never invent `.set(...)` or `.get(...)` array methods. No unsized arrays, runtime-sized arrays, `.size`, or JavaScript collection APIs.
 9. **Audio loop:** write `out <- float<2> (outL, outR);` and then `advance();` on every iteration.
 10. **Increment style:** `i++` is valid in loop headers; prefer `i += 1` in new code.
@@ -90,6 +90,5 @@ Emit analysis events at a throttled rate, not every sample. `std::frequency::rea
 6. Stereo effects preserve or intentionally transform stereo rather than accidentally collapsing it.
 7. The annotated defaults produce prompt audible wet output without clipping and `0 dB` means unity gain.
 8. A compressor measurably attenuates above-threshold material; a reverb produces delayed, diffuse, finite-decay stereo energy and stays within the total fixed-state budget.
-9. Search the final source for `processor.currentTime`, `Math.`, `uint`, and `unsigned`; every count must be zero. Noise uses the verified RNG pattern and time-varying DSP owns phase.
 
 Unless mono is requested, do not collapse the wet path to identical left and right signals; audit that the algorithm cannot remain `wetL == wetR` for every sample.
