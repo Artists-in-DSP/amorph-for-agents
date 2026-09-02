@@ -71,7 +71,8 @@ add `frequencyHz * float (processor.period)`, wrap at `1.0`, then evaluate
 by `twoPi`. Radians instead add `twoPi * frequencyHz * dt` and wrap at `twoPi`.
 
 Hard compatibility audit: the returned source must contain zero occurrences of
-`processor.currentTime`, `Math.`, `uint`, or `unsigned`. The only processor
+`processor.currentTime`, `Math.`, `uint`, or `unsigned`. Cmajor has built-in
+`pi` and `twoPi`; never declare a local named `twoPi`. The only processor
 properties here are `frequency`, `period`, `id`, and `session`. For elapsed time,
 own a processor-scope `float64 phase`, advance it in `main()` with
 `phase += float64 (frequencyHz * float (processor.period))`, wrap at `1.0`, and

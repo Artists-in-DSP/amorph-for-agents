@@ -11,7 +11,7 @@ from scripts.build_external_context import compose_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260902-b"
+RELEASE = "preview-20260902-c"
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -175,6 +175,8 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertNotIn("`select(cond, a, b)`", text)
                 self.assertIn("Vector-only masked selection", text)
                 self.assertIn("For scalar values use `cond ? a : b`", text)
+                self.assertIn("the `Math` namespace does not exist", text)
+                self.assertIn("Never write `Math.pi` or declare a local named `twoPi`", text)
                 self.assertIn('display label `[[ name: "Output" ]]`', text)
                 self.assertIn("never `output`", text)
                 self.assertIn("never `init: Z, ]]`", text)
@@ -313,6 +315,7 @@ class ExternalContextTests(unittest.TestCase):
             "equal-power",
             "Calling `sin (phase)` on a cycles phase is wrong",
             "zero occurrences of\n`processor.currentTime`",
+            "never declare a local named `twoPi`",
             "The only processor\nproperties here are `frequency`, `period`, `id`, and `session`",
             "`std::random::RNG rng;`",
             "`rng.getBipolar()`",
