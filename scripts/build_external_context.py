@@ -14,7 +14,7 @@ from typing import Dict, Iterable, List, Tuple
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / "context-src" / "v1"
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
-DEFAULT_RELEASE = "preview-20260831-a"
+DEFAULT_RELEASE = "preview-20260903-e"
 CMAJOR_SDK_VERSION = "1.0.3175"
 KNOWLEDGE_PROFILE = "core-dsp-v1"
 
@@ -69,7 +69,9 @@ def response_contract(target: str) -> str:
         filename = "dsp.cmajor"
         fence = "cmajor"
         source_start = (
-            "The next source token must be graph or processor. Every host parameter "
+            "The next source token must be graph or processor, immediately followed by "
+            "a top-level identifier before any annotation or body. Never return "
+            "`processor [[ main ]]`, `processor {`, or `graph [[ main ]]`. Every host parameter "
             "endpoint ID must be the exact sequential form `param1`, `param2`, ... "
             "`paramN`; descriptive endpoint IDs are invalid. Put human labels only in "
             "`[[ name: \"...\" ]]`, and audit every `input event float` declaration "
@@ -146,7 +148,6 @@ BODY_SHA256: {body_sha}
 DELIVERY_FORMAT: static-html-v1
 CONTENT_TYPE: text/html; charset=utf-8
 ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
-FAILURE_CONTRACT: return exactly CONTEXT_UNAVAILABLE when retrieval is incomplete
 
 BEGIN_AMORPH_CONTEXT
 {body.rstrip()}

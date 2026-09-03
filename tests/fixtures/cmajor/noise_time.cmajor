@@ -1,0 +1,24 @@
+processor FoundationNoiseTime [[ main ]]
+{
+    output stream float out;
+
+    std::random::RNG rng;
+    float64 phase = 0.0;
+
+    void main()
+    {
+        rng.seed (int64 (processor.session));
+
+        loop
+        {
+            phase += float64 (180.0f * float (processor.period));
+            if (phase >= 1.0)
+                phase -= 1.0;
+
+            float tone = float (sin (float64 (twoPi) * phase));
+            float noise = rng.getBipolar();
+            out <- (tone * 0.2f + noise * 0.05f);
+            advance();
+        }
+    }
+}

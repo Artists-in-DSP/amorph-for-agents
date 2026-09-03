@@ -185,6 +185,116 @@ bool runClockScenario (const std::string& sourcePath,
     packet ("next three-four bar", true, 120.0f, 3, 4, 15.0f, 15.0f, true);
     return allPassed;
 }
+
+std::vector<uint32_t> renderClockWithBlockSize (const std::string& sourcePath,
+                                                const std::string& source,
+                                                uint32_t blockSize,
+                                                uint32_t sessionID)
+{
+    cmaj::DiagnosticMessageList messages;
+    cmaj::Program program;
+    auto engine = cmaj::Engine::create();
+    engine.setBuildSettings (cmaj::BuildSettings().setFrequency (sampleRate).setSessionID (sessionID));
+    if (! program.parse (messages, sourcePath, source)
+        || ! engine.load (messages, program, {}, {}))
+    {
+        std::cerr << "FAIL block-size clock compile\n" << messages.toString() << "\n";
+        return {};
+    }
+
+    const auto outputHandle = engine.getEndpointHandle ("out");
+    const auto transportHandle = engine.getEndpointHandle ("transportIn");
+    const auto divisionHandle = engine.getEndpointHandle ("param1");
+    if (! engine.link (messages))
+    {
+        std::cerr << "FAIL block-size clock link\n" << messages.toString() << "\n";
+        return {};
+    }
+
+    auto performer = engine.createPerformer();
+    // Cross two normal 4/4 bar boundaries. A barStart-based latch reset would
+    // add a second trigger at the first block after frames 96000 and 192000.
+    // Stop away from the following sixteenth boundary so float rounding at the
+    // exclusive render endpoint cannot be misclassified as an extra trigger.
+    const uint32_t totalFrames = sampleRate * 4 + 11000;
+    uint32_t framesDone = 0;
+    double ppq = 0.0;
+    bool sentDivision = false;
+    std::vector<uint32_t> triggers;
+
+    while (framesDone < totalFrames)
+    {
+        const auto framesThisBlock = std::min (blockSize, totalFrames - framesDone);
+        performer.setBlockSize (framesThisBlock);
+        if (! sentDivision)
+        {
+            performer.addInputEvent (divisionHandle, 0, 0.0f);
+            sentDivision = true;
+        }
+
+        performer.addInputEvent (transportHandle, 0, 1.0f);
+        performer.addInputEvent (transportHandle, 0, 120.0f);
+        performer.addInputEvent (transportHandle, 0, 4.0f);
+        performer.addInputEvent (transportHandle, 0, 4.0f);
+        performer.addInputEvent (transportHandle, 0, float (ppq));
+        performer.addInputEvent (transportHandle, 0, float (std::floor (ppq / 4.0) * 4.0));
+        performer.advance();
+
+        std::vector<float> output (static_cast<size_t> (framesThisBlock) * 2, 0.0f);
+        performer.copyOutputFrames (outputHandle, output.data(), framesThisBlock);
+        for (uint32_t frame = 0; frame < framesThisBlock; ++frame)
+            if (std::abs (output[frame * 2]) > 0.2f)
+                triggers.push_back (framesDone + frame);
+
+        ppq += double (framesThisBlock) * 120.0 / 60.0 / double (sampleRate);
+        framesDone += framesThisBlock;
+    }
+
+    return triggers;
+}
+
+bool runBlockSizeClockScenario (const std::string& sourcePath,
+                                const std::string& source,
+                                uint32_t sessionID)
+{
+    const uint32_t blockSizes[] = { 31, 64, 257, 511 };
+    const uint32_t expectedCount = 34;
+    bool allPassed = true;
+
+    for (auto blockSize : blockSizes)
+    {
+        const auto triggers = renderClockWithBlockSize (sourcePath, source, blockSize, sessionID);
+        bool passed = triggers.size() == expectedCount;
+
+        if (passed)
+        {
+            for (uint32_t i = 0; i < expectedCount; ++i)
+            {
+                const auto expectedFrame = i * 6000;
+                const auto measuredFrame = triggers[i];
+                const auto error = measuredFrame > expectedFrame
+                                 ? measuredFrame - expectedFrame
+                                 : expectedFrame - measuredFrame;
+                passed = passed && error <= 2;
+                if (error > 2)
+                    std::cout << "MISMATCH block=" << blockSize
+                              << " step=" << i
+                              << " expected=" << expectedFrame
+                              << " measured=" << measuredFrame << "\n";
+            }
+        }
+
+        std::cout << (passed ? "PASS " : "FAIL ")
+                  << "per-block transport grid at block size " << blockSize
+                  << " triggerCount=" << triggers.size();
+        if (! triggers.empty())
+            std::cout << " first=" << triggers.front() << " last=" << triggers.back();
+        std::cout << "\n";
+        allPassed = passed && allPassed;
+    }
+
+    return allPassed;
+}
 }
 
 int main (int argc, char** argv)
@@ -233,5 +343,6 @@ int main (int argc, char** argv)
         return 2;
     }
     allPassed = runClockScenario (argv[3], clockBuffer.str(), sessionID++) && allPassed;
+    allPassed = runBlockSizeClockScenario (argv[3], clockBuffer.str(), sessionID++) && allPassed;
     return allPassed ? 0 : 1;
 }
