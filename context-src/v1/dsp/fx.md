@@ -7,7 +7,7 @@ You are writing Cmajor DSP code for the **Amorph_FX** plugin variant (stereo aud
 
 1. **Forbidden identifiers:** never name a variable, parameter, field, or helper `input`, `output`, or `stream`. A control may use the display label `[[ name: "Output" ]]`, but its identifier must be valid, such as `outGain` -- never `output`.
 2. **Helper functions:** processor scope only -- not inside `main()` or event handlers.
-3. **Required endpoints:** `input stream float<2> in;` and `output stream float<2> out;`. Use `float` only when mono is explicitly required.
+3. **Required endpoints and stereo read:** `input stream float<2> in;` and `output stream float<2> out;`. Use `float` only for explicit mono. Each iteration reads `float<2> inputFrame = in;`, then `inputFrame[0]` and `inputFrame[1]`. There are no implicit `inL` or `inR` symbols.
 4. **Types:** declare every manual phase field `float64 phase;` and update it with `phase += float64 (frequencyHz * float (processor.period));`. Never assign a `float64` expression to `float phase;`. Use `float` elsewhere; `double` does not exist.
 5. **No C++/localised tokens:** `auto`, `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`. Code tokens and identifiers must be ASCII; never emit translated keywords.
 6. **Math constants/casting:** Cmajor has built-in `pi` and `twoPi`; the `Math` namespace does not exist. Never write `Math.pi` or declare a local named `twoPi`; use `float(twoPi)`. `sin/cos/tan/tanh/sqrt/pow/exp/log` return `float64`; wrap with `float(...)` when storing in `float`.
@@ -20,7 +20,7 @@ You are writing Cmajor DSP code for the **Amorph_FX** plugin variant (stereo aud
 
    `mid` is optional but `name`, `min`, `max`, and `init` are required. Never emit `skew`. Do not put a trailing comma before `]]`; write `init: Z ]]`, never `init: Z, ]]`. Put every endpoint declaration in one contiguous block at processor start, before any state, struct, handler, or function. Never interleave endpoint/state/handler groups. Amorph and plugin hosts apply the annotated `init` after compile and during QA; a Cmajor state initializer is not a substitute. In edit mode, add missing metadata with an `init` that preserves the existing intended/audible default.
 8. **Fixed arrays:** `float[65536] buf;`; read with `array.at(i)` and write with `array.at(i) = value;`. Never invent `.set(...)` or `.get(...)` array methods. No unsized arrays, runtime-sized arrays, `.size`, or JavaScript collection APIs.
-9. **Audio loop:** write `out <- float<2> (outL, outR);` and then `advance();` on every iteration.
+9. **Audio loop:** `void main()` must contain a continuous `loop { ... }`. Inside that loop, read the current input, write `out <- float<2> (outL, outR);`, and call exactly one `advance()` on every iteration. A one-shot `main()` body or a `for` loop that processes only one sample is invalid even if it compiles.
 10. **Increment style:** `i++` is valid in loop headers; prefer `i += 1` in new code.
 11. **Typed locals only:** do not use `let` anywhere in the returned source. Use explicit mutable locals such as `float x`, `int count`, or `bool found`. Before responding, search the answer for `let`; required count zero.
 12. **Edit-mode preservation:** when current code is supplied, return the complete revised file and preserve every existing endpoint, parameter, and requested feature unless explicitly removed. Add a parameter with the next sequential `paramN` ID and include its endpoint, state, and event handler.
@@ -51,7 +51,11 @@ Every host parameter endpoint ID must be the exact sequential form `param1`, `pa
 - `std::levels::SmoothedGainParameter` accepts dB events and outputs smoothed linear gain.
 - `std::mixers::Interpolator (float<2>, 100.0f)` provides a smoothed linear interpolator; use the explicit equal-power law when constant perceived power is intended.
 - `std::random::RNG` is a struct; `std::random(lo, hi)` does not exist.
-- Delay buffers have compile-time size. Clamp delay reads to `1..N-1`, interpolate fractional positions, and keep every feedback path strictly below unity.
+- Delay buffers have compile-time size. Size them for the advertised maximum
+  delay at the highest supported sample rate, or reduce the endpoint maximum to
+  the duration the fixed buffer can actually provide. Clamp delay reads to
+  `1..N-1`, interpolate fractional positions, and keep every feedback path
+  strictly below unity.
 
 ---
 

@@ -284,6 +284,11 @@ class ExternalContextTests(unittest.TestCase):
         fx = (ROOT / "context-src" / "v1" / "dsp" / "fx.md").read_text(encoding="utf-8")
         self.assertIn("do not collapse the wet path to identical left and right signals", fx)
         self.assertIn("wetL == wetR", fx)
+        self.assertIn("`float<2> inputFrame = in;`", fx)
+        self.assertIn("There are no implicit `inL` or `inR` symbols", fx)
+        self.assertIn("continuous `loop { ... }`", fx)
+        self.assertIn("processes only one sample is invalid", fx)
+        self.assertIn("advertised maximum", fx)
 
     def test_ui_sources_require_one_parameter_marker_per_endpoint(self):
         for variant in ("instrument", "fx", "midi"):
@@ -308,6 +313,11 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("chromatic keyboard means at least 12", text)
                 self.assertIn('real `<button type="button">`', text)
                 self.assertIn("Do not return a generic", text)
+                self.assertIn("exactly one class that\n  extends `HTMLElement`", text)
+                self.assertIn("constructor is state-only", text)
+                self.assertIn("idempotent `_mounted` guard", text)
+                self.assertIn("ordinary visible DOM elements", text)
+                self.assertIn("A data attribute or `role=\"slider\"` alone is not a dial", text)
 
     def test_dsp_foundations_are_version_pinned_and_semantically_complete(self):
         shared = (ROOT / "context-src" / "v1" / "shared" / "core-dsp-foundations.md").read_text(
