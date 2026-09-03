@@ -1,136 +1,50 @@
 ## AMORPH HOST TRANSPORT AND DAW SYNC
 
-This is an **Amorph integration contract**, not generic Cmajor host advice. For
-Amorph Instrument, FX, and MIDI patches, declare this exact endpoint whenever
-the request mentions DAW/host/Ableton sync, tempo-synchronised drums, arps,
-sequencers, delays, LFOs, or modulation:
+Apply this section only when the request mentions DAW/host/Ableton sync,
+tempo-synchronised drums, arps, sequencers, delays, LFOs, or modulation. Declare:
 
     input event float transportIn;
 
-Amorph does not populate `std::timeline::*` endpoints. Do not declare
-`std::timeline::Position`, `Tempo`, `TimeSignature`, or `TransportState` for
-Amorph host sync: such code may compile but receives no DAW timing data.
+Amorph does not populate `std::timeline::*`. It sends six floats at each audio
+block start in this exact repeating order: **play, bpm, numerator, denominator,
+ppq, barStart**. Parse them with `transportSlot = (transportSlot + 1) % 6`.
+Store play as `bool`, BPM clamped to `20..999`, numerator/denominator as integers
+at least 1, and both PPQ values as `float64`, assigned directly with
+`currentPpq = float64 (value);` and `hostBarStartPpq = float64 (value);`.
 
-Amorph sends six consecutive float events at the start of every audio block in
-this fixed order: **play, bpm, numerator, denominator, ppq, barStart**. Parse the
-packet directly; do not invent fields or MIDI clock accessors:
+Keep `int lastStepIndex = -1`. Between packets advance PPQ only while playing by
+`float64 (hostBpm) / 60.0 / processor.frequency`; stopped transport emits no
+clocked triggers and resets the latch. Reset the latch only on play-state,
+time-signature, or division changes. Do not reset it from either PPQ/barStart
+delta alone, exact inequality, value decrease, or a fixed error threshold:
+rounding, a normal `barStart` advance, a BPM change, and an in-step seek must not
+retrigger at the DAW buffer rate. Never use `max(localPpq, hostPpq)` or a
+soft-lag lock.
 
-    int transportSlot = 0;
-    bool hostPlaying = false;
-    float hostBpm = 120.0f;
-    int hostNumerator = 4;
-    int hostDenominator = 4;
-    float currentPpq = 0.0f;
-    float hostBarStartPpq = 0.0f;
-    int lastStepIndex = -1;
+Quarter-note lengths: sixteenth `0.25`, eighth-triplet `1/3`, eighth `0.5`,
+quarter-triplet `2/3`, quarter `1`, half `2`, whole `4`, and one bar
+`numerator * 4 / denominator`. A Rate/Division/Sync control is a stepped integer
+selector with named labels such as
+`text: "1/16|1/8T|1/8|1/4T|1/4|1/2|1/1|1 bar"`, never arbitrary values such as
+`0.121413`. Put the mapping in `getDivisionQuarterNotes()`. Literal final audit:
+every such endpoint with `text:` labels must also contain `step: 1` and integer
+`min`, `max`, and `init` values. Omitting `step: 1` is invalid for the Amorph
+host-sync contract.
 
-    event transportIn (float value)
-    {
-        if (transportSlot == 0)
-        {
-            bool nextPlaying = value > 0.5f;
-            if (nextPlaying != hostPlaying) lastStepIndex = -1;
-            hostPlaying = nextPlaying;
-        }
-        else if (transportSlot == 1)
-        {
-            hostBpm = clamp (value, 20.0f, 999.0f);
-        }
-        else if (transportSlot == 2)
-        {
-            hostNumerator = max (1, int (value + 0.5f));
-        }
-        else if (transportSlot == 3)
-        {
-            hostDenominator = max (1, int (value + 0.5f));
-        }
-        else if (transportSlot == 4)
-        {
-            if (value < currentPpq) lastStepIndex = -1;
-            currentPpq = value;
-        }
-        else
-        {
-            if (value != hostBarStartPpq) lastStepIndex = -1;
-            hostBarStartPpq = value;
-        }
+For arps, drums, and sequencers compute the global step with
+`floor (currentPpq / max (0.0001f, getDivisionQuarterNotes()))` and trigger only
+when that value differs from `lastStepIndex`. Use that global step as the trigger
+latch even for `1 bar`. A separate bar-relative index may select a pattern step,
+but cannot be the sole latch. A BPM oscillator or sample counter is not
+phase-locked. A musical arpeggiator must articulate bounded note gates and keep
+physically held notes separate from sounding step voices.
 
-        transportSlot = (transportSlot + 1) % 6;
-    }
+For tempo-synchronised delay, LFO, or envelope DSP use
+`periodSeconds = divisionQuarterNotes * 60.0f / max (20.0f, hostBpm)`. Apply a
+valid host BPM immediately whether playing or stopped; play gates new triggers,
+not delay tails. Fixed seconds, `delayTimeParam * 0.25f`, or code without
+`hostBpm` is **not BPM sync**.
 
-Every received PPQ value is authoritative. Always assign it exactly as shown,
-even when it moves backwards or differs only slightly from the locally advanced
-value. A backward PPQ packet or changed bar-start value must reset the step latch
-before the next sample; otherwise a loop/downbeat that has the same local step
-number as the previous bar is silently skipped. Never use `max(localPpq,
-hostPpq)`, a one-sided deadband, or a soft-lag lock. Those patterns drift and
-then jump after tempo changes, seeks, or loops.
-
-Between packets only, advance `currentPpq` while playing using
-`hostBpm / 60 / sampleRate`. A BPM parameter is fallback-only when free-running
-was explicitly requested. When stopped, emit no new sequencer/drum triggers by
-default and set `lastStepIndex = -1` so restart immediately re-aligns.
-
-Use PPQ lengths: quarter `1.0`, eighth `0.5`, sixteenth `0.25`, eighth-triplet
-`1.0 / 3.0`, dotted eighth `0.75`. For a global clock use
-`floor(currentPpq / positiveStepLength)`. To restart a pattern each bar use
-`currentPpq - hostBarStartPpq`; bar length in quarter notes is
-`hostNumerator * 4.0 / max(1, hostDenominator)`. Trigger only when the computed
-step index changes. Recalculate from the authoritative PPQ after start, seek,
-loop, tempo automation, and time-signature changes; never let a local sample
-counter become the source of truth.
-
-Whenever the user asks for a musical Rate, Division, Sync Time, arp rate, or
-sequencer step, expose a **discrete named selector**, not a continuous beat
-value. The UI must show musical labels such as `1/4`, never arbitrary values
-such as `0.121413`:
-
-    input event float param1 [[ name: "Rate", min: 0, max: 7, init: 4, step: 1,
-                                text: "1/16|1/8T|1/8|1/4T|1/4|1/2|1/1|1 bar" ]];
-    int divisionIndex = 4;
-    event param1 (float value)
-    {
-        divisionIndex = clamp (int (value + 0.5f), 0, 7);
-        lastStepIndex = -1;
-    }
-
-    float getDivisionQuarterNotes()
-    {
-        if (divisionIndex == 0) return 0.25f;
-        if (divisionIndex == 1) return 1.0f / 3.0f;
-        if (divisionIndex == 2) return 0.5f;
-        if (divisionIndex == 3) return 2.0f / 3.0f;
-        if (divisionIndex == 4) return 1.0f;
-        if (divisionIndex == 5) return 2.0f;
-        if (divisionIndex == 6) return 4.0f;
-        return float (hostNumerator) * 4.0f / float (max (1, hostDenominator));
-    }
-
-For arps, drums, and sequencers, derive the step from authoritative PPQ:
-`floor ((currentPpq - hostBarStartPpq) / max (0.0001f,
-getDivisionQuarterNotes()))`. Reset `lastStepIndex` when the division changes,
-transport starts/stops, or a new position packet seeks/loops backward. A
-sample counter or BPM-only oscillator can follow tempo but is not phase-locked
-to the DAW grid.
-
-For tempo-synchronised delays, LFO periods, envelopes, and other time-based DSP,
-the musical division must be converted from quarter-note units using the host
-BPM received in every packet:
-
-    float divisionQuarterNotes = 1.0f; // quarter=1, eighth=0.5, dotted eighth=0.75
-    float periodSeconds = divisionQuarterNotes * 60.0f / max (20.0f, hostBpm);
-    int periodSamples = clamp (int (periodSeconds * sampleRate + 0.5f),
-                               1, maxBufferSamples - 1);
-
-Apply a valid host BPM immediately whether transport is playing or stopped, so
-tempo-synchronised effect tails and the next start already use the correct
-length. The play flag gates new clocked triggers; it does not turn a delay tail
-off. A selector such as `DelayTime` 0..7 is only a division index: map it to
-quarter-note units first, then use the formula above. `delayTimeParam * 0.25f`,
-a fixed seconds table, or any calculation that does not contain `hostBpm` is
-**not BPM sync**.
-
-Host-synced MIDI generators may schedule note events from `main()`; this is the
-intentional exception to the event-only MIDI rule. Held-note bookkeeping remains
-inside `event midiIn`. Audio instruments/effects keep their normal audio loop and
-use the same clock state to trigger drums or update tempo-synchronised DSP.
+**Buffer-size audit:** identical MIDI/transport must produce identical grid
+samples at 31, 64, 257, and 511 frame buffers. Block-boundary retriggers are not
+sync.

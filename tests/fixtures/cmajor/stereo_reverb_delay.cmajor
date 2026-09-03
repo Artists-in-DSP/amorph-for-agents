@@ -11,7 +11,11 @@ processor FoundationStereoReverbDelay [[ main ]]
     float feedback = 0.55f;
     float mixPercent = 25.0f;
     float[48000] delayL, delayR;
+    float[389] allpassL;
+    float[431] allpassR;
     int writeIndex = 0;
+    int allpassIndexL = 0;
+    int allpassIndexR = 0;
 
     event param1 (float v) { timeMs = clamp (v, 20.0f, 900.0f); }
     event param2 (float v) { feedback = clamp (v, 0.0f, 0.92f); }
@@ -33,11 +37,23 @@ processor FoundationStereoReverbDelay [[ main ]]
             delayR.at (writeIndex) = in[1] + wetL * feedback;
             writeIndex = (writeIndex + 1) % 48000;
 
+            float allpassCoefficient = 0.55f;
+            float stageInL = wetL;
+            float stageInR = wetR;
+            float delayedAllpassL = allpassL.at (allpassIndexL);
+            float delayedAllpassR = allpassR.at (allpassIndexR);
+            float allpassOutL = delayedAllpassL - allpassCoefficient * stageInL;
+            float allpassOutR = delayedAllpassR - allpassCoefficient * stageInR;
+            allpassL.at (allpassIndexL) = stageInL + allpassCoefficient * allpassOutL;
+            allpassR.at (allpassIndexR) = stageInR + allpassCoefficient * allpassOutR;
+            allpassIndexL = (allpassIndexL + 1) % 389;
+            allpassIndexR = (allpassIndexR + 1) % 431;
+
             float mix = mixPercent * 0.01f;
             float theta = mix * float (pi) * 0.5f;
             float dryGain = float (cos (float64 (theta)));
             float wetGain = float (sin (float64 (theta)));
-            out <- in * dryGain + float<2> (wetL, wetR) * wetGain;
+            out <- in * dryGain + float<2> (allpassOutL, allpassOutR) * wetGain;
             advance();
         }
     }

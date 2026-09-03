@@ -1,9 +1,7 @@
 ## C) MUSICAL PARAMETERS AND CMAJOR 1.0.3175 DSP FOUNDATIONS
 
-These rules describe the raw value received by DSP, the control mapping shown by
-Amorph, and the safe conversion into signal-processing space. Do not invent
-annotation properties or substitute a generic linear dial when the requested
-control has a meaningful midpoint.
+These rules cover host values, Amorph control mapping, and safe DSP conversion.
+Do not invent annotations or replace a meaningful midpoint with a linear dial.
 
 Language traps still apply: `select(mask, a, b)` is Vector-only masked selection;
 scalar arguments fail. For scalar values use `cond ? a : b`. Built-in math
@@ -21,10 +19,9 @@ returns `float64` where documented; cast explicitly into `float` signal state.
 | Pan | bipolar `-1..1` | Prefer `std::pan_law::centre3dB` |
 | Pitch | semitones or cents | Convert ratios with `2 ** (semitones / 12)`; do not add Hz for musical transposition |
 
-`mid` is the Cmajor/Amorph nonlinear control midpoint. It changes the mapping
-between control position and the declared raw range; it does not transform the
-raw value delivered to the event handler. `init` is independent and remains the
-startup raw value. Never emit `skew`: it is not the Amorph parameter contract.
+`mid` changes the control-position mapping, not the raw event value. `init`
+independently sets the startup raw value. Never emit `skew`: it is not the
+Amorph parameter contract.
 
 Example requested as "0 to 20 kHz, 1 kHz in the middle and initially 1 kHz":
 
@@ -41,11 +38,10 @@ For a dB control, keep the parameter in dB and convert it explicitly:
 
 ### Prefer verified standard-library primitives
 
-The bundled authority is Cmajor `1.0.3175`. `std::filters` is a parameterised
-namespace, so specialise its frame type. For a graph node use
-`std::filters (float<2>)::tpt::svf::Processor`; for per-voice or custom processor
-state use an `Implementation`. Declare the state at processor scope, then call
-`create` once at the start of `main`, where `processor.frequency` is live:
+The authority is Cmajor `1.0.3175`. Specialise the `std::filters` frame type:
+use `std::filters (float<2>)::tpt::svf::Processor` as a graph node or an
+`Implementation` for custom/per-voice state. Declare state at processor scope;
+call `create` once at the start of `main`, where `processor.frequency` is live:
 
     std::filters (float)::tpt::svf::Implementation filter;
     void main()
@@ -53,25 +49,44 @@ state use an `Implementation`. Declare the state at processor scope, then call
         filter = std::filters (float)::tpt::svf::create (
             std::filters (float)::tpt::svf::Mode::lowPass,
             processor.frequency, 1000.0, 0.707);
-        loop
-        {
-            // process one sample, then advance()
-        }
+        loop { /* process one sample, then advance() */ }
     }
 
     // Recalculate at control rate or after smoothed values change:
     filter.setFrequency (processor.frequency, float64 (safeCutoff), float64 (safeQ));
     float filtered = filter.process (sample);
 
-The SVF Q argument is true Q and must be greater than zero. When the user asks
-for a friendly `0..1` Resonance control, use an explicit bounded mapping such as:
+SVF Q is true Q and must exceed zero. Map a friendly `0..1` Resonance explicitly:
 
     float r = clamp (resonanceAmount, 0.0f, 1.0f);
     float safeQ = 0.5f + r * r * 11.5f;  // 0.5 .. 12.0 true Q
 
-Use `std::oscillators::PolyblepState` per voice for saw/square oscillators rather
-than a naive phase ramp. Set its frequency with the current sample rate, then use
+Use `std::oscillators::PolyblepState` per voice. Set with
+`osc.setFrequency (processor.frequency, float64 (frequencyHz));`, call
 `nextSawtooth()`, `nextSquare()`, `nextTriangle()`, or `nextSine()`.
+
+For a manual oscillator, use one unit consistently. Prefer cycles `[0, 1)`:
+add `frequencyHz * float (processor.period)`, wrap at `1.0`, then evaluate
+`sin (float64 (twoPi * phase))`. Calling `sin (phase)` on a cycles phase is wrong
+by `twoPi`. Radians instead add `twoPi * frequencyHz * dt` and wrap at `twoPi`.
+
+Hard compatibility audit: the returned source must contain zero occurrences of
+`processor.currentTime`, `Math.`, `uint`, or `unsigned`. Cmajor has built-in
+`pi` and `twoPi`; never declare a local named `twoPi`. The only processor
+properties here are `frequency`, `period`, `id`, and `session`. For elapsed time,
+own a processor-scope `float64 phase`, advance it in `main()` with
+`phase += float64 (frequencyHz * float (processor.period))`, wrap at `1.0`, and
+evaluate `sin (float64 (twoPi) * phase)`.
+
+Do not use `external` for an internal constant or storage field. An external
+value is supplied by the host and cannot have an initializer, so
+`external int voiceCount = 8;` is invalid. For a fixed internal count write
+`const int voiceCount = 8;`; for mutable processor state write `int voiceCount = 8;`.
+
+For noise declare processor-scope `std::random::RNG rng;`, seed once before the
+loop with `rng.seed (int64 (processor.session));`, then call `rng.getBipolar()`
+or `rng.getUnipolar()`. Floating-point `%` is invalid; use `fmod`/`remainder`
+only when an actual floating remainder is needed.
 
 ### Musical modulation, envelopes, and smoothing
 
@@ -82,61 +97,88 @@ musical depth is consistent across the cutoff range:
     float modulatedHz = cutoffHz * float (pow (2.0, float64 (octaveOffset)));
     float safeCutoff = clamp (modulatedHz, 0.0f, float (processor.frequency) * 0.45f);
 
-For continuously adjustable attack, decay, or release, calculate sample-rate
-independent coefficients from a strictly positive time. Do not subtract a fixed
-amount per sample and do not divide by a zero-millisecond parameter:
+For adjustable attack/decay/release, calculate sample-rate
+independent coefficients from positive time; never use fixed per-sample decay or
+divide by zero:
 
     float seconds = max (0.001f, timeMs * 0.001f);
     float coefficient = 1.0f - float (exp (-1.0 / float64 (seconds * float (processor.frequency))));
     envelope += coefficient * (target - envelope);
 
-Smooth cutoff, gain, mix, pan, drive, delay time, and feedback targets. Use
-`std::smoothing::SmoothedValue` when it fits, or an equivalent bounded ramp/one-pole.
-Event handlers update targets; the audio loop advances the smoother.
+Smooth cutoff, gain, mix, pan, drive, delay time, and feedback. Event handlers
+set targets; the audio loop advances `std::smoothing::SmoothedValue` or an
+equivalent bounded ramp/one-pole.
 
 ### Architecture recipes
 
-Use these signal-flow recipes as starting points, not as permission to ignore the
-user's requested behaviour:
+Use these recipes without overriding requested behaviour:
 
-- **Subtractive synth:** note pitch -> per-voice `PolyblepState` oscillator ->
-  pitch-space envelope/LFO cutoff modulation -> TPT low-pass with bounded true Q
-  -> amplitude envelope -> active-voice normalisation. Each allocated voice owns
-  its oscillator, filter, envelope, note, and gate state.
+- **Subtractive synth:** note -> per-voice `PolyblepState` -> pitch-space
+  envelope/LFO modulation -> TPT low-pass with bounded true Q -> amplitude
+  envelope -> active-voice normalisation. Each voice owns all state.
 - **Kick/tom:** trigger resets an amplitude envelope and a faster positive pitch
-  envelope; a sine body starts above the tuned fundamental and falls to it. Add a
-  separately decaying click/noise transient only when requested. Decay coefficients
-  are sample-rate independent; never decrement envelopes by a fixed sample amount.
-- **Snare/hat:** combine a bounded tonal component with filtered noise. Give body
-  and noise separate decay constants, high-pass unwanted DC/rumble, and retain
-  output headroom. A trigger resets state; continuous noise must not leak before it.
-- **Reverb:** use multiple unequal delay lengths, damp feedback paths, and diffuse
-  with all-pass/comb stages; cross-couple stereo paths without collapsing them to
-  mono. Clamp feedback below unity and delay reads inside fixed buffers. A single
-  feedback delay is an echo, not a convincing reverb.
-- **Delay/chorus:** preserve dry stereo, interpolate fractional read positions,
-  smooth time modulation, and use different/cross-coupled L/R trajectories when
-  width is requested. Never resize a delay buffer at runtime.
-- **Dynamics:** measure a rectified or RMS envelope, smooth attack and release,
-  compute gain reduction consistently in dB, convert once with `dBtoGain`, and
-  avoid subtracting dB values from a linear multiplier.
+  envelope; sine falls to the tuned fundamental. Optional click/noise decays
+  separately. Coefficients are sample-rate independent. For a conventional GM
+  kick, verify the settled body is normally `40..100 Hz`.
+- **Snare/hat:** bounded tone plus filtered noise with separate decays, DC/rumble
+  filtering, headroom, and no pre-trigger leakage. Conventional output retains
+  substantial bright/noise energy.
+- **Reverb:** unequal delays, damped feedback, all-pass/comb diffusion, and
+  cross-coupled stereo below unity. One feedback delay is an echo. An impulse must
+  yield multiple arrivals, distinct stereo wet output, and a finite decaying tail.
+  A Schroeder all-pass stage requires a delay buffer and uses this recurrence
+  (repeat it with separate buffers, indices, and unequal lengths for each stage):
+
+      float delayed = apBuffer.at (apIndex);
+      float allpassOut = delayed - coefficient * stageIn;
+      apBuffer.at (apIndex) = stageIn + coefficient * allpassOut;
+      apIndex = (apIndex + 1) % allpassLength;
+
+  Keep `abs (coefficient) < 1.0f` and make `allpassLength` a positive compile-time
+  constant. A scalar previous-sample variable is not a reverb all-pass stage.
+  Reject algebraically cancelling expressions such as `-g * x + state + g * x`.
+- **Delay/chorus:** preserve dry stereo, interpolate fractional reads, smooth time,
+  and use distinct/cross-coupled L/R trajectories. Never resize buffers at runtime.
+- **Modal/physical resonator:** use inharmonic modes with unequal,
+  frequency-dependent damping; a harmonic comb bank is not a convincing material.
+  Bound each complete delay-write feedback row: after decay,
+  `sum(abs(self and cross weights)) <= 0.98`. A safe pattern is
+  `fb1 = decayGain * (0.94f * own1 + 0.02f * other)`; by contrast,
+  `0.997f * own + 0.018f * other` is unsafe. Do not put `tanh` or a clamp
+  inside the loop to excuse an over-unity row; first prove the un-clamped tail
+  decays. Modal/comb/nonlinear wet paths can retain DC. DC-block each final wet
+  channel before dry/wet mixing, with independent state per channel:
+
+      float dcSafeL = wetL - previousWetL + dcStateL * 0.995f;
+      float dcSafeR = wetR - previousWetR + dcStateR * 0.995f;
+      previousWetL = wetL; previousWetR = wetR;
+      dcStateL = dcSafeL; dcStateR = dcSafeR;
+
+  Probe impulse and zero-mean noise at default and extreme damping/brightness.
+  Require an un-clamped finite decaying response, no clipping, and measured
+  `abs(wet-output DC offset) < 0.01`; compile and non-silence are insufficient.
+- **Dynamics:** smooth a rectified/RMS envelope; compute gain reduction in dB and
+  convert once with `dBtoGain`. Above-threshold input must show measurable dB gain reduction
+  versus bypass; moving parameters is not proof of compression.
 
 ### Mixing, output, and delay safety
 
-For equal-power dry/wet mixing, use a `0..1` mix position:
+For equal-power dry/wet, use a `0..1` position:
 
     float theta = clamp (mix, 0.0f, 1.0f) * float (pi) * 0.5f;
     float dryGain = float (cos (float64 (theta)));
     float wetGain = float (sin (float64 (theta)));
     float mixed = dry * dryGain + wet * wetGain;
 
-For pan, `float<2> gains = std::pan_law::centre3dB (clamp (pan, -1.0f, 1.0f));`.
-Keep feedback magnitude below `1.0`, keep delay buffers fixed-size, clamp every
-read delay to the allocated range, and interpolate fractional reads. Instruments
-must divide a variable voice sum by `float(max(1, activeVoiceCount))`, retain
-headroom, and apply only a bounded final saturator if requested.
+For pan use `std::pan_law::centre3dB`. Keep feedback below `1.0`; use fixed
+buffers, bounded interpolated reads, and safely wrapped indices. Instruments
+divide a variable sum by `float(max(1, activeVoiceCount))` and retain headroom.
 
-Before returning code, audit the complete default signal path: parameters must
-have the intended control meaning, coefficient updates must stay finite, stereo
-must remain stereo, `0 dB` must be unity, and the default output must be audible
-without clipping.
+Budget fixed delay state across the processor. A multi-stage reverb normally keeps
+the sum near or below `131072` floats (for example `16 * 8192`) and sizes each
+stage for its maximum. If requested delay needs more, reduce the number of large
+arrays. Copying `65536` into every comb/all-pass can cause a host compile stall.
+
+Final audit: intended control meaning; finite coefficients; stereo integrity;
+`0 dB` unity; audible, unclipped defaults. Compilation and non-silence are necessary, not sufficient:
+probe requested extremes and category behaviour.

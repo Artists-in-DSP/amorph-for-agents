@@ -1,0 +1,42 @@
+processor FoundationModalResonatorDcSafe [[ main ]]
+{
+    input stream float<2> in;
+    output stream float<2> out;
+
+    input event float param1 [[ name: "Drive", min: 0.0, max: 2.0,
+                                init: 0.7 ]];
+    input event float param2 [[ name: "Mix", min: 0.0, max: 1.0,
+                                init: 0.7 ]];
+
+    float drive = 0.7f;
+    float mix = 0.7f;
+    float previousWetL = 0.0f;
+    float previousWetR = 0.0f;
+    float dcStateL = 0.0f;
+    float dcStateR = 0.0f;
+
+    event param1 (float v) { drive = clamp (v, 0.0f, 2.0f); }
+    event param2 (float v) { mix = clamp (v, 0.0f, 1.0f); }
+
+    void main()
+    {
+        loop
+        {
+            float dryL = in[0];
+            float dryR = in[1];
+            float wetL = float (tanh (float64 (dryL * drive + 0.08f)));
+            float wetR = float (tanh (float64 (dryR * drive + 0.08f)));
+
+            float dcSafeL = wetL - previousWetL + dcStateL * 0.995f;
+            float dcSafeR = wetR - previousWetR + dcStateR * 0.995f;
+            previousWetL = wetL;
+            previousWetR = wetR;
+            dcStateL = dcSafeL;
+            dcStateR = dcSafeR;
+
+            out <- float<2> (dryL + mix * (dcSafeL - dryL),
+                             dryR + mix * (dcSafeR - dryR));
+            advance();
+        }
+    }
+}
