@@ -7,11 +7,11 @@ import unittest
 from html.parser import HTMLParser
 from pathlib import Path
 
-from scripts.build_external_context import compose_source
+from scripts.build_external_context import DEFAULT_RELEASE, compose_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260831-f"
+RELEASE = DEFAULT_RELEASE
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -99,10 +99,12 @@ class ExternalContextTests(unittest.TestCase):
                 context_match = re.search(r"^CONTEXT_ID: (\S+)$", text, re.MULTILINE)
                 end_match = re.search(r"^END_TOKEN: (\S+)$", text, re.MULTILINE)
 
-                # MIDI now carries the same complete host-transport and named
-                # musical-division contract as audio variants. Keep it below
-                # 20 KB while the richer Instrument/FX documents stay below 24 KB.
-                budget = 20_000 if record["target"] == "dsp" and record["variant"] == "midi" else 24_000
+                # Keep the complete DSP contract inside the prompt budget proven
+                # by the signed-out Gemini consumer gate. UI has its own budget.
+                if record["target"] == "dsp":
+                    budget = 19_000 if record["variant"] == "midi" else 24_000
+                else:
+                    budget = 24_000
                 self.assertLessEqual(len(raw), budget)
                 self.assertNotIn(b"\x00", raw)
                 self.assertNotIn("\r", text)
@@ -159,8 +161,13 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("preserve every existing endpoint, parameter", text)
                 self.assertIn("next sequential `paramN` ID", text)
                 self.assertIn("a Cmajor state initializer is not a substitute", text)
+                self.assertIn("Put every endpoint declaration in one contiguous block", text)
+                self.assertIn("Never interleave endpoint/state/handler groups", text)
                 self.assertIn("preserves the existing intended/audible default", text)
-                self.assertIn("After the two required receipt comments", text)
+                if path.stem in ("instrument", "fx"):
+                    self.assertNotIn("## D) OUTPUT CONTRACT", text)
+                else:
+                    self.assertIn("## D) OUTPUT CONTRACT", text)
                 self.assertIn("requires an identifier", text)
                 self.assertIn("`processor [[ main ]]`", text)
                 self.assertIn("`processor {`", text)
@@ -170,6 +177,8 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertNotIn("`select(cond, a, b)`", text)
                 self.assertIn("Vector-only masked selection", text)
                 self.assertIn("For scalar values use `cond ? a : b`", text)
+                self.assertIn("the `Math` namespace does not exist", text)
+                self.assertIn("Never write `Math.pi` or declare a local named `twoPi`", text)
                 self.assertIn('display label `[[ name: "Output" ]]`', text)
                 self.assertIn("never `output`", text)
                 self.assertIn("never `init: Z, ]]`", text)
@@ -191,27 +200,31 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("every `/` and `%` divisor", text)
                 self.assertIn("syntax-based and does not infer safety from an outer branch", text)
                 self.assertIn("inspect every literal `/` and `%` occurrence", text)
+                self.assertIn("`external int voiceCount = 8;` is invalid", text)
+                self.assertIn("`const int voiceCount = 8;`", text)
                 self.assertIn("declare every manual phase field `float64 phase;`", text)
                 self.assertIn("Never assign a `float64` expression to `float phase;`", text)
+                self.assertIn("Struct fields are declarations only", text)
+                self.assertIn("inside a struct is invalid Cmajor", text)
                 self.assertIn("input event float transportIn;", text)
-                self.assertIn("Amorph does not populate `std::timeline::*` endpoints", text)
-                self.assertIn("play, bpm, numerator, denominator, ppq, barStart", text)
-                self.assertIn("float64 currentPpq", text)
+                self.assertIn("Amorph does not populate `std::timeline::*`", text)
+                self.assertIn("play, bpm, numerator, denominator,", text)
+                self.assertIn("ppq, barStart", text)
+                self.assertIn("both PPQ values as `float64`", text)
                 self.assertIn("currentPpq = float64 (value);", text)
                 self.assertIn("float64 (hostBpm) / 60.0 /", text)
                 self.assertNotIn("abs (value - hostBarStartPpq) > 0.001f", text)
-                self.assertIn("without resetting", text)
-                self.assertIn("either delta alone", text)
-                self.assertIn("must not retrigger", text)
-                self.assertIn("A normal `barStart` advance", text)
-                self.assertIn("Use that global step as the trigger latch", text)
-                self.assertIn("Exact `value < currentPpq`, `!=`, or fixed", text)
-                self.assertIn("error thresholds can turn", text)
+                self.assertIn("Do not reset it from either PPQ/barStart", text)
+                self.assertIn("retrigger at the DAW buffer rate", text)
+                self.assertIn("a normal `barStart` advance", text)
+                self.assertIn("Use that global step as the trigger", text)
+                self.assertIn("exact inequality, value decrease, or a fixed error threshold", text)
                 self.assertIn("retrigger", text)
+                self.assertIn("must also contain `step: 1`", text)
                 self.assertIn("DAW buffer rate", text)
                 self.assertIn("**Buffer-size audit:**", text)
-                self.assertIn("31, 64, 257, and 511 frames", text)
-                self.assertIn("Apply a valid host BPM immediately", text)
+                self.assertIn("31, 64, 257, and 511 frame buffers", text)
+                self.assertIn("valid host BPM immediately whether playing or stopped", text)
                 self.assertIn("periodSeconds = divisionQuarterNotes * 60.0f", text)
                 self.assertIn("`delayTimeParam * 0.25f`", text)
                 self.assertIn("**not BPM sync**", text)
@@ -219,7 +232,8 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("never arbitrary values", text)
                 self.assertIn("0.121413", text)
                 self.assertIn("getDivisionQuarterNotes()", text)
-                self.assertIn("not phase-locked", text)
+                self.assertIn("A BPM oscillator or sample counter is not", text)
+                self.assertIn("phase-locked", text)
                 self.assertNotIn("search_components(\"transport ppq parser\")", text)
                 self.assertNotIn("Patches/StartupMidiLive/dsp.cmajor", text)
 
@@ -236,6 +250,9 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("**Polyphonic sum safety:**", instrument)
         self.assertIn("never use a fixed multiplier such as `0.25`", instrument)
         self.assertIn("`float(max(1, activeVoiceCount))`", instrument)
+        self.assertIn("at most `0.5f`", instrument)
+        self.assertIn("at least 6 dB internal headroom", instrument)
+        self.assertIn("Active-count normalisation alone is insufficient", instrument)
 
         self.assertNotIn("float64 (voices[i].noteFreq) * processor.period", instrument)
         self.assertIn("float64 (frequencyHz * float (processor.period))", instrument)
@@ -246,8 +263,8 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("`midiIn -> std::midi::MPEConverter -> synth.midiIn` is invalid", instrument)
         self.assertIn("Count existing `paramN` declarations", instrument)
         self.assertIn("the new control must be `param5` in all four places", instrument)
-        self.assertIn("A musical arpeggiator must also articulate steps", compose_source("dsp", "instrument"))
-        self.assertIn("physically held MIDI-note set separate", compose_source("dsp", "instrument"))
+        self.assertIn("A musical arpeggiator must articulate bounded note gates", compose_source("dsp", "instrument"))
+        self.assertIn("physically held notes separate", compose_source("dsp", "instrument"))
 
         midi = (ROOT / "context-src" / "v1" / "dsp" / "midi.md").read_text(encoding="utf-8")
         self.assertIn("`% heldCount` is forbidden", midi)
@@ -303,9 +320,23 @@ class ExternalContextTests(unittest.TestCase):
             "tpt::svf",
             "true Q",
             "PolyblepState",
+            "osc.setFrequency (processor.frequency, float64 (frequencyHz))",
             "proportional in pitch space",
             "sample-rate\nindependent",
             "equal-power",
+            "Calling `sin (phase)` on a cycles phase is wrong",
+            "zero occurrences of\n`processor.currentTime`",
+            "never declare a local named `twoPi`",
+            "The only processor\nproperties here are `frequency`, `period`, `id`, and `session`",
+            "`std::random::RNG rng;`",
+            "`rng.getBipolar()`",
+            "Floating-point `%` is invalid",
+            "`40..100 Hz`",
+            "substantial bright/noise energy",
+            "measurable dB gain reduction",
+            "sum near or below `131072` floats",
+            "host compile stall",
+            "Compilation and non-silence are necessary, not sufficient",
         ):
             self.assertIn(required, shared)
 
@@ -319,8 +350,15 @@ class ExternalContextTests(unittest.TestCase):
         midi = compose_source("dsp", "midi")
         self.assertNotIn("{{HOST_TRANSPORT_CONTRACT}}", midi)
         self.assertIn("input event float transportIn;", midi)
+        self.assertIn("`processor.currentTime` does not exist", midi)
+        self.assertIn("Floating-point `%` is", midi)
+
+        host_transport = (ROOT / "context-src" / "v1" / "shared" / "host-transport.md").read_bytes()
+        self.assertLessEqual(len(host_transport), 3_000)
 
         instrument = compose_source("dsp", "instrument")
+        self.assertNotIn("## D) OUTPUT CONTRACT", instrument)
+        self.assertIn("must contain zero occurrences", instrument)
         self.assertNotIn(
             "float cutoff = clamp (2000.0f + resonance * 4000.0f",
             instrument,
@@ -339,7 +377,7 @@ class ExternalContextTests(unittest.TestCase):
         fixture_root = ROOT / "tests" / "fixtures" / "cmajor"
         fixtures = {path.name: path.read_text(encoding="utf-8") for path in fixture_root.glob("*.cmajor")}
         self.assertEqual(
-            {"filter_gain.cmajor", "host_synced_drums.cmajor", "kick_drum.cmajor", "stereo_reverb_delay.cmajor", "subtractive_synth.cmajor", "tempo_synced_delay.cmajor"},
+            {"filter_gain.cmajor", "host_synced_drums.cmajor", "kick_drum.cmajor", "noise_time.cmajor", "stereo_reverb_delay.cmajor", "subtractive_synth.cmajor", "tempo_synced_delay.cmajor"},
             set(fixtures),
         )
         self.assertTrue(all("[[ main ]]" in source for source in fixtures.values()))
@@ -347,7 +385,15 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("mid: 1000.0", fixtures["filter_gain.cmajor"])
         self.assertIn("PolyblepState", fixtures["subtractive_synth.cmajor"])
         self.assertIn("pitchEnvelope", fixtures["kick_drum.cmajor"])
+        self.assertIn("std::random::RNG", fixtures["noise_time.cmajor"])
+        self.assertIn("rng.getBipolar()", fixtures["noise_time.cmajor"])
+        self.assertNotIn("processor.currentTime", fixtures["noise_time.cmajor"])
         self.assertIn("fraction", fixtures["stereo_reverb_delay.cmajor"])
+        self.assertIn("allpassOutL", fixtures["stereo_reverb_delay.cmajor"])
+        self.assertIn(
+            "stageInL + allpassCoefficient * allpassOutL",
+            fixtures["stereo_reverb_delay.cmajor"],
+        )
         self.assertIn("input event float transportIn;", fixtures["host_synced_drums.cmajor"])
         self.assertIn("float64 currentPpq", fixtures["host_synced_drums.cmajor"])
         self.assertIn("currentPpq = float64 (value);", fixtures["host_synced_drums.cmajor"])
@@ -362,6 +408,15 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("text:", fixtures["tempo_synced_delay.cmajor"])
         self.assertIn("60.0f / max (20.0f, hostBpm)", fixtures["tempo_synced_delay.cmajor"])
         self.assertNotIn("delayTimeParam * 0.25f", fixtures["tempo_synced_delay.cmajor"])
+
+    def test_reverb_recipe_requires_real_delay_buffer_allpass_state(self):
+        core = (ROOT / "context-src" / "v1" / "shared" / "core-dsp-foundations.md").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("A Schroeder all-pass stage requires a delay buffer", core)
+        self.assertIn("apBuffer.at (apIndex) = stageIn + coefficient * allpassOut", core)
+        self.assertIn("A scalar previous-sample variable is not a reverb all-pass stage", core)
+        self.assertIn("-g * x + state + g * x", core)
 
     def test_transport_sync_runtime_gate_is_present(self):
         self.assertTrue((ROOT / "scripts" / "verify_cmajor_transport_sync.py").is_file())

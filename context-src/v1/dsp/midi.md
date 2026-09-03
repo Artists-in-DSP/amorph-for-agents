@@ -14,7 +14,7 @@ You are writing Cmajor DSP code for the **Amorph_MIDI** plugin variant (pure MID
 4. **Types:** declare every manual phase field `float64 phase;` and update it with `phase += float64 (frequencyHz * float (processor.period));`. Never assign a `float64` expression to `float phase;`. Use `float` elsewhere.
    - [NO] `double` does not exist in Cmajor -- use `float64`.
 5. **No C++/localised tokens:** `auto`, `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`. Code tokens and identifiers must be ASCII; never emit translated keywords.
-6. **Math casting:** `sin/cos/tan/tanh/sqrt/pow/exp/log` return `float64` -- wrap with `float(...)`.
+6. **Math constants/casting:** Cmajor has built-in `pi` and `twoPi`; the `Math` namespace does not exist. Never write `Math.pi` or declare a local named `twoPi`; use `float(twoPi)`. `sin/cos/tan/tanh/sqrt/pow/exp/log` return `float64` -- wrap with `float(...)`.
 7. **Parameter pattern (3-step mandatory):**
    ```
    input event float param1 [[ name: "Label", min: X, max: Y, init: Z ]];
@@ -22,7 +22,7 @@ You are writing Cmajor DSP code for the **Amorph_MIDI** plugin variant (pure MID
    event param1 (float v) { stateVar = v; }
    ```
    Do not put a trailing comma before `]]`; write `init: Z ]]`, never `init: Z, ]]`.
-   Every host-facing parameter endpoint, including one preserved from current code, must include explicit `name`, `min`, `max`, and `init` annotations. Amorph and plugin hosts apply the annotated `init` after compile and during QA; a Cmajor state initializer is not a substitute. In edit mode, if an existing endpoint has no metadata, add it and choose an `init` that preserves the existing intended/audible default (for example, do not accidentally reset gain or cutoff to `0.0`).
+   Every host-facing parameter endpoint, including one preserved from current code, must include explicit `name`, `min`, `max`, and `init` annotations. Put every endpoint declaration in one contiguous block at processor start, before any state, struct, handler, or function. Never interleave endpoint/state/handler groups. Amorph and plugin hosts apply the annotated `init` after compile and during QA; a Cmajor state initializer is not a substitute. In edit mode, if an existing endpoint has no metadata, add it and choose an `init` that preserves the existing intended/audible default (for example, do not accidentally reset gain or cutoff to `0.0`).
 8. **Fixed-array access:** read with `array.at(i)` and write with `array.at(i) = value;`. Never invent `.set(...)` or `.get(...)` array methods. Do not use JavaScript-style collection APIs.
 9. **main() is ONLY:** `void main() { loop { advance(); } }`. All MIDI processing belongs in `event midiIn`; never use `midiIn.available()` or `midiIn.read()`.
 10. **Fixed-size arrays only:** `float[1024] buf;` -- NO unsized `float[] buf`, NO runtime `.wrap(size)`, NO `.size` property. Buffer sizes must be compile-time constants.
@@ -31,6 +31,8 @@ You are writing Cmajor DSP code for the **Amorph_MIDI** plugin variant (pure MID
 13. **Edit-mode preservation:** when current code is supplied, return the complete revised file and preserve every existing endpoint, parameter, and requested feature unless the task explicitly removes it. Add a new parameter with the next sequential `paramN` ID and include all three parts: endpoint declaration, state, and event handler.
 14. **Period casting (Amorph lint contract):** every occurrence of `processor.period` in returned source must be syntactically inside `float(processor.period)` or `float (processor.period)`. Never use bare `processor.period`, `float64(processor.period)`, or a `float64` alias that hides the bare value. For a `float64` phase, write `phase += float64(freq) * float(processor.period);`, or bind `float dt = float(processor.period);` and use `phase += float64(freq * dt);`.
 15. **Modulo/division safety:** every `/` and `%` divisor must be nonzero before any event. Amorph lint is syntax-based and does not infer safety from an outer branch, so write count modulo as `% max(1, count)`; `% heldCount` is forbidden because it starts at zero. Guard floating division with an epsilon; inspect every literal `/` and `%` occurrence in the final source.
+16. **No initialized externals:** do not use `external` for an internal constant or storage field. `external int voiceCount = 8;` is invalid because external values are supplied by the host and cannot have initializers. Use `const int voiceCount = 8;` for a fixed internal count or `int voiceCount = 8;` for mutable state.
+17. **Struct fields are declarations only:** never write C++-style field initializers inside a `struct`. Use `struct NoteState { int note; bool active; }`, then initialise each instance before use. `int note = -1;` inside a struct is invalid Cmajor.
 
 ---
 
@@ -50,6 +52,10 @@ Every host parameter endpoint ID must be the exact sequential form `param1`, `pa
 | `processor.period` | Seconds per sample (`float64`); Amorph requires every source occurrence to be wrapped as `float(processor.period)` |
 | `processor.id` | Unique `int32` per processor instance (same across runs) |
 | `processor.session` | Unique `int32` per program run (changes each time) |
+
+`processor.currentTime` does not exist. Own and advance a `float64` phase or
+sample counter in `main()` when elapsed time is needed. Floating-point `%` is
+invalid; use `fmod(x, y)` or `remainder(x, y)`.
 | `clamp(x, lo, hi)` | Built-in clamp |
 | `abs(x)` / `floor(x)` / `ceil(x)` / `rint(x)` | Built-in rounding/abs |
 | `sin(x)` / `cos(x)` / `tan(x)` / `atan(x)` / `atan2(y,x)` | Trig (radians) -- wrap results with `float()` in float32 context |
@@ -192,3 +198,4 @@ processor HarmonicTransposer
 6. `main()` is `loop { advance(); }` for event-driven MIDI FX; host-synced arps/sequencers may advance PPQ and schedule notes in `main()` (see E)
 7. **Immutable `let`:** a `let` binding can never be assigned again. If a value must change after its declaration, use an explicit typed mutable local such as `bool found = false;` or `int count = 0;` instead of `let`.
 8. **Final loop audit:** inspect every `for`, `while`, and timing `loop` body. No value declared inside a repeated loop body may use `let`; use an explicit typed local such as `float rate = ...;` or `int index = ...;`, or hoist it outside the loop. Do this literal audit after generating the complete file.
+9. **Discrete selector audit:** every host-synchronised Rate/Division selector with `text:` labels must also declare integer `min`, `max`, and `init` values plus `step: 1`. Do not omit `step: 1` from the returned endpoint.

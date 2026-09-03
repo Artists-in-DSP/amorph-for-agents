@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow">
+<title>Amorph DSP context — fx</title>
+<link rel="canonical" href="https://artists-in-dsp.github.io/amorph-for-agents/v1/preview-20260902-a/dsp/fx.html">
+</head>
+<body><pre id="amorph-context">AMORPH_EXTERNAL_CONTEXT v1
+CONTEXT_ID: amorph-dsp-fx-f244431361588bac
+TARGET: dsp
+VARIANT: fx
+RELEASE: preview-20260902-a
+BODY_SHA256: 17567240018c2665a036b2f3d44ee1cd40de579e0808ab49e4e7dcab773fd914
+DELIVERY_FORMAT: static-html-v1
+CONTENT_TYPE: text/html; charset=utf-8
+ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
+FAILURE_CONTRACT: return exactly CONTEXT_UNAVAILABLE when retrieval is incomplete
+
+BEGIN_AMORPH_CONTEXT
+RESPONSE CONTRACT — REQUIRED
+
+Return the complete corrected `dsp.cmajor` in exactly one fenced code block
+tagged `cmajor`. Return no prose, heading, explanation, or second code block.
+Do not use SEARCH/REPLACE blocks, patches, ellipses, or placeholders.
+
+The first two lines inside the fence must copy the exact receipt values printed
+near the top and bottom of this document:
+
+// AMORPH_CONTEXT_ID: &lt;exact CONTEXT_ID&gt;
+// AMORPH_END_TOKEN: &lt;exact END_TOKEN&gt;
+
+The next source token must be graph or processor, immediately followed by a top-level identifier before any annotation or body. Never return `processor [[ main ]]`, `processor {`, or `graph [[ main ]]`. Every host parameter endpoint ID must be the exact sequential form `param1`, `param2`, ... `paramN`; descriptive endpoint IDs are invalid. Put human labels only in `[[ name: "..." ]]`, and audit every `input event float` declaration before returning. Amorph removes the outer fence before Compile.
+
+You are writing Cmajor DSP code for the **Amorph_FX** plugin variant (stereo audio effect -- audio IN -&gt; audio OUT, no MIDI).
+**USER REQUEST ALWAYS WINS** -- topology, parameters, character, and complexity are driven by the request.
+
+---
+
+## A) HARD RULES
+
+1. **Forbidden identifiers:** never name a variable, parameter, field, or helper `input`, `output`, or `stream`. A control may use the display label `[[ name: "Output" ]]`, but its identifier must be valid, such as `outGain` -- never `output`.
+2. **Helper functions:** processor scope only -- not inside `main()` or event handlers.
+3. **Required endpoints:** `input stream float&lt;2&gt; in;` and `output stream float&lt;2&gt; out;`. Use `float` only when mono is explicitly required.
+4. **Types:** declare every manual phase field `float64 phase;` and update it with `phase += float64 (frequencyHz * float (processor.period));`. Never assign a `float64` expression to `float phase;`. Use `float` elsewhere; `double` does not exist.
+5. **No C++/localised tokens:** `auto`, `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`. Code tokens and identifiers must be ASCII; never emit translated keywords.
+6. **Math casting:** `sin/cos/tan/tanh/sqrt/pow/exp/log` return `float64`; wrap with `float(...)` when storing in `float`.
+7. **Host parameter pattern (all three parts are mandatory):**
+
+       input event float param1 [[ name: "Cutoff", min: 0.0, max: 20000.0,
+                                   mid: 1000.0, init: 1000.0, unit: "Hz" ]];
+       float cutoffHz = 1000.0f;
+       event param1 (float v) { cutoffHz = v; }
+
+   `mid` is optional but `name`, `min`, `max`, and `init` are required. Never emit `skew`. Do not put a trailing comma before `]]`; write `init: Z ]]`, never `init: Z, ]]`. Amorph and plugin hosts apply the annotated `init` after compile and during QA; a Cmajor state initializer is not a substitute. In edit mode, add missing metadata with an `init` that preserves the existing intended/audible default.
+8. **Fixed arrays:** `float[65536] buf;`; read with `array.at(i)` and write with `array.at(i) = value;`. Never invent `.set(...)` or `.get(...)` array methods. No unsized arrays, runtime-sized arrays, `.size`, or JavaScript collection APIs.
+9. **Audio loop:** write `out &lt;- float&lt;2&gt; (outL, outR);` and then `advance();` on every iteration.
+10. **Increment style:** `i++` is valid in loop headers; prefer `i += 1` in new code.
+11. **Typed locals only:** do not use `let` anywhere in the returned source. Use explicit mutable locals such as `float x`, `int count`, or `bool found`. Before responding, search the answer for `let`; required count zero.
+12. **Edit-mode preservation:** when current code is supplied, return the complete revised file and preserve every existing endpoint, parameter, and requested feature unless explicitly removed. Add a parameter with the next sequential `paramN` ID and include its endpoint, state, and event handler.
+13. **Period casting:** every occurrence of `processor.period` must appear inside `float(processor.period)` or `float (processor.period)`. Never use bare `processor.period` or `float64(processor.period)`. A safe alias is `float dt = float(processor.period);`.
+14. **Modulo/division safety:** every `/` and `%` divisor must be provably nonzero before any event fires. Amorph lint is syntax-based and does not infer safety from an outer branch. Use `% max(1, count)` and a positive epsilon for floating division; inspect every literal `/` and `%` occurrence before returning.
+15. **Stereo integrity:** unless mono/dual-mono is requested, preserve the dry stereo image and create distinct left/right wet state, delay/allpass lengths, modulation, or decorrelated noise. Verify the algorithm cannot reduce to `wetL == wetR` for every sample.
+16. **Prompt audible wet path:** reverb, delay, chorus, shimmer, widening, and spatial effects must produce non-silent wet energy within a normal two-second audition at annotated defaults. Include an early wet branch below roughly 250 ms rather than waiting only for a multi-second buffer.
+17. **Complete response:** no truncation, ellipses, pseudo-code, SEARCH/REPLACE blocks, or placeholder DSP.
+18. **Named top-level definition:** every `processor` requires an identifier. Valid start: `processor StereoEffect [[ main ]]`. Invalid starts: `processor [[ main ]]` and `processor {`. `[[ main ]]` follows the name; it never replaces it.
+
+---
+
+## B) PARAMETER AND ENDPOINT NAMING
+
+Every host parameter endpoint ID must be the exact sequential form `param1`, `param2`, ... `paramN`. Descriptive IDs such as `paramSnap`, `paramBody`, or `paramDecay` are invalid for Amorph even if Cmajor accepts them. Put the human label only in `[[ name: "..." ]]`, and give every parameter a handler with the same `paramN` ID.
+
+---
+
+## C) MUSICAL PARAMETERS AND CMAJOR 1.0.3175 DSP FOUNDATIONS
+
+These rules cover host values, Amorph control mapping, and safe DSP conversion.
+Do not invent annotations or replace a meaningful midpoint with a linear dial.
+
+Language traps still apply: `select(mask, a, b)` is Vector-only masked selection;
+scalar arguments fail. For scalar values use `cond ? a : b`. Built-in math
+returns `float64` where documented; cast explicitly into `float` signal state.
+
+### Parameter semantics
+
+| Meaning | Host declaration | DSP use |
+|---|---|---|
+| Cutoff/frequency | Hz; use `mid` when the user requests a centre position or the range spans more than roughly two octaves | Smooth the raw Hz value; clamp to `0..0.45 * sampleRate` before filter coefficient updates |
+| Gain/trim/output | dB; movement is normally linear in dB, so do not add frequency-style curvature | Smooth in dB or linear gain, then use `std::levels::dBtoGain`; `0 dB` must produce gain `1.0` |
+| Time | `ms` or `s`; use `mid` for a useful musical centre | Clamp above zero before division, then convert once to seconds, frames, or a coefficient |
+| Resonance | Either true Q or a clearly labelled normalised `0..1` amount | TPT SVF receives true Q; never pass a normalised amount directly as Q |
+| Mix | `0..100 %` or `0..1` | Clamp, then choose linear crossfade only when level interaction is intended; otherwise use equal-power dry/wet gains |
+| Pan | bipolar `-1..1` | Prefer `std::pan_law::centre3dB` |
+| Pitch | semitones or cents | Convert ratios with `2 ** (semitones / 12)`; do not add Hz for musical transposition |
+
+`mid` changes the control-position mapping, not the raw event value. `init`
+independently sets the startup raw value. Never emit `skew`: it is not the
+Amorph parameter contract.
+
+Example requested as "0 to 20 kHz, 1 kHz in the middle and initially 1 kHz":
+
+    input event float param1 [[ name: "Cutoff", min: 0.0, max: 20000.0,
+                                mid: 1000.0, init: 1000.0, unit: "Hz" ]];
+
+For a dB control, keep the parameter in dB and convert it explicitly:
+
+    input event float param2 [[ name: "Output", min: -24.0, max: 6.0,
+                                init: 0.0, unit: "dB" ]];
+    float outputDb = 0.0f;
+    event param2 (float v) { outputDb = clamp (v, -24.0f, 6.0f); }
+    // audio loop: float outputGain = float (std::levels::dBtoGain (outputDb));
+
+### Prefer verified standard-library primitives
+
+The authority is Cmajor `1.0.3175`. Specialise the `std::filters` frame type:
+use `std::filters (float&lt;2&gt;)::tpt::svf::Processor` as a graph node or an
+`Implementation` for custom/per-voice state. Declare state at processor scope;
+call `create` once at the start of `main`, where `processor.frequency` is live:
+
+    std::filters (float)::tpt::svf::Implementation filter;
+    void main()
+    {
+        filter = std::filters (float)::tpt::svf::create (
+            std::filters (float)::tpt::svf::Mode::lowPass,
+            processor.frequency, 1000.0, 0.707);
+        loop { /* process one sample, then advance() */ }
+    }
+
+    // Recalculate at control rate or after smoothed values change:
+    filter.setFrequency (processor.frequency, float64 (safeCutoff), float64 (safeQ));
+    float filtered = filter.process (sample);
+
+SVF Q is true Q and must exceed zero. Map a friendly `0..1` Resonance explicitly:
+
+    float r = clamp (resonanceAmount, 0.0f, 1.0f);
+    float safeQ = 0.5f + r * r * 11.5f;  // 0.5 .. 12.0 true Q
+
+Use `std::oscillators::PolyblepState` per voice instead of a naive saw/square
+ramp. Set its frequency, then call its `nextSawtooth()`, `nextSquare()`,
+`nextTriangle()`, or `nextSine()`.
+
+For a manual oscillator, use one unit consistently. Prefer cycles `[0, 1)`:
+add `frequencyHz * float (processor.period)`, wrap at `1.0`, then evaluate
+`sin (float64 (twoPi * phase))`. Calling `sin (phase)` on a cycles phase is wrong
+by `twoPi`. Radians instead add `twoPi * frequencyHz * dt` and wrap at `twoPi`.
+
+`processor.currentTime` does not exist in Cmajor `1.0.3175`. For elapsed time,
+own and advance a `float64` phase or sample counter in `main()`. For noise,
+prefer a processor-scope `std::random::RNG rng`, seed it once at the start of
+`main()` with `processor.id` or `processor.session`, and call
+`rng.getBipolar()` or `rng.getUnipolar()`. Do not fake noise with floating-point
+`%`; `fmod(x, y)` or `remainder(x, y)` is required for floating remainders.
+
+### Musical modulation, envelopes, and smoothing
+
+Filter envelope/LFO modulation should be proportional in pitch space so its
+musical depth is consistent across the cutoff range:
+
+    float octaveOffset = envAmountOctaves * envelopeValue + lfoAmountOctaves * lfoValue;
+    float modulatedHz = cutoffHz * float (pow (2.0, float64 (octaveOffset)));
+    float safeCutoff = clamp (modulatedHz, 0.0f, float (processor.frequency) * 0.45f);
+
+For adjustable attack/decay/release, calculate sample-rate
+independent coefficients from positive time; never use fixed per-sample decay or
+divide by zero:
+
+    float seconds = max (0.001f, timeMs * 0.001f);
+    float coefficient = 1.0f - float (exp (-1.0 / float64 (seconds * float (processor.frequency))));
+    envelope += coefficient * (target - envelope);
+
+Smooth cutoff, gain, mix, pan, drive, delay time, and feedback. Event handlers
+set targets; the audio loop advances `std::smoothing::SmoothedValue` or an
+equivalent bounded ramp/one-pole.
+
+### Architecture recipes
+
+Use these recipes without overriding requested behaviour:
+
+- **Subtractive synth:** note -&gt; per-voice `PolyblepState` -&gt; pitch-space
+  envelope/LFO modulation -&gt; TPT low-pass with bounded true Q -&gt; amplitude
+  envelope -&gt; active-voice normalisation. Each voice owns all state.
+- **Kick/tom:** trigger resets an amplitude envelope and a faster positive pitch
+  envelope; sine falls to the tuned fundamental. Optional click/noise decays
+  separately. Coefficients are sample-rate independent. For a conventional GM
+  kick, verify the settled body is normally `40..100 Hz`.
+- **Snare/hat:** bounded tone plus filtered noise with separate decays, DC/rumble
+  filtering, headroom, and no pre-trigger leakage. Conventional output retains
+  substantial bright/noise energy.
+- **Reverb:** unequal delays, damped feedback, all-pass/comb diffusion, and
+  cross-coupled stereo below unity. One feedback delay is an echo. An impulse must
+  yield multiple arrivals, distinct stereo wet output, and a finite decaying tail.
+- **Delay/chorus:** preserve dry stereo, interpolate fractional reads, smooth time,
+  and use distinct/cross-coupled L/R trajectories. Never resize buffers at runtime.
+- **Dynamics:** smooth a rectified/RMS envelope; compute gain reduction in dB and
+  convert once with `dBtoGain`. Above-threshold input must show measurable dB gain reduction
+  versus bypass; moving parameters is not proof of compression.
+
+### Mixing, output, and delay safety
+
+For equal-power dry/wet, use a `0..1` position:
+
+    float theta = clamp (mix, 0.0f, 1.0f) * float (pi) * 0.5f;
+    float dryGain = float (cos (float64 (theta)));
+    float wetGain = float (sin (float64 (theta)));
+    float mixed = dry * dryGain + wet * wetGain;
+
+For pan use `std::pan_law::centre3dB`. Keep feedback below `1.0`; use fixed
+buffers, bounded interpolated reads, and safely wrapped indices. Instruments
+divide a variable sum by `float(max(1, activeVoiceCount))` and retain headroom.
+
+Budget fixed delay state across the processor. A multi-stage reverb normally keeps
+the sum near or below `131072` floats (for example `16 * 8192`) and sizes each
+stage for its maximum. If requested delay needs more, reduce the number of large
+arrays. Copying `65536` into every comb/all-pass can cause a host compile stall.
+
+Final audit: intended control meaning; finite coefficients; stereo integrity;
+`0 dB` unity; audible, unclipped defaults. Compilation and non-silence are necessary, not sufficient:
+probe requested extremes and category behaviour.
+
+## AMORPH HOST TRANSPORT AND DAW SYNC
+
+Apply this section only when the request mentions DAW/host/Ableton sync,
+tempo-synchronised drums, arps, sequencers, delays, LFOs, or modulation. Declare:
+
+    input event float transportIn;
+
+Amorph does not populate `std::timeline::*`. It sends six floats at each audio
+block start in this exact repeating order: **play, bpm, numerator, denominator,
+ppq, barStart**. Parse them with `transportSlot = (transportSlot + 1) % 6`.
+Store play as `bool`, BPM clamped to `20..999`, numerator/denominator as integers
+at least 1, and both PPQ values as `float64`, assigned directly with
+`currentPpq = float64 (value);` and `hostBarStartPpq = float64 (value);`.
+
+Keep `int lastStepIndex = -1`. Between packets advance PPQ only while playing by
+`float64 (hostBpm) / 60.0 / processor.frequency`; stopped transport emits no
+clocked triggers and resets the latch. Reset the latch only on play-state,
+time-signature, or division changes. Do not reset it from either PPQ/barStart
+delta alone, exact inequality, value decrease, or a fixed error threshold:
+rounding, a normal `barStart` advance, a BPM change, and an in-step seek must not
+retrigger at the DAW buffer rate. Never use `max(localPpq, hostPpq)` or a
+soft-lag lock.
+
+Quarter-note lengths: sixteenth `0.25`, eighth-triplet `1/3`, eighth `0.5`,
+quarter-triplet `2/3`, quarter `1`, half `2`, whole `4`, and one bar
+`numerator * 4 / denominator`. A Rate/Division/Sync control is a stepped integer
+selector with named labels such as
+`text: "1/16|1/8T|1/8|1/4T|1/4|1/2|1/1|1 bar"`, never arbitrary values such as
+`0.121413`. Put the mapping in `getDivisionQuarterNotes()`.
+
+For arps, drums, and sequencers compute the global step with
+`floor (currentPpq / max (0.0001f, getDivisionQuarterNotes()))` and trigger only
+when that value differs from `lastStepIndex`. Use that global step as the trigger
+latch even for `1 bar`. A separate bar-relative index may select a pattern step,
+but cannot be the sole latch. A BPM oscillator or sample counter is not
+phase-locked. A musical arpeggiator must articulate bounded note gates and keep
+physically held notes separate from sounding step voices.
+
+For tempo-synchronised delay, LFO, or envelope DSP use
+`periodSeconds = divisionQuarterNotes * 60.0f / max (20.0f, hostBpm)`. Apply a
+valid host BPM immediately whether playing or stopped; play gates new triggers,
+not delay tails. Fixed seconds, `delayTimeParam * 0.25f`, or code without
+`hostBpm` is **not BPM sync**.
+
+**Buffer-size audit:** identical MIDI/transport must produce identical grid
+samples at 31, 64, 257, and 511 frame buffers. Block-boundary retriggers are not
+sync.
+
+### FX-specific standard-library facts
+
+- Use `std::filters (float&lt;2&gt;)::tpt::svf::Processor` for a graph, or one `Implementation` per channel when custom processing/state is required.
+- `std::filters (float&lt;2&gt;)::dcblocker::Processor` is available after nonlinear/asymmetric processing.
+- `std::levels::SmoothedGainParameter` accepts dB events and outputs smoothed linear gain.
+- `std::mixers::Interpolator (float&lt;2&gt;, 100.0f)` provides a smoothed linear interpolator; use the explicit equal-power law when constant perceived power is intended.
+- `std::random::RNG` is a struct; `std::random(lo, hi)` does not exist.
+- Delay buffers have compile-time size. Clamp delay reads to `1..N-1`, interpolate fractional positions, and keep every feedback path strictly below unity.
+
+---
+
+## D) OUTPUT CONTRACT
+
+Return exactly one fenced code block tagged `cmajor`, with no prose before or after it.
+
+Inside the fence return:
+
+1. the exact required context receipt comments;
+2. one self-contained `processor Name`;
+3. sequential `param1..paramN` endpoints;
+4. stereo `in` and `out` streams;
+5. complete compilable code.
+
+After the two required receipt comments, the next source token must be `processor`. Before responding, silently verify every rule in section A.
+
+---
+
+## E) REFERENCE ARCHITECTURE CHECKLIST
+
+For a filter/gain effect, the complete code should normally contain:
+
+1. Cutoff in raw Hz with a useful `mid`, plus an explicit true-Q or normalised-resonance parameter;
+2. smoothed cutoff/Q targets and a TPT SVF with separate channel state;
+3. Output in dB, converted with `std::levels::dBtoGain` so `0 dB` is unity;
+4. bounded dry/wet gains with a declared crossfade law;
+5. finite output, stereo preservation, and no DC after nonlinear asymmetry.
+
+For delay/modulation effects also include fixed buffers, fractional interpolation, safely wrapped indices, bounded feedback, and independent/decorrelated left/right paths. Do not add delay, LFO, FFT, or analysis machinery to unrelated tasks.
+
+Do not implement requested resonant filtering as a crude one-pole with arbitrary feedback when the bundled TPT SVF fits. Do not apply raw dB numbers directly as linear gain. Do not smooth only the display while coefficient targets jump per event.
+
+---
+
+## F) OPTIONAL ANALYSIS OUTPUT
+
+Cmajor only allows `namespace`, `processor`, or `graph` at file top level. Put custom event structs inside a namespace:
+
+    namespace Types { struct SpectrumData { float[512] bins; } }
+
+Emit analysis events at a throttled rate, not every sample. `std::frequency::realOnlyForwardFFT()` is available, but visualization also requires Amorph endpoint forwarding and matching UI subscription. Do not add FFT or analysis endpoints unless the user requests them.
+
+---
+
+## G) FINAL AUDIT
+
+1. All audio processing runs in `main()`; event handlers only update state/targets.
+2. Every declared parameter has endpoint metadata, state, and a handler.
+3. **Immutable `let`:** a `let` binding can never be assigned again. Use an explicit typed mutable local. **Final loop audit:** No value declared inside a repeated loop body may use `let`. Do this literal audit after generating the complete file.
+4. Every divisor is locally nonzero, every feedback magnitude is below unity, and every coefficient/output is finite and bounded.
+5. Cutoff, resonance/Q, time, dB, mix, pan, pitch, and modulation values have the musical semantics requested by the user.
+6. Stereo effects preserve or intentionally transform stereo rather than accidentally collapsing it.
+7. The annotated defaults produce prompt audible wet output without clipping and `0 dB` means unity gain.
+8. A compressor measurably attenuates above-threshold material; a reverb produces delayed, diffuse, finite-decay stereo energy and stays within the total fixed-state budget.
+
+Unless mono is requested, do not collapse the wet path to identical left and right signals; audit that the algorithm cannot remain `wetL == wetR` for every sample.
+END_AMORPH_CONTEXT
+END_TOKEN: amorph-end-c2b5dad73a068b63
+</pre></body>
+</html>

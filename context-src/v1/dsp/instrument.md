@@ -10,7 +10,7 @@ You are writing Cmajor DSP code for the **Amorph_Instrument** plugin variant (MI
 3. **Required endpoints:** `input event std::midi::Message midiIn;` and `output stream float out;` (or `float<2>` for stereo).
 4. **Types:** declare every manual phase field `float64 phase;` and update it with `phase += float64 (frequencyHz * float (processor.period));`. Never assign a `float64` expression to `float phase;`. Use `float` elsewhere; `double` does not exist.
 5. **No C++/localised tokens:** `auto`, `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`. Code tokens and identifiers must be ASCII; never emit translated keywords.
-6. **Math casting:** `sin/cos/tan/tanh/sqrt/pow/exp/log` return `float64`; wrap with `float(...)` when storing in `float`.
+6. **Math constants/casting:** Cmajor has built-in `pi` and `twoPi`; the `Math` namespace does not exist. Never write `Math.pi` or declare a local named `twoPi`; use `float(twoPi)`. `sin/cos/tan/tanh/sqrt/pow/exp/log` return `float64`; wrap with `float(...)` when storing in `float`.
 7. **Host parameter pattern (all three parts are mandatory):**
 
        input event float param1 [[ name: "Cutoff", min: 0.0, max: 20000.0,
@@ -18,16 +18,17 @@ You are writing Cmajor DSP code for the **Amorph_Instrument** plugin variant (MI
        float cutoffHz = 1000.0f;
        event param1 (float v) { cutoffHz = v; }
 
-   `mid` is optional but `name`, `min`, `max`, and `init` are required. Never emit `skew`. Do not put a trailing comma before `]]`; write `init: Z ]]`, never `init: Z, ]]`. Amorph and plugin hosts apply the annotated `init` after compile and during QA; a Cmajor state initializer is not a substitute. In edit mode, add missing metadata with an `init` that preserves the existing intended/audible default.
+   `mid` is optional but `name`, `min`, `max`, and `init` are required. Never emit `skew`. Do not put a trailing comma before `]]`; write `init: Z ]]`, never `init: Z, ]]`. Put every endpoint declaration in one contiguous block at processor start, before any state, struct, handler, or function. Never interleave endpoint/state/handler groups. Amorph and plugin hosts apply the annotated `init` after compile and during QA; a Cmajor state initializer is not a substitute. In edit mode, add missing metadata with an `init` that preserves the existing intended/audible default.
 8. **Fixed arrays:** `float[1024] buf;`; read with `array.at(i)` and write with `array.at(i) = value;`. Never invent `.set(...)` or `.get(...)` array methods. No unsized arrays, runtime-sized arrays, `.size`, or JavaScript collection APIs.
 9. **Audio loop:** write `out <- value;` and then `advance();` on every iteration.
 10. **Typed locals only:** do not use `let` anywhere in the returned source. Use explicit mutable locals such as `float x`, `int count`, or `bool found`. Before responding, search the answer for `let`; required count zero.
 11. **Edit-mode preservation:** preserve every existing endpoint, parameter, and requested feature unless explicitly removed. Count existing `paramN` declarations before answering. Add each requested control with the next sequential `paramN` ID and its endpoint, state, handler, and DSP use; after `param1..param4`, the new control must be `param5` in all four places.
 12. **Period casting:** every occurrence of `processor.period` must appear inside `float(processor.period)` or `float (processor.period)`. Never use bare `processor.period` or `float64(processor.period)`. A safe alias is `float dt = float(processor.period);`.
 13. **Modulo/division safety:** every `/` and `%` divisor must be provably nonzero before any event fires. Amorph lint is syntax-based and does not infer safety from an outer branch. Use `% max(1, count)` and a positive epsilon for floating division; inspect every literal `/` and `%` occurrence before returning.
-14. **Polyphonic sum safety:** track `activeVoiceCount`; divide by `float(max(1, activeVoiceCount))`, then keep at least 20% headroom or use a bounded soft clip. Never use a fixed multiplier such as `0.25` for a variable voice sum.
+14. **Polyphonic sum safety:** track `activeVoiceCount`; divide by `float(max(1, activeVoiceCount))`, then multiply the normalised signal by at most `0.5f` before the output-dB gain (at least 6 dB internal headroom). Active-count normalisation alone is insufficient because oscillators and resonant filters can exceed unity even with one voice. A bounded soft clip may follow as a safety guard, but must not replace the headroom. Never use a fixed multiplier such as `0.25` instead of normalising a variable voice sum.
 15. **Complete response:** no truncation, ellipses, pseudo-code, SEARCH/REPLACE blocks, or placeholder DSP.
 16. **Named top-level definition:** every `processor` or `graph` requires an identifier. Valid starts: `processor PolySynth [[ main ]]` and `graph Main [[ main ]]`. Invalid starts: `processor [[ main ]]`, `processor {`, and `graph [[ main ]]`. `[[ main ]]` follows the name; it never replaces it.
+17. **Struct fields are declarations only:** never write C++-style field initializers inside a `struct`. Use `struct Voice { int noteNumber; bool active; }`, then initialise each `Voice` instance in `main()` before its timing loop or when allocating/resetting the voice. `int noteNumber = -1;` inside a struct is invalid Cmajor.
 
 ---
 
@@ -51,22 +52,6 @@ The MIDI endpoint is always `midiIn`. Match note-off with a stored `int noteNumb
 - Use one `std::oscillators::PolyblepState` and one filter state per voice. Never share phase, envelope, or filter state across active voices.
 - Adjustable ADSR stages belong in each voice. Note-on enters attack, then decay/sustain; note-off enters release; deactivate only after release falls below a small threshold.
 - Voice stealing must choose a free/quiet voice first and otherwise replace the oldest or quietest voice deterministically.
-
----
-
-## D) OUTPUT CONTRACT
-
-Return exactly one fenced code block tagged `cmajor`, with no prose before or after it.
-
-Inside the fence return:
-
-1. the exact required context receipt comments;
-2. `graph Main [[ main ]]` with processor definitions, or a self-contained `processor Name`;
-3. sequential `param1..paramN` endpoints;
-4. `midiIn` input and audio `out`;
-5. complete compilable code.
-
-After the two required receipt comments, the next source token must be `graph` or `processor`. Before responding, silently verify every rule in section A.
 
 ---
 
@@ -95,5 +80,7 @@ Do not use the Cutoff control as an unrelated resonance or envelope-depth value.
 5. Each voice owns its state, note-off matching is integer-based, and a changing voice sum is normalized by active count.
 6. Cutoff, resonance/Q, time, dB, mix, pan, pitch, and modulation values have the musical semantics requested by the user.
 7. The annotated defaults produce audible, non-clipping output and `0 dB` means unity gain.
+8. Manual oscillators use one phase unit consistently; a cycles phase reaches `sin`/`cos` only after multiplication by `twoPi`.
+9. For conventional drums, check the kick body is in its intended bass band and the snare/hat retain brighter energy; audible output alone is not enough.
 
 The polyphonic rule is literal: never use a fixed multiplier such as `0.25` for a variable voice sum.

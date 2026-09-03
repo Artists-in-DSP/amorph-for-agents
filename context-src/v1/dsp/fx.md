@@ -10,7 +10,7 @@ You are writing Cmajor DSP code for the **Amorph_FX** plugin variant (stereo aud
 3. **Required endpoints:** `input stream float<2> in;` and `output stream float<2> out;`. Use `float` only when mono is explicitly required.
 4. **Types:** declare every manual phase field `float64 phase;` and update it with `phase += float64 (frequencyHz * float (processor.period));`. Never assign a `float64` expression to `float phase;`. Use `float` elsewhere; `double` does not exist.
 5. **No C++/localised tokens:** `auto`, `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`. Code tokens and identifiers must be ASCII; never emit translated keywords.
-6. **Math casting:** `sin/cos/tan/tanh/sqrt/pow/exp/log` return `float64`; wrap with `float(...)` when storing in `float`.
+6. **Math constants/casting:** Cmajor has built-in `pi` and `twoPi`; the `Math` namespace does not exist. Never write `Math.pi` or declare a local named `twoPi`; use `float(twoPi)`. `sin/cos/tan/tanh/sqrt/pow/exp/log` return `float64`; wrap with `float(...)` when storing in `float`.
 7. **Host parameter pattern (all three parts are mandatory):**
 
        input event float param1 [[ name: "Cutoff", min: 0.0, max: 20000.0,
@@ -18,7 +18,7 @@ You are writing Cmajor DSP code for the **Amorph_FX** plugin variant (stereo aud
        float cutoffHz = 1000.0f;
        event param1 (float v) { cutoffHz = v; }
 
-   `mid` is optional but `name`, `min`, `max`, and `init` are required. Never emit `skew`. Do not put a trailing comma before `]]`; write `init: Z ]]`, never `init: Z, ]]`. Amorph and plugin hosts apply the annotated `init` after compile and during QA; a Cmajor state initializer is not a substitute. In edit mode, add missing metadata with an `init` that preserves the existing intended/audible default.
+   `mid` is optional but `name`, `min`, `max`, and `init` are required. Never emit `skew`. Do not put a trailing comma before `]]`; write `init: Z ]]`, never `init: Z, ]]`. Put every endpoint declaration in one contiguous block at processor start, before any state, struct, handler, or function. Never interleave endpoint/state/handler groups. Amorph and plugin hosts apply the annotated `init` after compile and during QA; a Cmajor state initializer is not a substitute. In edit mode, add missing metadata with an `init` that preserves the existing intended/audible default.
 8. **Fixed arrays:** `float[65536] buf;`; read with `array.at(i)` and write with `array.at(i) = value;`. Never invent `.set(...)` or `.get(...)` array methods. No unsized arrays, runtime-sized arrays, `.size`, or JavaScript collection APIs.
 9. **Audio loop:** write `out <- float<2> (outL, outR);` and then `advance();` on every iteration.
 10. **Increment style:** `i++` is valid in loop headers; prefer `i += 1` in new code.
@@ -30,6 +30,7 @@ You are writing Cmajor DSP code for the **Amorph_FX** plugin variant (stereo aud
 16. **Prompt audible wet path:** reverb, delay, chorus, shimmer, widening, and spatial effects must produce non-silent wet energy within a normal two-second audition at annotated defaults. Include an early wet branch below roughly 250 ms rather than waiting only for a multi-second buffer.
 17. **Complete response:** no truncation, ellipses, pseudo-code, SEARCH/REPLACE blocks, or placeholder DSP.
 18. **Named top-level definition:** every `processor` requires an identifier. Valid start: `processor StereoEffect [[ main ]]`. Invalid starts: `processor [[ main ]]` and `processor {`. `[[ main ]]` follows the name; it never replaces it.
+19. **Struct fields are declarations only:** never write C++-style field initializers inside a `struct`. Use `struct State { float value; bool active; }`, then initialise each instance in `main()` before its timing loop or in the processor's reset path. `float value = 0.0f;` inside a struct is invalid Cmajor.
 
 ---
 
@@ -51,22 +52,6 @@ Every host parameter endpoint ID must be the exact sequential form `param1`, `pa
 - `std::mixers::Interpolator (float<2>, 100.0f)` provides a smoothed linear interpolator; use the explicit equal-power law when constant perceived power is intended.
 - `std::random::RNG` is a struct; `std::random(lo, hi)` does not exist.
 - Delay buffers have compile-time size. Clamp delay reads to `1..N-1`, interpolate fractional positions, and keep every feedback path strictly below unity.
-
----
-
-## D) OUTPUT CONTRACT
-
-Return exactly one fenced code block tagged `cmajor`, with no prose before or after it.
-
-Inside the fence return:
-
-1. the exact required context receipt comments;
-2. one self-contained `processor Name`;
-3. sequential `param1..paramN` endpoints;
-4. stereo `in` and `out` streams;
-5. complete compilable code.
-
-After the two required receipt comments, the next source token must be `processor`. Before responding, silently verify every rule in section A.
 
 ---
 
@@ -105,5 +90,6 @@ Emit analysis events at a throttled rate, not every sample. `std::frequency::rea
 5. Cutoff, resonance/Q, time, dB, mix, pan, pitch, and modulation values have the musical semantics requested by the user.
 6. Stereo effects preserve or intentionally transform stereo rather than accidentally collapsing it.
 7. The annotated defaults produce prompt audible wet output without clipping and `0 dB` means unity gain.
+8. A compressor measurably attenuates above-threshold material; a reverb produces delayed, diffuse, finite-decay stereo energy and stays within the total fixed-state budget.
 
 Unless mono is requested, do not collapse the wet path to identical left and right signals; audit that the algorithm cannot remain `wetL == wetR` for every sample.
