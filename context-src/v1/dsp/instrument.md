@@ -28,6 +28,7 @@ You are writing Cmajor DSP code for the **Amorph_Instrument** plugin variant (MI
 14. **Modulo/division safety:** every `/` and `%` divisor must be provably nonzero before any event fires. Amorph lint is syntax-based and does not infer safety from an outer branch. Use `% max(1, count)` and a positive epsilon for floating division; inspect every literal `/` and `%` occurrence before returning.
 15. **Polyphonic sum safety:** track `activeVoiceCount`; divide by `float(max(1, activeVoiceCount))`, then keep at least 20% headroom or use a bounded soft clip. Never use a fixed multiplier such as `0.25` for a variable voice sum.
 16. **Complete response:** no truncation, ellipses, pseudo-code, SEARCH/REPLACE blocks, or placeholder DSP.
+17. **Named top-level definition:** every `processor` or `graph` requires an identifier. Valid starts: `processor PolySynth [[ main ]]` and `graph Main [[ main ]]`. Invalid starts: `processor [[ main ]]`, `processor {`, and `graph [[ main ]]`. `[[ main ]]` follows the name; it never replaces it.
 
 ---
 
@@ -61,7 +62,7 @@ Return exactly one fenced code block tagged `cmajor`, with no prose before or af
 Inside the fence return:
 
 1. the exact required context receipt comments;
-2. one top-level `graph [[ main ]]` with processor definitions, or one self-contained `processor`;
+2. `graph Main [[ main ]]` with processor definitions, or a self-contained `processor Name`;
 3. sequential `param1..paramN` endpoints;
 4. `midiIn` input and audio `out`;
 5. complete compilable code.
