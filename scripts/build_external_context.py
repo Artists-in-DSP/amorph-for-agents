@@ -14,7 +14,7 @@ from typing import Dict, Iterable, List, Tuple
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / "context-src" / "v1"
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
-DEFAULT_RELEASE = "preview-20260903-e"
+DEFAULT_RELEASE = "preview-20260903-f"
 CMAJOR_SDK_VERSION = "1.0.3175"
 KNOWLEDGE_PROFILE = "core-dsp-v1"
 
@@ -44,6 +44,7 @@ def compose_source(target: str, variant: str) -> str:
     source = normalise_source(SOURCE_ROOT / target / f"{variant}.md")
     core_token = "{{CORE_DSP_FOUNDATIONS}}"
     transport_token = "{{HOST_TRANSPORT_CONTRACT}}"
+    ui_token = "{{CORE_UI_CONTRACT}}"
 
     if target == "dsp" and variant in ("instrument", "fx"):
         if source.count(core_token) != 1:
@@ -60,6 +61,14 @@ def compose_source(target: str, variant: str) -> str:
         source = source.replace(transport_token, transport.rstrip())
     elif transport_token in source:
         raise ValueError(f"unexpected {transport_token} in {target}/{variant}")
+
+    if target == "ui":
+        if source.count(ui_token) != 1:
+            raise ValueError(f"{target}/{variant} must contain exactly one {ui_token}")
+        shared_ui = normalise_source(SOURCE_ROOT / "shared" / "core-ui-contract.md")
+        source = source.replace(ui_token, shared_ui.rstrip())
+    elif ui_token in source:
+        raise ValueError(f"unexpected {ui_token} in {target}/{variant}")
 
     return source
 
@@ -92,7 +101,7 @@ def response_contract(target: str) -> str:
             "inside a class, the template-literal semicolon must be followed by both closing "
             "braces: one for the method and one for the class. Prefer a shorter complete UI "
             "over extra decorative code. Hard response budget: keep a newly generated complete "
-            "`index.js` under 10000 visible characters. Generate repeated controls or pads from "
+            "`index.js` under 8000 visible characters. Generate repeated controls or pads from "
             "small data arrays, keep CSS compact, and remove visual extras before approaching "
             "the budget. Never spend the budget on decoration and then omit required closers."
         )

@@ -132,6 +132,18 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("// AMORPH_CONTEXT_ID: <exact CONTEXT_ID>", text)
                 self.assertIn("// AMORPH_END_TOKEN: <exact END_TOKEN>", text)
 
+    def test_model_facing_documents_are_compact_and_free_of_mojibake(self):
+        for record in self.manifest["documents"]:
+            text = (RELEASE_ROOT / record["audit_path"]).read_text(encoding="utf-8")
+            for broken in ("\ufffd", "\u00e2\u2014", "\u00e2\u2013", "\u00c3", "\u00c2"):
+                with self.subTest(path=record["audit_path"], broken=broken):
+                    self.assertNotIn(broken, text)
+
+            if record["target"] == "ui":
+                self.assertLessEqual(record["visible_text_bytes"], 10_000)
+                self.assertIn("under 8000 visible characters", text)
+                self.assertIn("// END_AMORPH_UI", text)
+
     def test_landing_page_and_sitemap_link_all_html_documents(self):
         index = (ROOT / "public-context" / "index.html").read_text(encoding="utf-8")
         sitemap = (ROOT / "public-context" / "sitemap.xml").read_text(encoding="utf-8")
@@ -274,39 +286,28 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("wetL == wetR", fx)
 
     def test_ui_sources_require_one_parameter_marker_per_endpoint(self):
-        for path in sorted((ROOT / "context-src" / "v1" / "ui").glob("*.md")):
-            with self.subTest(path=path.name):
-                text = path.read_text(encoding="utf-8")
-                self.assertIn("exactly ONE DOM element with `data-param`", text)
-                self.assertIn('querySelectorAll("[data-param]").length', text)
-                self.assertIn("line 3", text)
-                self.assertIn("After the two required receipt comments", text)
-                self.assertIn("factory declaration comes before every class", text)
+        for variant in ("instrument", "fx", "midi"):
+            with self.subTest(variant=variant):
+                text = compose_source("ui", variant)
+                self.assertNotIn("{{CORE_UI_CONTRACT}}", text)
+                self.assertIn("exactly once on one `.control` wrapper", text)
+                self.assertIn("`[data-param]` count and unique IDs exactly match", text)
+                self.assertIn("After the two receipt comments", text)
+                self.assertIn("factory before every class", text)
                 self.assertIn("`view.patchConnection = patchConnection`", text)
-                self.assertIn("unless the returned element received this assignment", text)
-                self.assertIn(
-                    "The next source declaration MUST be `export default function createPatchView (patchConnection)`",
-                    text,
-                )
+                self.assertIn("`export default function createPatchView (patchConnection)`", text)
                 self.assertIn("Never use `ResizeObserver`", text)
-                self.assertIn("ResizeObserver loop-delivery warnings as runtime errors", text)
-                self.assertNotIn("or use a `ResizeObserver`", text)
-                self.assertIn("literal bracket-balance check", text)
-                self.assertIn("one for the method and one for the class", text)
-                self.assertIn("Prefer a shorter complete UI", text)
-                self.assertIn("under 10000 visible", text)
-                self.assertIn("Generate repeated controls or pads from small data arrays", text)
-                self.assertIn("Never spend the budget on", text)
-                self.assertIn("must return an actual `HTMLElement` instance", text)
-                self.assertIn("Never return a class or constructor", text)
+                self.assertIn("balance every `()`, `[]`, `{}`, quote", text)
+                self.assertIn("one brace for the method and another for the class", text)
+                self.assertIn("below 8000 visible characters", text)
+                self.assertIn("Generate repeated controls", text)
+                self.assertIn("never return a class", text)
                 self.assertNotIn("## H) STRUCTURAL SCAFFOLD", text)
-                self.assertNotIn("```javascript\n", text)
-                self.assertIn("## H) FINAL CONSTRUCTION AND AUDIT", text)
-                self.assertIn("declare exactly N data entries and render all N", text)
-                self.assertIn("one-octave chromatic keyboard has at least 12", text)
-                self.assertIn("N octaves have at least `12 * N` keys", text)
+                self.assertIn("### 7. Final audit", text)
+                self.assertIn("create and render all N", text)
+                self.assertIn("chromatic keyboard means at least 12", text)
                 self.assertIn('real `<button type="button">`', text)
-                self.assertIn("Remove any unrequested generic dark-dashboard styling", text)
+                self.assertIn("Do not return a generic", text)
 
     def test_dsp_foundations_are_version_pinned_and_semantically_complete(self):
         shared = (ROOT / "context-src" / "v1" / "shared" / "core-dsp-foundations.md").read_text(
@@ -373,9 +374,9 @@ class ExternalContextTests(unittest.TestCase):
         )
 
     def test_ui_sources_define_the_same_mid_mapping_as_cmajor(self):
-        for path in sorted((ROOT / "context-src" / "v1" / "ui").glob("*.md")):
-            with self.subTest(path=path.name):
-                text = path.read_text(encoding="utf-8")
+        for variant in ("instrument", "fx", "midi"):
+            with self.subTest(variant=variant):
+                text = compose_source("ui", variant)
                 self.assertIn("data-mid", text)
                 self.assertIn("Math.log(0.5)", text)
                 self.assertIn("Math.pow(norm, power)", text)

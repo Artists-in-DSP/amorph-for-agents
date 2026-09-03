@@ -1,0 +1,107 @@
+## COMPLETE UI CONTRACT
+
+Build one complete, self-contained JavaScript ES module for Amorph's plugin WebView.
+The user request controls the visual style. These rules control correctness.
+
+### 1. File shape and completeness
+
+- Use plain ES6+ JavaScript and Web Components only. No TypeScript, React, Vue,
+  Svelte, external libraries, remote assets, or JavaScript imports.
+- After the two receipt comments and `// WINDOW SIZE: WxH`, the first declaration
+  must be `export default function createPatchView (patchConnection)`.
+- Put the factory before every class. It must create and return an `HTMLElement`,
+  assign `view.patchConnection = patchConnection`, and never return a class.
+- Include a control class and one patch-view class extending `HTMLElement`.
+- Define the custom element once, for example by checking `customElements.get(name)`.
+- New files must stay below 8000 visible characters. Generate repeated controls,
+  buttons, pads, or keys from concise data arrays. Prefer a finished, styled UI to
+  ambitious animation. Never use ellipses, placeholders, or omitted code.
+- End the source with the comment `// END_AMORPH_UI`. Before returning, literally
+  balance every `()`, `[]`, `{}`, quote, and template literal. A final `getHTML()`
+  inside a class needs one brace for the method and another for the class before
+  the end comment.
+
+### 2. Parameter identity and control choice
+
+- Host endpoint IDs are exactly sequential `param1` through `paramN`. Never invent
+  descriptive IDs. Human labels belong only in visible text.
+- Represent every DSP parameter exactly once on one `.control` wrapper with
+  `data-param="paramN"`. Do not repeat `data-param` on descendants.
+- Put `data-min`, `data-max`, `data-init`, optional `data-mid`, optional `data-step`,
+  and `data-control` on that wrapper. Store controls in a `Map` keyed by endpoint ID.
+- Continuous parameters use a dial or slider. Integer, stepped, enum, mode, and
+  on/off parameters use real `<button type="button">` controls, a segmented group,
+  a toggle, stepper, or select. Do not put discrete states on a free-running dial.
+- For N requested pads, keys, or choices, create and render all N. A one-octave
+  chromatic keyboard means at least 12 distinct semitone buttons.
+
+### 3. Continuous interaction
+
+- Implement `pointerdown`, `pointermove`, `pointerup`, `pointercancel`, and `dblclick`.
+  Use vertical drag (`startY - clientY`); Shift provides fine adjustment.
+- Attach movement handlers to the control element, call
+  `element.setPointerCapture(e.pointerId)`, and call `e.preventDefault()` on
+  pointerdown. Never attach drag handlers to `window` or `document`.
+- Give the drag element `role="slider"`, `aria-label`, `aria-valuemin`,
+  `aria-valuemax`, and a maintained `aria-valuenow`.
+- Clamp and then quantize. `setValue(value, notify)` must update the graphic,
+  visible value, and local callback; notify the host only when `notify === true`.
+  Initialize immediately with `setValue(init, false)`; do not leave `--` visible.
+- If metadata declares `mid`, map normalized position with
+  `power = Math.log((mid-min)/(max-min)) / Math.log(0.5)` and
+  `value = min + (max-min) * Math.pow(norm, power)`, with the inverse for display.
+  `mid` must land at normalized 0.5. Never invent `skew`. A dB parameter remains linear
+  in declared dB unless the DSP explicitly provides `mid`.
+
+### 4. Host binding and cleanup
+
+- User changes call `patchConnection.sendEventOrValue("paramN", value)`.
+- Register one `addAllParameterListener(({ endpointID, value }) => ...)` callback.
+  The callback receives one object, not `(id, value)`.
+- After controls and the listener exist, call
+  `patchConnection.requestParameterValue("paramN")` for every parameter.
+- Remove the all-parameter listener in `disconnectedCallback()`.
+- Subscribe to an output only when the DSP explicitly declares that exact endpoint
+  and the requested UI needs it. Pair every `addEndpointListener(id, fn)` with
+  `removeEndpointListener(id, fn)` in `disconnectedCallback()`.
+- Initialize every state variable and guard invalid ranges and non-finite values.
+
+### 5. Plugin layout
+
+- Use light DOM with `this.innerHTML`. Never call `attachShadow()`.
+- The first CSS rules must reset sizing and scroll:
+  `* { box-sizing: border-box; margin: 0; padding: 0; }`
+  `body, html { overflow: hidden; margin: 0; }`
+- Use `:host { display:block; width:100%; height:100%; overflow:hidden; }`.
+  Do not set fixed pixel dimensions on `:host`; do not use scrolling containers.
+- Constrain the whole layout to the plugin viewport with grid/flex, `%`, and `fr`.
+  Put `user-select:none; -webkit-user-select:none` on the root.
+- Make important controls readable and visually distinct. Do not return a generic
+  flat grid of identical knobs. Use the requested palette and layout; otherwise
+  choose a restrained plugin-specific hierarchy that communicates signal flow.
+
+### 6. Canvas and animation
+
+- Canvas is optional. Use it only when it communicates requested or available
+  behavior and the complete file remains within budget.
+- Set backing `canvas.width` and `canvas.height` once in `connectedCallback()` from
+  `offsetWidth`/`offsetHeight` with finite fallbacks. Never assign canvas dimensions
+  in a `requestAnimationFrame` loop. Never use `ResizeObserver`.
+- Store the animation handle and cancel it in `disconnectedCallback()`.
+- Spectrum drawing is allowed only when the DSP declares the exact spectrum output
+  and the request asks for it. Never guess `spectrumOut` or `spectrumPreOut`.
+
+### 7. Final audit
+
+Before responding, silently verify all of the following:
+
+1. The file is below 8000 visible characters and ends with `// END_AMORPH_UI`.
+2. The exported factory is the first declaration, assigns the connection, and
+   returns an element.
+3. Braces, brackets, parentheses, strings, and template literals are complete.
+4. `[data-param]` count and unique IDs exactly match DSP `param1..paramN`.
+5. Every requested clickable quantity is present as real buttons.
+6. Initial values render before host replies; host updates never echo back.
+7. Every listener, MIDI bridge, pointer capture, and animation has cleanup.
+8. No shadow DOM, scrollbar, guessed endpoint, per-frame canvas resize, or
+   external dependency remains.
