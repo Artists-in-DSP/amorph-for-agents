@@ -26,7 +26,10 @@ quarter-triplet `2/3`, quarter `1`, half `2`, whole `4`, and one bar
 `numerator * 4 / denominator`. A Rate/Division/Sync control is a stepped integer
 selector with named labels such as
 `text: "1/16|1/8T|1/8|1/4T|1/4|1/2|1/1|1 bar"`, never arbitrary values such as
-`0.121413`. Put the mapping in `getDivisionQuarterNotes()`.
+`0.121413`. Put the mapping in `getDivisionQuarterNotes()`. Literal final audit:
+every such endpoint with `text:` labels must also contain `step: 1` and integer
+`min`, `max`, and `init` values. Omitting `step: 1` is invalid for the Amorph
+host-sync contract.
 
 For arps, drums, and sequencers compute the global step with
 `floor (currentPpq / max (0.0001f, getDivisionQuarterNotes()))` and trigger only

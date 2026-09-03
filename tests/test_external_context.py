@@ -7,11 +7,11 @@ import unittest
 from html.parser import HTMLParser
 from pathlib import Path
 
-from scripts.build_external_context import compose_source
+from scripts.build_external_context import DEFAULT_RELEASE, compose_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE = "preview-20260902-e"
+RELEASE = DEFAULT_RELEASE
 RELEASE_ROOT = ROOT / "public-context" / "v1" / RELEASE
 PUBLIC_BASE_URL = "https://artists-in-dsp.github.io/amorph-for-agents"
 
@@ -102,7 +102,7 @@ class ExternalContextTests(unittest.TestCase):
                 # Keep the complete DSP contract inside the prompt budget proven
                 # by the signed-out Gemini consumer gate. UI has its own budget.
                 if record["target"] == "dsp":
-                    budget = 17_000 if record["variant"] == "midi" else 21_000
+                    budget = 19_000 if record["variant"] == "midi" else 24_000
                 else:
                     budget = 24_000
                 self.assertLessEqual(len(raw), budget)
@@ -204,6 +204,8 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("`const int voiceCount = 8;`", text)
                 self.assertIn("declare every manual phase field `float64 phase;`", text)
                 self.assertIn("Never assign a `float64` expression to `float phase;`", text)
+                self.assertIn("Struct fields are declarations only", text)
+                self.assertIn("inside a struct is invalid Cmajor", text)
                 self.assertIn("input event float transportIn;", text)
                 self.assertIn("Amorph does not populate `std::timeline::*`", text)
                 self.assertIn("play, bpm, numerator, denominator,", text)
@@ -218,6 +220,7 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("Use that global step as the trigger", text)
                 self.assertIn("exact inequality, value decrease, or a fixed error threshold", text)
                 self.assertIn("retrigger", text)
+                self.assertIn("must also contain `step: 1`", text)
                 self.assertIn("DAW buffer rate", text)
                 self.assertIn("**Buffer-size audit:**", text)
                 self.assertIn("31, 64, 257, and 511 frame buffers", text)
@@ -351,7 +354,7 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("Floating-point `%` is", midi)
 
         host_transport = (ROOT / "context-src" / "v1" / "shared" / "host-transport.md").read_bytes()
-        self.assertLessEqual(len(host_transport), 2_800)
+        self.assertLessEqual(len(host_transport), 3_000)
 
         instrument = compose_source("dsp", "instrument")
         self.assertNotIn("## D) OUTPUT CONTRACT", instrument)

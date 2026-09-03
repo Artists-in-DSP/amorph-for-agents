@@ -28,6 +28,7 @@ You are writing Cmajor DSP code for the **Amorph_Instrument** plugin variant (MI
 14. **Polyphonic sum safety:** track `activeVoiceCount`; divide by `float(max(1, activeVoiceCount))`, then multiply the normalised signal by at most `0.5f` before the output-dB gain (at least 6 dB internal headroom). Active-count normalisation alone is insufficient because oscillators and resonant filters can exceed unity even with one voice. A bounded soft clip may follow as a safety guard, but must not replace the headroom. Never use a fixed multiplier such as `0.25` instead of normalising a variable voice sum.
 15. **Complete response:** no truncation, ellipses, pseudo-code, SEARCH/REPLACE blocks, or placeholder DSP.
 16. **Named top-level definition:** every `processor` or `graph` requires an identifier. Valid starts: `processor PolySynth [[ main ]]` and `graph Main [[ main ]]`. Invalid starts: `processor [[ main ]]`, `processor {`, and `graph [[ main ]]`. `[[ main ]]` follows the name; it never replaces it.
+17. **Struct fields are declarations only:** never write C++-style field initializers inside a `struct`. Use `struct Voice { int noteNumber; bool active; }`, then initialise each `Voice` instance in `main()` before its timing loop or when allocating/resetting the voice. `int noteNumber = -1;` inside a struct is invalid Cmajor.
 
 ---
 
