@@ -1,3 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow">
+<title>Amorph UI context — midi</title>
+<link rel="canonical" href="https://artists-in-dsp.github.io/amorph-for-agents/v1/preview-20260904-b/ui/midi.html">
+</head>
+<body><pre id="amorph-context">AMORPH_EXTERNAL_CONTEXT v1
+CONTEXT_ID: amorph-ui-midi-7c32ab3ca4703198
+TARGET: ui
+VARIANT: midi
+RELEASE: preview-20260904-b
+BODY_SHA256: 1a4df0b5e99f08286fc443bd073a7b9ad85118626072822a229e93ab6934c763
+DELIVERY_FORMAT: static-html-v1
+CONTENT_TYPE: text/html; charset=utf-8
+ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
+
+BEGIN_AMORPH_CONTEXT
+RESPONSE CONTRACT — REQUIRED
+
+Return the complete corrected `index.js` in exactly one fenced code block
+tagged `javascript`. Return no prose, heading, explanation, or second code block.
+Do not use SEARCH/REPLACE blocks, patches, ellipses, or placeholders.
+
+The first two lines inside the fence must copy the exact receipt values printed
+near the top and bottom of this document:
+
+// AMORPH_CONTEXT_ID: &lt;exact CONTEXT_ID&gt;
+// AMORPH_END_TOKEN: &lt;exact END_TOKEN&gt;
+
+The next line must be `// WINDOW SIZE: &lt;width&gt;x&lt;height&gt;`. The next source declaration after that comment must be `export default function createPatchView (patchConnection)`. Place the exported factory before every class so a long response cannot lose the required entry point at the tail. Before returning, perform a literal bracket-balance check over the final JavaScript. The file must not end inside a method, template literal, class, or block. For a final `getHTML()` method inside a class, the template-literal semicolon must be followed by both closing braces: one for the method and one for the class. Prefer a shorter complete UI over extra decorative code. Hard response budget: keep a newly generated complete `index.js` under 8000 visible characters. Generate repeated controls or pads from small data arrays, keep CSS compact, and remove visual extras before approaching the budget. Never spend the budget on decoration and then omit required closers. Amorph removes the outer fence before loading the UI.
+
+You are writing the JavaScript UI for the **Amorph_MIDI** plugin variant.
+
+Variant facts:
+
+- Parameters: `sendEventOrValue`, `addAllParameterListener`, and
+  `requestParameterValue` are available.
+- `window.__amorphProcessMidi` reports MIDI entering the processor.
+- `window.__amorphProcessMidiOut` reports transformed or generated MIDI leaving it.
+
+When the requested UI needs MIDI visualization, install concise input and output
+handlers. Messages are `{ s, d1, d2 }`; use `s &amp; 0xF0`, treat note-on with velocity
+zero as note-off, and distinguish input from output visually.
+
+```javascript
+window.__amorphProcessMidi = messages =&gt; {
+  for (const m of messages) showMidi(m, "input");
+};
+window.__amorphProcessMidiOut = messages =&gt; {
+  for (const m of messages) showMidi(m, "output");
+};
+```
+
+UI note or CC buttons send packed input only with:
+
+```javascript
+patchConnection.sendMIDIInputEvent("midiIn", (0x90 &lt;&lt; 16) | (note &lt;&lt; 8) | velocity);
+patchConnection.sendMIDIInputEvent("midiIn", (0x80 &lt;&lt; 16) | (note &lt;&lt; 8));
+patchConnection.sendMIDIInputEvent("midiIn", (0xB0 &lt;&lt; 16) | (cc &lt;&lt; 8) | value);
+```
+
+`sendMIDI` does not exist. In `disconnectedCallback()`, delete both handlers that
+this view installed. Generate every requested pad, step, or key as a real button.
+
+The user request determines the visual style. Preserve its palette, references,
+layout, control emphasis, and exclusions while satisfying the contract below.
+
 ## COMPLETE UI CONTRACT
 
 Build one complete, self-contained JavaScript ES module for Amorph's plugin WebView.
@@ -36,7 +106,7 @@ The user request controls the visual style. These rules control correctness.
 - Put `data-min`, `data-max`, `data-init`, optional `data-mid`/`data-step`, and
   `data-control` there. Store controls in a `Map` keyed by endpoint ID.
 - Continuous parameters use a dial or slider. Integer, stepped, enum, mode, and
-  on/off parameters use real `<button type="button">` controls, a segmented group,
+  on/off parameters use real `&lt;button type="button"&gt;` controls, a segmented group,
   a toggle, stepper, or select. Do not put discrete states on a free-running dial.
 - For N requested pads, keys, or choices, create and render all N. A one-octave
   chromatic keyboard means at least 12 distinct semitone buttons.
@@ -67,7 +137,7 @@ The user request controls the visual style. These rules control correctness.
 ### 4. Host binding and cleanup
 
 - User changes call `patchConnection.sendEventOrValue("paramN", value)`.
-- Register one `addAllParameterListener(({ endpointID, value }) => ...)` callback.
+- Register one `addAllParameterListener(({ endpointID, value }) =&gt; ...)` callback.
   The callback receives one object, not `(id, value)`.
 - After controls and the listener exist, call
   `patchConnection.requestParameterValue("paramN")` for every parameter.
@@ -111,3 +181,7 @@ Before responding, silently verify:
 5. Initial and dial min/mid/max rendering correct; no host-update echo.
 6. Clean up listeners, MIDI bridges, pointer capture, and animation.
 7. No shadow DOM, scrolling, guessed endpoints, per-frame resize, or dependencies.
+END_AMORPH_CONTEXT
+END_TOKEN: amorph-end-0f8fb3e88981c88d
+</pre></body>
+</html>

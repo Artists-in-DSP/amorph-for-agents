@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "generated_by": "scripts/export_paste_context.py",
-  "source_commit": "6e4348f96a91b8ee6422f8ecf5c6752c0095ea15",
+  "source_commit": "b5b1eb17393c7b9f31bc523c59b18e874d57bfd5",
   "cmajor_version": "1.0.3175",
   "context_ref": "main",
   "hash_scope": "generated_body_utf8_excluding_provenance_header",
   "aggregate_algorithm": "sha256(sorted(path + NUL + body_sha256 + LF))",
-  "aggregate_sha256": "f9a1012ec3555e76ce77ba6743eb19cfa79d2126173fbb09481ff42344b417e3",
+  "aggregate_sha256": "77a952f35ed17aebe0243e65a9f20e32c7cfc883f728a36955c69c81cf988134",
   "files": [
     {
       "path": "BUILD_COMPAT.md",
@@ -20,38 +20,38 @@
     },
     {
       "path": "docs/paste-context/PRODUCT_GUIDE.md",
-      "sha256": "f156af6f23d8500d023350a339810a2581fb9b43919c2e0ebdce2e374ff348f0",
-      "bytes": 9481
+      "sha256": "2c85f02e195789e13ae057e0e3008558ac726f4c174ef89a10f25fd01e2896e3",
+      "bytes": 9527
     },
     {
       "path": "docs/paste-context/dsp/LANG_REF_FX.md",
-      "sha256": "eb21c5961f6098971a843ab9cce3aaaab5dd48fabbeb7ae4116a32c2404e5c4c",
-      "bytes": 11831
+      "sha256": "a824c96e06a5890dce83ffc48651421527a241f4242637d64505fd730e99230b",
+      "bytes": 11951
     },
     {
       "path": "docs/paste-context/dsp/LANG_REF_INSTRUMENT.md",
-      "sha256": "8cef0832674ca9dc183038445a75bb43741896d64307028920e3c2aba72d9da2",
-      "bytes": 12975
+      "sha256": "1ab4f01c57f21bf06b2dea89a7368111b8105e9ab73ead519720f648964bf74e",
+      "bytes": 13095
     },
     {
       "path": "docs/paste-context/dsp/LANG_REF_MIDI.md",
-      "sha256": "80043ff348027ea688703494f2a209884684bb26a28200e2ac08794dfbcd2a36",
-      "bytes": 9521
+      "sha256": "89046ca8c03426b012a0cfdd9cb352fb9d331fc43a4d03bc0018e8869e12ee86",
+      "bytes": 9668
     },
     {
       "path": "docs/paste-context/ui/UI_REF_FX.md",
-      "sha256": "dea4479e874831bb7dc9d641f2b377b29429c8d1cef8ef8a374ca674e317e423",
-      "bytes": 22928
+      "sha256": "3688184a95d1ce44b7ae10fb8a96cbb71694b6ec2aae248be2020affe1be2a33",
+      "bytes": 23114
     },
     {
       "path": "docs/paste-context/ui/UI_REF_INSTRUMENT.md",
-      "sha256": "55e5cf60eb5753d1594d21fa45639199564587207f0da26824993996c64c3d93",
-      "bytes": 24491
+      "sha256": "adf202ad873f0bcd6b86ad4fe4f930975a47ace6fab9171ce9683f416b11b64e",
+      "bytes": 24677
     },
     {
       "path": "docs/paste-context/ui/UI_REF_MIDI.md",
-      "sha256": "97cd146a6094189a3546c903a5d89a1f5a4475dfa41948d1393d515f947b94ea",
-      "bytes": 25299
+      "sha256": "33544bb070b3b55770de9ee4fd226da864d5c5687410c4374866fc1892f5dabf",
+      "bytes": 25485
     }
   ]
 }

@@ -318,6 +318,13 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("idempotent `_mounted` guard", text)
                 self.assertIn("ordinary visible DOM elements", text)
                 self.assertIn("A data attribute or `role=\"slider\"` alone is not a dial", text)
+                self.assertIn("retain unitless `--norm` in `0..1`", text)
+                self.assertIn("`--angle: ${-135 + 270 * n}deg`", text)
+                self.assertIn("`--arc: ${270 * n}deg`", text)
+                self.assertIn("`transform: rotate(var(--angle))`", text)
+                self.assertIn("Never use the signed pointer angle as a gradient stop", text)
+                self.assertIn("`--angle = -135deg/0deg/135deg`", text)
+                self.assertIn("`--arc = 0deg/135deg/270deg`", text)
 
     def test_dsp_foundations_are_version_pinned_and_semantically_complete(self):
         shared = (ROOT / "context-src" / "v1" / "shared" / "core-dsp-foundations.md").read_text(
