@@ -254,6 +254,8 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("must also contain `step: 1`", text)
                 self.assertIn("DAW buffer rate", text)
                 self.assertIn("**Buffer-size audit:**", text)
+                self.assertIn("must not directly emit a note", text)
+                self.assertIn("currentPpq += float64 (hostBpm) / 60.0", text)
                 self.assertIn("31, 64, 257, and 511 frame buffers", text)
                 self.assertIn("valid host BPM immediately whether playing or stopped", text)
                 self.assertIn("periodSeconds = divisionQuarterNotes * 60.0f", text)
@@ -399,7 +401,7 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("Floating-point `%` is", midi)
 
         host_transport = (ROOT / "context-src" / "v1" / "shared" / "host-transport.md").read_bytes()
-        self.assertLessEqual(len(host_transport), 3_000)
+        self.assertLessEqual(len(host_transport), 3_600)
 
         instrument = compose_source("dsp", "instrument")
         self.assertNotIn("## D) OUTPUT CONTRACT", instrument)

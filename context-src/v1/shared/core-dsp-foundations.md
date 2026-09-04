@@ -170,8 +170,14 @@ For equal-power dry/wet, use a `0..1` position:
     float wetGain = float (sin (float64 (theta)));
     float mixed = dry * dryGain + wet * wetGain;
 
-For pan use `std::pan_law::centre3dB`. Keep feedback below `1.0`; use fixed
-buffers, bounded interpolated reads, and safely wrapped indices. Instruments
+For pan, the function returns a `float<2>` pair; index it, never invent `.left`
+or `.right` members:
+
+    float<2> panGains = std::pan_law::centre3dB (clamp (pan, -1.0f, 1.0f));
+    float left = sample * panGains[0];
+    float right = sample * panGains[1];
+
+Keep feedback below `1.0`; use fixed buffers, bounded interpolated reads, and safely wrapped indices. Instruments
 divide a variable sum by `float(max(1, activeVoiceCount))` and retain headroom.
 
 Budget fixed delay state across the processor. A multi-stage reverb normally keeps
