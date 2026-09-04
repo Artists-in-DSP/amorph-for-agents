@@ -1,9 +1,9 @@
 AMORPH_EXTERNAL_CONTEXT v1
-CONTEXT_ID: amorph-dsp-fx-123abc5c76735ee6
+CONTEXT_ID: amorph-dsp-fx-70c104210fa8ca11
 TARGET: dsp
 VARIANT: fx
 RELEASE: preview-20260904-d
-BODY_SHA256: ceb68977d8a2b0dcccb1c9132186af5137cbc202f71e4ffe6c97bf4f1dc2864c
+BODY_SHA256: 4d4019dac91cbb3dd37991d7bc9378600c8d06ad42d9dea39c3150efa316d85b
 DELIVERY_FORMAT: static-html-v1
 CONTENT_TYPE: text/html; charset=utf-8
 ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
@@ -67,28 +67,22 @@ Every host parameter endpoint ID must be the exact sequential form `param1`, `pa
 
 ## C) MUSICAL PARAMETERS AND CMAJOR 1.0.3175 DSP FOUNDATIONS
 
-These rules cover host values, Amorph control mapping, and safe DSP conversion.
-Do not invent annotations or replace a meaningful midpoint with a linear dial.
-
-Language traps still apply: `select(mask, a, b)` is Vector-only masked selection;
-scalar arguments fail. For scalar values use `cond ? a : b`. Built-in math
-returns `float64` where documented; cast explicitly into `float` signal state.
+Use safe host values and DSP conversions. Do not invent annotations or replace a
+meaningful midpoint with a linear dial. `select(mask, a, b)` is Vector-only masked selection. For scalar values use `cond ? a : b`. Cast math results into `float` state.
 
 ### Parameter semantics
 
 | Meaning | Host declaration | DSP use |
 |---|---|---|
-| Cutoff/frequency | Hz; use `mid` when the user requests a centre position or the range spans more than roughly two octaves | Smooth the raw Hz value; clamp to `0..0.45 * sampleRate` before filter coefficient updates |
-| Gain/trim/output | dB; movement is normally linear in dB, so do not add frequency-style curvature | Smooth in dB or linear gain, then use `std::levels::dBtoGain`; `0 dB` must produce gain `1.0` |
-| Time | `ms` or `s`; use `mid` for a useful musical centre | Clamp above zero before division, then convert once to seconds, frames, or a coefficient |
-| Resonance | Either true Q or a clearly labelled normalised `0..1` amount | TPT SVF receives true Q; never pass a normalised amount directly as Q |
-| Mix | `0..100 %` or `0..1` | Clamp, then choose linear crossfade only when level interaction is intended; otherwise use equal-power dry/wet gains |
-| Pan | bipolar `-1..1` | Prefer `std::pan_law::centre3dB` |
-| Pitch | semitones or cents | Convert ratios with `2 ** (semitones / 12)`; do not add Hz for musical transposition |
+| Cutoff/frequency | Hz; use `mid` for a requested centre or a range over two octaves | Smooth Hz; clamp to `0..0.45 * sampleRate` before coefficient updates |
+| Gain/trim/output | dB; linear dial position | Smooth, then `std::levels::dBtoGain`; `0 dB` = gain `1.0` |
+| Time | `ms` or `s`; useful `mid` | Clamp above zero; convert once to seconds, frames, or coefficient |
+| Resonance | true Q, or labelled normalised `0..1` | TPT SVF takes true Q; never feed it a normalised amount |
+| Mix | `0..100 %` or `0..1` | Clamp; use linear only for intended level interaction, otherwise equal-power |
+| Pan | bipolar `-1..1` | `std::pan_law::centre3dB` |
+| Pitch | semitones/cents | Ratio `2 ** (semitones / 12)`; never add Hz |
 
-`mid` changes the control-position mapping, not the raw event value. `init`
-independently sets the startup raw value. Never emit `skew`: it is not the
-Amorph parameter contract.
+`mid` maps control position, not event value; `init` sets startup value. Never emit `skew`: it is not the Amorph parameter contract.
 
 Example requested as "0 to 20 kHz, 1 kHz in the middle and initially 1 kHz":
 
@@ -105,10 +99,7 @@ For a dB control, keep the parameter in dB and convert it explicitly:
 
 ### Prefer verified standard-library primitives
 
-The authority is Cmajor `1.0.3175`. Specialise the `std::filters` frame type:
-use `std::filters (float<2>)::tpt::svf::Processor` as a graph node or an
-`Implementation` for custom/per-voice state. Declare state at processor scope;
-call `create` once at the start of `main`, where `processor.frequency` is live:
+Cmajor `1.0.3175` is authoritative. Use `std::filters (float<2>)::tpt::svf::Processor` as a graph node or an `Implementation` for custom/per-voice state. State belongs at processor scope; call `create` once at `main()` start where `processor.frequency` is live:
 
     std::filters (float)::tpt::svf::Implementation filter;
     void main()
@@ -128,32 +119,15 @@ SVF Q is true Q and must exceed zero. Map a friendly `0..1` Resonance explicitly
     float r = clamp (resonanceAmount, 0.0f, 1.0f);
     float safeQ = 0.5f + r * r * 11.5f;  // 0.5 .. 12.0 true Q
 
-Use `std::oscillators::PolyblepState` per voice. Set with
-`osc.setFrequency (processor.frequency, float64 (frequencyHz));`, call
-`nextSawtooth()`, `nextSquare()`, `nextTriangle()`, or `nextSine()`.
+Use `std::oscillators::PolyblepState` per voice: set with `osc.setFrequency (processor.frequency, float64 (frequencyHz));`; call `nextSawtooth()`, `nextSquare()`, `nextTriangle()`, or `nextSine()`.
 
-For a manual oscillator, use one unit consistently. Prefer cycles `[0, 1)`:
-add `frequencyHz * float (processor.period)`, wrap at `1.0`, then evaluate
-`sin (float64 (twoPi * phase))`. Calling `sin (phase)` on a cycles phase is wrong
-by `twoPi`. Radians instead add `twoPi * frequencyHz * dt` and wrap at `twoPi`.
+For a manual oscillator use one unit. Prefer cycles `[0, 1)`: add `frequencyHz * float (processor.period)`, wrap at `1.0`, then call `sin (float64 (twoPi * phase))`. Calling `sin (phase)` on a cycles phase is wrong by `twoPi`. Radians instead add `twoPi * frequencyHz * dt` and wrap at `twoPi`.
 
-Hard compatibility audit: the returned source must contain zero occurrences of
-`processor.currentTime`, `Math.`, `uint`, or `unsigned`. Cmajor has built-in
-`pi` and `twoPi`; never declare a local named `twoPi`. The only processor
-properties here are `frequency`, `period`, `id`, and `session`. For elapsed time,
-own a processor-scope `float64 phase`, advance it in `main()` with
-`phase += float64 (frequencyHz * float (processor.period))`, wrap at `1.0`, and
-evaluate `sin (float64 (twoPi) * phase)`.
+Hard audit: returned source must contain zero occurrences of `processor.currentTime`, `Math.`, `uint`, or `unsigned`. Cmajor supplies `pi`/`twoPi`; never declare a local named `twoPi`. Processor properties here are `frequency`, `period`, `id`, `session`. For time, own processor-scope `float64 phase`; in `main()` use `phase += float64 (frequencyHz * float (processor.period))`, wrap at `1.0`, then `sin (float64 (twoPi) * phase)`.
 
-Do not use `external` for an internal constant or storage field. An external
-value is supplied by the host and cannot have an initializer, so
-`external int voiceCount = 8;` is invalid. For a fixed internal count write
-`const int voiceCount = 8;`; for mutable processor state write `int voiceCount = 8;`.
+`external` is host-supplied and cannot be initialised: `external int voiceCount = 8;` is invalid. Use `const int voiceCount = 8;` internally, or mutable `int voiceCount = 8;`.
 
-For noise declare processor-scope `std::random::RNG rng;`, seed once before the
-loop with `rng.seed (int64 (processor.session));`, then call `rng.getBipolar()`
-or `rng.getUnipolar()`. Floating-point `%` is invalid; use `fmod`/`remainder`
-only when an actual floating remainder is needed.
+For noise declare processor-scope `std::random::RNG rng;`, seed once before the loop with `rng.seed (int64 (processor.session));`, then use `rng.getBipolar()`/`rng.getUnipolar()`. Floating-point `%` is invalid; use `fmod`/`remainder`.
 
 ### Musical modulation, envelopes, and smoothing
 
@@ -258,8 +232,6 @@ probe requested extremes and category behaviour.
 
 ## AMORPH HOST TRANSPORT AND DAW SYNC
 
-For host sync declare:
-
     input event float transportIn;
     int transportSlot=0;
     bool hostPlaying=false;
@@ -269,10 +241,7 @@ For host sync declare:
     float64 currentPpq=0.0;
     float64 hostBarStartPpq=0.0;
 
-`transportIn` is the reserved hidden host-fed endpoint; never rename it to `paramN`,
-add `[[ ... ]]`, or expose a "Transport In" UI control. Amorph does not populate `std::timeline::*`.
-Packet: **play, bpm, numerator, denominator, ppq, barStart**.
-Parse only here, never in `main()`:
+`transportIn` is the reserved hidden host-fed endpoint: never rename it to `paramN`, add `[[ ... ]]`, or expose a "Transport In" UI control. Amorph does not populate `std::timeline::*`. Packet: **play, bpm, numerator, denominator, ppq, barStart**. Parse here, never in `main()`:
 
     event transportIn(float value)
     {
@@ -285,44 +254,30 @@ Parse only here, never in `main()`:
         transportSlot=(transportSlot+1)%6;
     }
 
-Keep `int lastStepIndex = -1`. Compute the global step before incrementing PPQ.
-Between packets, advance only while playing with
-`currentPpq += float64 (hostBpm) / 60.0 / max (1.0, processor.frequency)`.
-Do not round through a `float dt`; it can create buffer-size-dependent off-by-one
-triggers. Stop resets the latch and emits no clocked triggers.
+Keep `int lastStepIndex = -1`. Compute the global step before incrementing PPQ; between packets, advance only while playing:
 
-Otherwise reset only on play, signature, or division changes. Do not reset it from either PPQ/barStart delta alone; exact inequality, value decrease, or a fixed error threshold. Neither a normal `barStart` advance, rounding, BPM change, nor an in-step seek may retrigger at the DAW buffer rate. Never use `max(localPpq, hostPpq)` or a soft-lag lock.
+    currentPpq += float64 (hostBpm) / 60.0 / max (1.0, processor.frequency);
 
-On a play/signature/division reset, set the latch to the current global step and
-subtract one only when PPQ is exactly on the grid, so grid start fires once:
+Do not round through `float dt`; that makes buffer-size-dependent off-by-one triggers. Stop resets the latch and emits nothing. A transport packet updates state; it must not directly emit a note.
+
+Reset only on play, signature, or division change. Do not reset it from either PPQ/barStart delta alone, exact inequality, value decrease, or a fixed error threshold; a normal `barStart` advance, rounding, BPM change, or in-step seek must not retrigger at the DAW buffer rate. Never use `max(localPpq, hostPpq)` or soft-lag lock.
+
+On reset, set the latch to the current step; subtract one only at an exact grid start so it fires once:
 
     int globalStep = int (floor (currentPpq / float64 (divisionQuarterNotes)));
     lastStepIndex = globalStep;
     if (fmod (currentPpq, float64 (divisionQuarterNotes)) == 0.0)
         lastStepIndex = globalStep - 1;
 
-A transport packet updates state; it must not directly emit a note or reset the latch on every packet.
-The audio loop owns the single
-`globalStep != lastStepIndex` test. Use that global step as the trigger latch,
-stop the prior sounding note, emit at most one new grid note, then update the latch.
+The audio loop owns one `globalStep != lastStepIndex` test. Use that global step as the trigger: stop the prior note, emit at most one grid note, update the latch.
 
-Quarter lengths: 1/16 `0.25`, 1/8T `1/3`, 1/8 `0.5`, 1/4T `2/3`, 1/4 `1`,
-1/2 `2`, 1/1 `4`, bar `numerator * 4 / denominator`. Use a stepped integer
-selector with `text: "1/16|1/8T|1/8|1/4T|1/4|1/2|1/1|1 bar"`; never arbitrary values such as `0.121413`. Map it in `getDivisionQuarterNotes()`. Labeled
-endpoints must also contain `step: 1` and integer `min`, `max`, and `init`.
+Quarter lengths: 1/16 `0.25`, 1/8T `1/3`, 1/8 `0.5`, 1/4T `2/3`, 1/4 `1`, 1/2 `2`, 1/1 `4`, bar `numerator * 4 / denominator`. Map a stepped integer in `getDivisionQuarterNotes()` with `text: "1/16|1/8T|1/8|1/4T|1/4|1/2|1/1|1 bar"`; never arbitrary values such as `0.121413`. Labeled endpoints must also contain `step: 1` and integer `min`, `max`, `init`.
 
-For arps, drums, and sequencers use
-`floor (currentPpq / max (0.0001f, getDivisionQuarterNotes()))`. A BPM oscillator or sample counter is not phase-locked. A musical arpeggiator must articulate bounded note gates and keep physically held notes separate from sounding step voices.
+Arps/drums/sequencers use `floor (currentPpq / max (0.0001f, getDivisionQuarterNotes()))`. A BPM oscillator or sample counter is not phase-locked. A musical arpeggiator must articulate bounded note gates and keep physically held notes separate.
 
-Tempo-synced delay/LFO/envelope time is
-`periodSeconds = divisionQuarterNotes * 60.0f / max (20.0f, hostBpm)`. Apply a
-valid host BPM immediately whether playing or stopped; play gates new triggers,
-not delay tails. Fixed seconds, `delayTimeParam * 0.25f`, or no `hostBpm` is
-**not BPM sync**.
+Tempo-synced delay/LFO/envelope time is `periodSeconds = divisionQuarterNotes * 60.0f / max (20.0f, hostBpm)`. Apply a valid host BPM immediately whether playing or stopped; play gates triggers, not delay tails. Fixed seconds, `delayTimeParam * 0.25f`, or no `hostBpm` is **not BPM sync**.
 
-**Buffer-size audit:** identical MIDI/transport must produce identical grid
-samples at 31, 64, 257, and 511 frame buffers. Block-boundary retriggers are not
-sync.
+**Buffer-size audit:** identical MIDI/transport must produce identical grid samples at 31, 64, 257, and 511 frame buffers. Block-boundary retriggers are not sync.
 
 ### FX-specific standard-library facts
 
@@ -378,4 +333,4 @@ Emit analysis events at a throttled rate, not every sample. `std::frequency::rea
 
 Unless mono is requested, do not collapse the wet path to identical left and right signals; audit that the algorithm cannot remain `wetL == wetR` for every sample.
 END_AMORPH_CONTEXT
-END_TOKEN: amorph-end-e411b30464e12e8b
+END_TOKEN: amorph-end-143beab35294130f
