@@ -256,6 +256,11 @@ class ExternalContextTests(unittest.TestCase):
                 self.assertIn("**Buffer-size audit:**", text)
                 self.assertIn("must not directly emit a note", text)
                 self.assertIn("currentPpq += float64 (hostBpm) / 60.0", text)
+                self.assertIn("only legal PPQ advance", text)
+                self.assertIn("never divide by `processor.period`", text)
+                self.assertIn("compute and trigger from the global step first", text)
+                self.assertIn("then increment PPQ exactly once", text)
+                self.assertIn("generic period-casting rule is only for oscillators and timers", text)
                 self.assertIn("Never cast `processor.frequency` to `float`", text)
                 self.assertIn("store it in a `float` alias", text)
                 self.assertIn("never write `currentPpq = 0.0` on play or restart", text)
@@ -304,6 +309,10 @@ class ExternalContextTests(unittest.TestCase):
 
         midi = (ROOT / "context-src" / "v1" / "dsp" / "midi.md").read_text(encoding="utf-8")
         self.assertIn("`% heldCount` is forbidden", midi)
+        self.assertIn("Host PPQ is the exception", midi)
+        host_transport = (ROOT / "context-src" / "v1" / "shared" / "host-transport.md").read_text(encoding="utf-8")
+        self.assertNotIn("/ float (processor.period)", host_transport)
+        self.assertNotIn("/ float(processor.period)", host_transport)
 
         fx = (ROOT / "context-src" / "v1" / "dsp" / "fx.md").read_text(encoding="utf-8")
         self.assertIn("do not collapse the wet path to identical left and right signals", fx)
