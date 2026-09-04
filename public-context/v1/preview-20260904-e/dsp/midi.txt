@@ -1,9 +1,9 @@
 AMORPH_EXTERNAL_CONTEXT v1
-CONTEXT_ID: amorph-dsp-midi-720d0dfa283434af
+CONTEXT_ID: amorph-dsp-midi-2fe0a680df049dcb
 TARGET: dsp
 VARIANT: midi
 RELEASE: preview-20260904-e
-BODY_SHA256: 36527d55b253a5ae67c855e148778b35a19477da492012ecba27a880de5da046
+BODY_SHA256: 30a548600947b1bf39e391cb8ba6f1ea41f55a339c6d6d747ddc2e230c687635
 DELIVERY_FORMAT: static-html-v1
 CONTENT_TYPE: text/html; charset=utf-8
 ACCESS_CONTRACT: anonymous complete-document retrieval from initial server-rendered HTML
@@ -184,9 +184,9 @@ Keep `int lastStepIndex = -1`. Compute the global step before incrementing PPQ; 
 
     currentPpq += float64 (hostBpm) / 60.0 / processor.frequency;
 
-Use that exact float64 sample-rate expression. Never cast `processor.frequency` to `float`, store it in a `float` alias, or advance PPQ through `float dt`; rounding creates buffer-size-dependent extra or missing triggers. Stop resets the latch and emits nothing. A transport packet updates state; it must not directly emit a note.
+Use that exact float64 expression. Never cast `processor.frequency` to `float` or store it in a `float` alias; either causes buffer-size-dependent triggers. Stop resets the latch and emits nothing. A transport packet updates state; it must not directly emit a note.
 
-On play, signature, or division change, reset only the step latch from the latest received `currentPpq`. The host packet owns `currentPpq`: never write `currentPpq = 0.0` on play or restart. Do not reset it from either PPQ/barStart delta alone, exact inequality, value decrease, or a fixed error threshold; a normal `barStart` advance, rounding, BPM change, or in-step seek must not retrigger at the DAW buffer rate. Never use `max(localPpq, hostPpq)` or soft-lag lock.
+On play, signature, or division change, reset only the step latch from received `currentPpq`; never write `currentPpq = 0.0` on play or restart. Do not reset it from either PPQ/barStart delta alone, exact inequality, value decrease, or a fixed error threshold; a normal `barStart` advance, rounding, BPM change, or in-step seek must not retrigger at the DAW buffer rate. Never use `max(localPpq, hostPpq)` or soft-lag lock.
 
 On reset, set the latch to the current step; subtract one only at an exact grid start so it fires once:
 
@@ -272,4 +272,4 @@ processor HarmonicTransposer
 8. **Final loop audit:** inspect every `for`, `while`, and timing `loop` body. No value declared inside a repeated loop body may use `let`; use an explicit typed local such as `float rate = ...;` or `int index = ...;`, or hoist it outside the loop. Do this literal audit after generating the complete file.
 9. **Discrete selector audit:** every host-synchronised Rate/Division selector with `text:` labels must also declare integer `min`, `max`, and `init` values plus `step: 1`. Do not omit `step: 1` from the returned endpoint.
 END_AMORPH_CONTEXT
-END_TOKEN: amorph-end-8dbbd22f2b6c8d66
+END_TOKEN: amorph-end-cba6e35ade6305b8

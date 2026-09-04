@@ -26,9 +26,9 @@ Keep `int lastStepIndex = -1`. Compute the global step before incrementing PPQ; 
 
     currentPpq += float64 (hostBpm) / 60.0 / processor.frequency;
 
-Use that exact float64 sample-rate expression. Never cast `processor.frequency` to `float`, store it in a `float` alias, or advance PPQ through `float dt`; rounding creates buffer-size-dependent extra or missing triggers. Stop resets the latch and emits nothing. A transport packet updates state; it must not directly emit a note.
+Use that exact float64 expression. Never cast `processor.frequency` to `float` or store it in a `float` alias; either causes buffer-size-dependent triggers. Stop resets the latch and emits nothing. A transport packet updates state; it must not directly emit a note.
 
-On play, signature, or division change, reset only the step latch from the latest received `currentPpq`. The host packet owns `currentPpq`: never write `currentPpq = 0.0` on play or restart. Do not reset it from either PPQ/barStart delta alone, exact inequality, value decrease, or a fixed error threshold; a normal `barStart` advance, rounding, BPM change, or in-step seek must not retrigger at the DAW buffer rate. Never use `max(localPpq, hostPpq)` or soft-lag lock.
+On play, signature, or division change, reset only the step latch from received `currentPpq`; never write `currentPpq = 0.0` on play or restart. Do not reset it from either PPQ/barStart delta alone, exact inequality, value decrease, or a fixed error threshold; a normal `barStart` advance, rounding, BPM change, or in-step seek must not retrigger at the DAW buffer rate. Never use `max(localPpq, hostPpq)` or soft-lag lock.
 
 On reset, set the latch to the current step; subtract one only at an exact grid start so it fires once:
 

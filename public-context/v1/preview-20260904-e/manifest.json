@@ -5,39 +5,39 @@
   "documents": [
     {
       "audit_path": "dsp/instrument.txt",
-      "body_sha256": "9e562723c97010c4d4a77d3d53c9e46f8affb752aca61fcf5d74fbdc2ab8b02a",
-      "canonical_text_sha256": "abd64cf726dbc15debc29bd84a36707f791fc4b54c766a079a28c1bc2aabd8ae",
-      "html_bytes": 24430,
+      "body_sha256": "60545f14447a5da8f831f79871943f3bc6f0ab148e6ec80245c3ad90f2096df6",
+      "canonical_text_sha256": "271f253c7a05aa2ef2b14b19428ba5b7a17464ddbbf7b1ba86f982ae98378fd0",
+      "html_bytes": 24319,
       "html_path": "dsp/instrument.html",
-      "html_sha256": "02a123ac0068befcd09fbe2324688ca77136c84ff43f919743c6d5e49790fad5",
+      "html_sha256": "7e1f00a5fec0239632dc2ce2783128f261ea6cd4317e85e20a17dd682a9430a9",
       "path": "dsp/instrument.html",
       "target": "dsp",
       "variant": "instrument",
-      "visible_text_bytes": 23941
+      "visible_text_bytes": 23830
     },
     {
       "audit_path": "dsp/fx.txt",
-      "body_sha256": "5b67a006e8ef61e73266413605e38d2b44fc8e1ed04804d88572597b01f0225a",
-      "canonical_text_sha256": "28f2e9f5126f5bd968ec760af76d51ab14d72d9fd5cfb243a0264781b797e805",
-      "html_bytes": 24568,
+      "body_sha256": "89c84515549fcd878136c77a76b2074950fee5ae4025f5492133e356d4613495",
+      "canonical_text_sha256": "57badbb642af1925589823d2a03856186bfae055781f474d204488fb3e9585fc",
+      "html_bytes": 24457,
       "html_path": "dsp/fx.html",
-      "html_sha256": "7191ced9a796d1a72f8f717961392338639732e68dda012c15a649a96ebc712e",
+      "html_sha256": "0a01a37f887cc6e1b091fc9f3488e5a30b0e09534e269b4b5e6ce9068b4fb9fc",
       "path": "dsp/fx.html",
       "target": "dsp",
       "variant": "fx",
-      "visible_text_bytes": 24071
+      "visible_text_bytes": 23960
     },
     {
       "audit_path": "dsp/midi.txt",
-      "body_sha256": "36527d55b253a5ae67c855e148778b35a19477da492012ecba27a880de5da046",
-      "canonical_text_sha256": "f8db3cb8bb7381af2cd2a906c4e929422a19af4364f72099ada94b80f1d8e89e",
-      "html_bytes": 18974,
+      "body_sha256": "30a548600947b1bf39e391cb8ba6f1ea41f55a339c6d6d747ddc2e230c687635",
+      "canonical_text_sha256": "798109ca842e6e283b210b119445efecc3995437acf4c3d5c9a26a12f00ab9a6",
+      "html_bytes": 18863,
       "html_path": "dsp/midi.html",
-      "html_sha256": "29a70e440201768f39b7c139c91afbacc8827685cc4eecd8ac8f6c05402b3e04",
+      "html_sha256": "331e5e7aa0eda1466864d8a89179ac8e657be068b75828bc1b3a6595c98411b8",
       "path": "dsp/midi.html",
       "target": "dsp",
       "variant": "midi",
-      "visible_text_bytes": 18513
+      "visible_text_bytes": 18402
     },
     {
       "audit_path": "ui/instrument.txt",
