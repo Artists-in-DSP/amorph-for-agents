@@ -306,6 +306,9 @@ class ExternalContextTests(unittest.TestCase):
         self.assertIn("the new control must be `param5` in all four places", instrument)
         self.assertIn("A musical arpeggiator must articulate bounded note gates", compose_source("dsp", "instrument"))
         self.assertIn("physically held notes separate", compose_source("dsp", "instrument"))
+        self.assertIn("never `heldNotes` or `heldCount`", compose_source("dsp", "midi"))
+        self.assertIn("only `midiIn` note-off removes held input", compose_source("dsp", "midi"))
+        self.assertIn("restart can continue on-grid", compose_source("dsp", "midi"))
 
         midi = (ROOT / "context-src" / "v1" / "dsp" / "midi.md").read_text(encoding="utf-8")
         self.assertIn("`% heldCount` is forbidden", midi)
