@@ -1,27 +1,21 @@
 ## C) MUSICAL PARAMETERS AND CMAJOR 1.0.3175 DSP FOUNDATIONS
 
-These rules cover host values, Amorph control mapping, and safe DSP conversion.
-Do not invent annotations or replace a meaningful midpoint with a linear dial.
-
-Language traps still apply: `select(mask, a, b)` is Vector-only masked selection;
-scalar arguments fail. For scalar values use `cond ? a : b`. Built-in math
-returns `float64` where documented; cast explicitly into `float` signal state.
+Use safe host values and DSP conversions. Do not invent annotations or replace a
+meaningful midpoint with a linear dial. `select(mask, a, b)` is Vector-only masked selection. For scalar values use `cond ? a : b`. Cast math results into `float` state.
 
 ### Parameter semantics
 
 | Meaning | Host declaration | DSP use |
 |---|---|---|
-| Cutoff/frequency | Hz; use `mid` when the user requests a centre position or the range spans more than roughly two octaves | Smooth the raw Hz value; clamp to `0..0.45 * sampleRate` before filter coefficient updates |
-| Gain/trim/output | dB; movement is normally linear in dB, so do not add frequency-style curvature | Smooth in dB or linear gain, then use `std::levels::dBtoGain`; `0 dB` must produce gain `1.0` |
-| Time | `ms` or `s`; use `mid` for a useful musical centre | Clamp above zero before division, then convert once to seconds, frames, or a coefficient |
-| Resonance | Either true Q or a clearly labelled normalised `0..1` amount | TPT SVF receives true Q; never pass a normalised amount directly as Q |
-| Mix | `0..100 %` or `0..1` | Clamp, then choose linear crossfade only when level interaction is intended; otherwise use equal-power dry/wet gains |
-| Pan | bipolar `-1..1` | Prefer `std::pan_law::centre3dB` |
-| Pitch | semitones or cents | Convert ratios with `2 ** (semitones / 12)`; do not add Hz for musical transposition |
+| Cutoff/frequency | Hz; use `mid` for a requested centre or a range over two octaves | Smooth Hz; clamp to `0..0.45 * sampleRate` before coefficient updates |
+| Gain/trim/output | dB; linear dial position | Smooth, then `std::levels::dBtoGain`; `0 dB` = gain `1.0` |
+| Time | `ms` or `s`; useful `mid` | Clamp above zero; convert once to seconds, frames, or coefficient |
+| Resonance | true Q, or labelled normalised `0..1` | TPT SVF takes true Q; never feed it a normalised amount |
+| Mix | `0..100 %` or `0..1` | Clamp; use linear only for intended level interaction, otherwise equal-power |
+| Pan | bipolar `-1..1` | `std::pan_law::centre3dB` |
+| Pitch | semitones/cents | Ratio `2 ** (semitones / 12)`; never add Hz |
 
-`mid` changes the control-position mapping, not the raw event value. `init`
-independently sets the startup raw value. Never emit `skew`: it is not the
-Amorph parameter contract.
+`mid` maps control position, not event value; `init` sets startup value. Never emit `skew`: it is not the Amorph parameter contract.
 
 Example requested as "0 to 20 kHz, 1 kHz in the middle and initially 1 kHz":
 
@@ -38,10 +32,7 @@ For a dB control, keep the parameter in dB and convert it explicitly:
 
 ### Prefer verified standard-library primitives
 
-The authority is Cmajor `1.0.3175`. Specialise the `std::filters` frame type:
-use `std::filters (float<2>)::tpt::svf::Processor` as a graph node or an
-`Implementation` for custom/per-voice state. Declare state at processor scope;
-call `create` once at the start of `main`, where `processor.frequency` is live:
+Cmajor `1.0.3175` is authoritative. Use `std::filters (float<2>)::tpt::svf::Processor` as a graph node or an `Implementation` for custom/per-voice state. State belongs at processor scope; call `create` once at `main()` start where `processor.frequency` is live:
 
     std::filters (float)::tpt::svf::Implementation filter;
     void main()
@@ -61,32 +52,15 @@ SVF Q is true Q and must exceed zero. Map a friendly `0..1` Resonance explicitly
     float r = clamp (resonanceAmount, 0.0f, 1.0f);
     float safeQ = 0.5f + r * r * 11.5f;  // 0.5 .. 12.0 true Q
 
-Use `std::oscillators::PolyblepState` per voice. Set with
-`osc.setFrequency (processor.frequency, float64 (frequencyHz));`, call
-`nextSawtooth()`, `nextSquare()`, `nextTriangle()`, or `nextSine()`.
+Use `std::oscillators::PolyblepState` per voice: set with `osc.setFrequency (processor.frequency, float64 (frequencyHz));`; call `nextSawtooth()`, `nextSquare()`, `nextTriangle()`, or `nextSine()`.
 
-For a manual oscillator, use one unit consistently. Prefer cycles `[0, 1)`:
-add `frequencyHz * float (processor.period)`, wrap at `1.0`, then evaluate
-`sin (float64 (twoPi * phase))`. Calling `sin (phase)` on a cycles phase is wrong
-by `twoPi`. Radians instead add `twoPi * frequencyHz * dt` and wrap at `twoPi`.
+For a manual oscillator use one unit. Prefer cycles `[0, 1)`: add `frequencyHz * float (processor.period)`, wrap at `1.0`, then call `sin (float64 (twoPi * phase))`. Calling `sin (phase)` on a cycles phase is wrong by `twoPi`. Radians instead add `twoPi * frequencyHz * dt` and wrap at `twoPi`.
 
-Hard compatibility audit: the returned source must contain zero occurrences of
-`processor.currentTime`, `Math.`, `uint`, or `unsigned`. Cmajor has built-in
-`pi` and `twoPi`; never declare a local named `twoPi`. The only processor
-properties here are `frequency`, `period`, `id`, and `session`. For elapsed time,
-own a processor-scope `float64 phase`, advance it in `main()` with
-`phase += float64 (frequencyHz * float (processor.period))`, wrap at `1.0`, and
-evaluate `sin (float64 (twoPi) * phase)`.
+Hard audit: returned source must contain zero occurrences of `processor.currentTime`, `Math.`, `uint`, or `unsigned`. Cmajor supplies `pi`/`twoPi`; never declare a local named `twoPi`. Processor properties here are `frequency`, `period`, `id`, `session`. For time, own processor-scope `float64 phase`; in `main()` use `phase += float64 (frequencyHz * float (processor.period))`, wrap at `1.0`, then `sin (float64 (twoPi) * phase)`.
 
-Do not use `external` for an internal constant or storage field. An external
-value is supplied by the host and cannot have an initializer, so
-`external int voiceCount = 8;` is invalid. For a fixed internal count write
-`const int voiceCount = 8;`; for mutable processor state write `int voiceCount = 8;`.
+`external` is host-supplied and cannot be initialised: `external int voiceCount = 8;` is invalid. Use `const int voiceCount = 8;` internally, or mutable `int voiceCount = 8;`.
 
-For noise declare processor-scope `std::random::RNG rng;`, seed once before the
-loop with `rng.seed (int64 (processor.session));`, then call `rng.getBipolar()`
-or `rng.getUnipolar()`. Floating-point `%` is invalid; use `fmod`/`remainder`
-only when an actual floating remainder is needed.
+For noise declare processor-scope `std::random::RNG rng;`, seed once before the loop with `rng.seed (int64 (processor.session));`, then use `rng.getBipolar()`/`rng.getUnipolar()`. Floating-point `%` is invalid; use `fmod`/`remainder`.
 
 ### Musical modulation, envelopes, and smoothing
 
@@ -170,8 +144,14 @@ For equal-power dry/wet, use a `0..1` position:
     float wetGain = float (sin (float64 (theta)));
     float mixed = dry * dryGain + wet * wetGain;
 
-For pan use `std::pan_law::centre3dB`. Keep feedback below `1.0`; use fixed
-buffers, bounded interpolated reads, and safely wrapped indices. Instruments
+For pan, the function returns a `float<2>` pair; index it, never invent `.left`
+or `.right` members:
+
+    float<2> panGains = std::pan_law::centre3dB (clamp (pan, -1.0f, 1.0f));
+    float left = sample * panGains[0];
+    float right = sample * panGains[1];
+
+Keep feedback below `1.0`; use fixed buffers, bounded interpolated reads, and safely wrapped indices. Instruments
 divide a variable sum by `float(max(1, activeVoiceCount))` and retain headroom.
 
 Budget fixed delay state across the processor. A multi-stage reverb normally keeps

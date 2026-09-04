@@ -1,7 +1,5 @@
 ## AMORPH HOST TRANSPORT AND DAW SYNC
 
-For host sync:
-
     input event float transportIn;
     int transportSlot=0;
     bool hostPlaying=false;
@@ -11,10 +9,7 @@ For host sync:
     float64 currentPpq=0.0;
     float64 hostBarStartPpq=0.0;
 
-`transportIn` is the reserved hidden host-fed endpoint; never rename it to `paramN`,
-add `[[ ... ]]`, or expose a "Transport In" UI control.
-Amorph does not populate `std::timeline::*`. Packet:
-**play, bpm, numerator, denominator, ppq, barStart**. Parse only here, never in `main()`:
+`transportIn` is the reserved hidden host-fed endpoint: never rename it to `paramN`, add `[[ ... ]]`, or expose a "Transport In" UI control. Amorph does not populate `std::timeline::*`. Packet: **play, bpm, numerator, denominator, ppq, barStart**. Parse here, never in `main()`:
 
     event transportIn(float value)
     {
@@ -27,33 +22,27 @@ Amorph does not populate `std::timeline::*`. Packet:
         transportSlot=(transportSlot+1)%6;
     }
 
-Keep `int lastStepIndex = -1`. Between packets, advance playing PPQ by
-`float64 (hostBpm) / 60.0 / processor.frequency`; stop resets the latch and emits
-no clocked triggers. Otherwise reset only on play, signature, or division
-changes. Do not reset it from either PPQ/barStart delta alone;
-exact inequality, value decrease, or a fixed error threshold; a normal `barStart` advance,
-rounding, BPM change, or in-step seek must not retrigger at the DAW buffer rate.
-Never use `max(localPpq, hostPpq)` or a soft-lag lock.
+Keep `int lastStepIndex = -1`. Compute the global step before incrementing PPQ; between packets, advance only while playing:
 
-Quarter lengths: 1/16 `0.25`, 1/8T `1/3`, 1/8 `0.5`, 1/4T `2/3`, 1/4 `1`, 1/2
-`2`, 1/1 `4`, bar `numerator * 4 / denominator`. Use a stepped integer selector:
-`text: "1/16|1/8T|1/8|1/4T|1/4|1/2|1/1|1 bar"`, never arbitrary values such as
-`0.121413`; map it in `getDivisionQuarterNotes()`. Labeled endpoints
-must also contain `step: 1` and integer `min`, `max`, and `init`.
+    currentPpq += float64 (hostBpm) / 60.0 / max (1.0, processor.frequency);
 
-For arps, drums, and sequencers compute the global step with
-`floor (currentPpq / max (0.0001f, getDivisionQuarterNotes()))` and trigger only
-when it differs from `lastStepIndex`. Use that global step as the trigger latch
-even for `1 bar`; a bar-relative pattern index cannot be the sole latch.
-A BPM oscillator or sample counter is not phase-locked.
-A musical arpeggiator must articulate bounded note gates; keep physically held notes separate from sounding step voices.
+Do not round through `float dt`; that makes buffer-size-dependent off-by-one triggers. Stop resets the latch and emits nothing. A transport packet updates state; it must not directly emit a note.
 
-Tempo-synced delay/LFO/envelope DSP uses
-`periodSeconds = divisionQuarterNotes * 60.0f / max (20.0f, hostBpm)`. Apply a
-valid host BPM immediately whether playing or stopped; play gates new triggers,
-not delay tails. Fixed seconds, `delayTimeParam * 0.25f`, or no `hostBpm` is
-**not BPM sync**.
+Reset only on play, signature, or division change. Do not reset it from either PPQ/barStart delta alone, exact inequality, value decrease, or a fixed error threshold; a normal `barStart` advance, rounding, BPM change, or in-step seek must not retrigger at the DAW buffer rate. Never use `max(localPpq, hostPpq)` or soft-lag lock.
 
-**Buffer-size audit:** identical MIDI/transport must produce identical grid
-samples at 31, 64, 257, and 511 frame buffers. Block-boundary retriggers are not
-sync.
+On reset, set the latch to the current step; subtract one only at an exact grid start so it fires once:
+
+    int globalStep = int (floor (currentPpq / float64 (divisionQuarterNotes)));
+    lastStepIndex = globalStep;
+    if (fmod (currentPpq, float64 (divisionQuarterNotes)) == 0.0)
+        lastStepIndex = globalStep - 1;
+
+The audio loop owns one `globalStep != lastStepIndex` test. Use that global step as the trigger: stop the prior note, emit at most one grid note, update the latch.
+
+Quarter lengths: 1/16 `0.25`, 1/8T `1/3`, 1/8 `0.5`, 1/4T `2/3`, 1/4 `1`, 1/2 `2`, 1/1 `4`, bar `numerator * 4 / denominator`. Map a stepped integer in `getDivisionQuarterNotes()` with `text: "1/16|1/8T|1/8|1/4T|1/4|1/2|1/1|1 bar"`; never arbitrary values such as `0.121413`. Labeled endpoints must also contain `step: 1` and integer `min`, `max`, `init`.
+
+Arps/drums/sequencers use `floor (currentPpq / max (0.0001f, getDivisionQuarterNotes()))`. A BPM oscillator or sample counter is not phase-locked. A musical arpeggiator must articulate bounded note gates and keep physically held notes separate.
+
+Tempo-synced delay/LFO/envelope time is `periodSeconds = divisionQuarterNotes * 60.0f / max (20.0f, hostBpm)`. Apply a valid host BPM immediately whether playing or stopped; play gates triggers, not delay tails. Fixed seconds, `delayTimeParam * 0.25f`, or no `hostBpm` is **not BPM sync**.
+
+**Buffer-size audit:** identical MIDI/transport must produce identical grid samples at 31, 64, 257, and 511 frame buffers. Block-boundary retriggers are not sync.
