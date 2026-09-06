@@ -7,9 +7,9 @@ You are writing Cmajor DSP code for the **Amorph_FX** plugin variant (stereo aud
 
 1. **Forbidden identifiers:** never name a variable, parameter, field, or helper `input`, `output`, or `stream`. A control may use the display label `[[ name: "Output" ]]`, but its identifier must be valid, such as `outGain` -- never `output`.
 2. **Helper functions:** processor scope only -- not inside `main()` or event handlers.
-3. **Required endpoints and stereo read:** `input stream float<2> in;` and `output stream float<2> out;`. Use `float` only for explicit mono. Each iteration reads `float<2> inputFrame = in;`, then `inputFrame[0]` and `inputFrame[1]`. There are no implicit `inL` or `inR` symbols.
+3. **Required stereo endpoints:** `input stream float<2> in;` and `output stream float<2> out;`. Each loop reads `float<2> inputFrame = in;` and indexes `[0]`/`[1]`. There are no implicit `inL` or `inR` symbols.
 4. **Types:** declare every manual phase field `float64 phase;` and update it with `phase += float64 (frequencyHz * float (processor.period));`. Never assign a `float64` expression to `float phase;`. Use `float` elsewhere; `double` does not exist.
-5. **No C++/localised tokens:** `auto`, `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`. Code tokens and identifiers must be ASCII; never emit translated keywords.
+5. **No C++:** `auto`, `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`, and local `State& s` aliases are invalid. Use `states.at(i)` directly; `&` is legal only in function parameters; identifiers must be ASCII.
 6. **Math constants/casting:** Cmajor has built-in `pi` and `twoPi`; the `Math` namespace does not exist. Never write `Math.pi` or declare a local named `twoPi`; use `float(twoPi)`. `sin/cos/tan/tanh/sqrt/pow/exp/log` return `float64`; wrap with `float(...)` when storing in `float`.
 7. **Host parameter pattern (all three parts are mandatory):**
 

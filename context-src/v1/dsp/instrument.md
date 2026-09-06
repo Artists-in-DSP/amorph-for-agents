@@ -9,7 +9,7 @@ You are writing Cmajor DSP code for the **Amorph_Instrument** plugin variant (MI
 2. **Helper functions:** processor scope only -- not inside `main()` or event handlers.
 3. **Required endpoints:** `input event std::midi::Message midiIn;` and `output stream float out;` (or `float<2>` for stereo).
 4. **Types:** declare every manual phase field `float64 phase;` and update it with `phase += float64 (frequencyHz * float (processor.period));`. Never assign a `float64` expression to `float phase;`. Use `float` elsewhere; `double` does not exist.
-5. **No C++/localised tokens:** `auto`, `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`. Code tokens and identifiers must be ASCII; never emit translated keywords.
+5. **No C++:** `auto`, `unsigned`, `uint32_t`, `uint64_t`, `size_t`, `constexpr`, `static`, and local `Voice& v` aliases are invalid. Use `voices.at(i)` directly; `&` is legal only in function parameters; identifiers must be ASCII.
 6. **Math constants/casting:** Cmajor has built-in `pi` and `twoPi`; the `Math` namespace does not exist. Never write `Math.pi` or declare a local named `twoPi`; use `float(twoPi)`. `sin/cos/tan/tanh/sqrt/pow/exp/log` return `float64`; wrap with `float(...)` when storing in `float`.
 7. **Host parameter pattern (all three parts are mandatory):**
 
