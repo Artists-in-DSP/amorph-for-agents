@@ -25,5 +25,5 @@ Explore is the only tab with two resize handles (in-page corner grip plus the ou
 
 ## Remote control
 
-Settings → Connections → Remote Control provides a URL + QR for browser control of the loaded patch.
+Settings → Remote provides a URL + QR for browser control of the loaded patch.
 This is a **control/performance** path — not a separate authoring surface.

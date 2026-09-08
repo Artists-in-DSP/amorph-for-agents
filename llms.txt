@@ -6,9 +6,9 @@ amorph is made by Artists in DSP, Switzerland.
 
 ## Build compatibility
 
-> **MCP, IDE auto-connect, and Connections onboarding are not in the current Gumroad download (v0.99).**
+> **MCP, Your AI onboarding, and the loopback hub are not in the current Gumroad download (v0.99).**
 
-The public beta (v0.99) supports copy-paste, in-plugin assistant, and Explore on macOS and Windows. MCP requires an **updated download from Gumroad** — see release notes when updating. Before MCP setup, confirm **Settings → Connections** is present. See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUILD_COMPAT.md
+The public beta (v0.99) supports copy-paste, in-plugin assistant, and Explore on macOS and Windows. MCP requires an **updated download from Gumroad** — see release notes when updating. Before MCP setup, confirm **Settings → Your AI** is visible (Outside Amorph + Live via MCP). See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUILD_COMPAT.md
 
 ## Pick your door
 
@@ -61,10 +61,11 @@ Voice/mic input requires an OpenAI key regardless of the active code-generation 
 
 ## MCP for agents (not in v0.99)
 
-Verify **Settings → Connections** exists before MCP setup. See BUILD_COMPAT.md.
-- Each runtime runs a built-in MCP server + auto-deployed stdio bridge (`mcp_bridge.py`)
+Verify **Settings → Your AI** is visible before MCP setup. See BUILD_COMPAT.md.
+- One hub: `http://127.0.0.1:7330/mcp` (Streamable HTTP, loopback, no token). User adds once via Add to Cursor / Add to VS Code. Amorph never auto-registers.
+- Python only for Claude Desktop (stdio). Prefer `GET http://127.0.0.1:7330/mcp/setup`.
 - **First call:** `get_host_status` (works before a runtime is open)
-- Key tools: `read_code`, `edit_lines`, `generate_code`, `audition_patch`, `run_qa_probe`, `run_ui_probe`, `task_complete`, `apply_draft`, `get_error`
+- Key tools: `read_code`, `edit_lines`, `generate_code`, `put_asset`, `list_assets`, `set_parameters`, `audition_patch`, `run_qa_probe`, `run_ui_probe`, `task_complete`, `apply_draft`, `get_error`
 - MCP operates the patch inside amorph; it does not control the DAW
 - Full agent docs: https://github.com/Artists-in-DSP/amorph-for-agents
 

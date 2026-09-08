@@ -72,9 +72,9 @@ named consumer-provider gate are green.
 
 ## MCP in 30 seconds (v1 beta)
 
-1. Confirm **Settings → Connections** is present ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). If missing, the user is on **v0.99** — copy-paste in Build only.
-2. Install amorph and open a runtime in your DAW.
-3. Connect your IDE agent via MCP ([setup guide](MCP_SETUP.md)).
+1. Confirm **Settings → Your AI** is visible ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). If missing, the user is on **v0.99** — copy-paste in Build only.
+2. Install amorph, open a runtime, set **Outside Amorph** → **Live via MCP**.
+3. Add the hub once: **Add to Cursor** / **Add to VS Code**, or copy Other clients ([setup guide](MCP_SETUP.md)). URL: `http://127.0.0.1:7330/mcp`.
 4. Call **`get_host_status`** first (works even before the plugin is open).
 5. Edit with **`edit_lines`** → **`task_complete`** → **`apply_draft`** to hear changes.
 

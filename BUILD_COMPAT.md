@@ -32,6 +32,6 @@ The **Explore catalog** lists **chosen, verified** patches only (curated by Arti
 
 **Not in v0.99:** MCP, BYOK, and link-share. **Not in v1 beta:** Explore catalog listing / public patch publishing.
 
-Before MCP or BYOK setup: confirm **Settings → Connections** is present. If missing, the user is on v0.99 — guide **copy-paste in Build only**.
+Before MCP or BYOK setup: confirm **Settings → Your AI** is visible (Outside Amorph + Live via MCP). If missing, the user is on v0.99 — guide **copy-paste in Build only**.
 
 Preview builds: Discord → `#announcements`

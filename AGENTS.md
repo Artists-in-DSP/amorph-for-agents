@@ -29,26 +29,26 @@ See [`BUILD_COMPAT.md`](BUILD_COMPAT.md) before guiding MCP, BYOK, or share flow
 
 ## First connection
 
-1. **Verify compatibility:** Confirm **Settings → Connections** exists in the plugin ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). If missing, the user is on v0.99 — guide **copy-paste in Build only**; do not run MCP or in-plugin BYOK steps.
-2. Call **`get_host_status`** — works even when no runtime is open (bridge v5+).
-3. If **disconnected:** guide install from https://artistsindsp.gumroad.com/l/amorph → open a runtime in the DAW → reconnect. Do not call code tools yet.
-4. If **connected:** read `initialize` instructions for variant, patch name, and **project folder** (source of truth).
+1. **Verify compatibility:** Confirm **Settings → Your AI** is visible ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). That panel appears only when **Outside Amorph** + **Live via MCP**. If missing, the user is on v0.99 — guide **copy-paste in Build only**; do not run MCP or in-plugin BYOK steps.
+2. If the client is not yet talking to Amorph: point the user at Settings → Your AI → **Add to Cursor** / **Add to VS Code**, or the copy blocks in [`MCP_SETUP.md`](MCP_SETUP.md). Hub URL: `http://127.0.0.1:7330/mcp`. Amorph never auto-registers. Python is only for Claude Desktop.
+3. Call **`get_host_status`** — works even when no runtime is open.
+4. If **disconnected:** guide install from https://artistsindsp.gumroad.com/l/amorph → open a runtime in the DAW → reconnect. Do not call code tools yet.
+5. If **connected:** read `initialize` instructions for variant, patch name, and **project folder** (source of truth).
 
 ## New project (two paths)
 
 | Path | Who | When |
 |------|-----|------|
-| **In-plugin** | User saves **New blank patch** | Traditional; creates `Projects/<Name>/` + `.vscode/mcp.json` |
-| **MCP agent** | You call **`create_project`** | Blank saved project without manual Save; requires plugin open |
+| **In-plugin** | User saves **New blank patch** | Traditional; creates `Projects/<Name>/` + hub `.vscode/mcp.json` |
+| **MCP agent** | You call **`create_project`** | Blank saved project without manual Save; `name` is optional (`New patch`, `New patch (2)`, …) |
 
 **Connect MCP (by client):**
 
 | Client | Open project folder? |
 |--------|---------------------|
-| **Cursor / Claude Desktop / Windsurf** | **No** for MCP-only authoring — chat from any workspace (auto-registered). Optional to open folder for hand-editing files. |
-| **VS Code** | **Yes** — `File → Open Folder` → project folder (uses `.vscode/mcp.json`). |
+| **Cursor / VS Code / Windsurf / Claude Code / Claude Desktop** | **No** for MCP-only authoring — add the hub once, then chat from any workspace. Folder is optional (hand-edit only). VS Code has a one-click HTTP install. |
 
-**Editor connected** badge = MCP client ran a tool recently — not “user opened the folder.”
+**AI connected** badge = MCP client ran a tool recently — not “user opened the folder.” States: **Waiting for your AI** / **AI connected** / **AI working**.
 
 ## The editor (what you and the user are editing)
 
@@ -99,7 +99,7 @@ get_host_status → read_code / get_code_outline → edit_lines
 
 **New patch from scratch (agent-first):**
 ```
-get_host_status → create_project(name="…") → generate_code / edit_lines
+get_host_status → create_project → generate_code / edit_lines
 → audition_patch? → run_qa_probe? → task_complete → apply_draft → get_error none
 ```
 

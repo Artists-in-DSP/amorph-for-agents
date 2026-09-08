@@ -42,7 +42,7 @@ Every path below edits these files and compiles into the same running patch. No 
 - Fullest **external** tool surface (`run_qa_probe`, `apply_draft`, `reload_from_disk`, etc.)
 - The in-plugin agent may have additional internal planning/eval helpers that are not part of the normal external MCP workflow
 - The user’s own agent pays for inference (no Amorph API budget limit)
-- Setup: [`MCP_SETUP.md`](MCP_SETUP.md) — bridge + `get_host_status` cold start
+- Setup: [`MCP_SETUP.md`](MCP_SETUP.md) — hub `http://127.0.0.1:7330/mcp` via Settings → Your AI; `get_host_status` on cold start
 
 **Agent message:** “Connect your IDE agent to amorph via MCP — ask it to call `get_host_status` and walk you through setup.”
 
