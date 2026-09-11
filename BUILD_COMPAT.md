@@ -7,10 +7,9 @@
 
 | Release | Channel | When |
 |---------|---------|------|
-| **v0.99 Open Beta** | [Gumroad](https://artistsindsp.gumroad.com/l/amorph) (public) | **Today** |
-| **v1 beta** (1, 2, …) | [Discord](https://discord.gg/JzVbjU38tp) `#announcements` preview → Gumroad when ready | **Next** |
-| **v1 gamma** | TBD | After v1 beta stabilizes |
-| **v1.0 official** | Gumroad | Target ~end summer 2026 |
+| **v0.99** | Gumroad (superseded) | Previous public cut — no MCP / Your AI |
+| **v1.0.0-beta** (open beta) | [Gumroad](https://artistsindsp.gumroad.com/l/amorph) (public) | **Today** (shipped 10 Sep 2026) |
+| **v1.0 official** | Gumroad | After beta stabilizes |
 
 ## Explore (community catalog)
 
@@ -26,12 +25,12 @@ The **Explore catalog** lists **chosen, verified** patches only (curated by Arti
 
 ## Authoring & agents
 
-**v0.99 (Gumroad today):** Ask → Compile → Play via copy-paste in Build. Explore = chosen patches only. Instrument / FX / MIDI. macOS + Windows.
+**Gumroad today (v1 open beta):** MCP, in-plugin BYOK, and **share-via-link** (unlisted — **not** Explore catalog listing). Instrument / FX / MIDI. macOS + Windows.
 
-**v1 beta (next):** adds MCP, in-plugin BYOK, and **share-via-link** (unlisted — **not** Explore catalog listing).
+**v0.99 (older install):** Ask → Compile → Play via copy-paste in Build. No MCP, BYOK, or link-share.
 
-**Not in v0.99:** MCP, BYOK, and link-share. **Not in v1 beta:** Explore catalog listing / public patch publishing.
+**Not in this beta:** Explore catalog listing / public patch publishing.
 
-Before MCP or BYOK setup: confirm **Settings → Connections** is present. If missing, the user is on v0.99 — guide **copy-paste in Build only**.
+Before MCP or BYOK setup: confirm **Settings → Your AI** is visible (Outside Amorph + Live via MCP). If missing, the user is on an older v0.99 build — guide **copy-paste in Build only**.
 
 Preview builds: Discord → `#announcements`

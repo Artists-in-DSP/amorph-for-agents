@@ -2,7 +2,7 @@
 
 Tool names use **snake_case** in MCP `tools/call`. Always call **`get_host_status`** first if connection is uncertain.
 
-## Bridge-level
+## Host / routing
 
 | Tool | When to use |
 |------|-------------|
@@ -14,7 +14,10 @@ Tool names use **snake_case** in MCP `tools/call`. Always call **`get_host_statu
 
 | Tool | When to use |
 |------|-------------|
-| `create_project` | Blank saved project + switch live runtime (`name`, `overwrite`, `discard_unsaved`). Same as in-plugin New patch + save. Use for agent-first new patches. |
+| `create_project` | Blank saved project + switch live runtime. `name` is optional (`New patch`, `New patch (2)`, …). Also `overwrite`, `discard_unsaved`. Same as in-plugin New patch + save. |
+| `list_assets` | List accepted files in the current patch `assets/` folder |
+| `put_asset` | Place an image, font, or sample into `assets/` and remirror into the live runtime |
+| `set_parameters` | Set live knob values without editing code or compiling |
 
 ## Code — read
 
@@ -30,9 +33,6 @@ Tool names use **snake_case** in MCP `tools/call`. Always call **`get_host_statu
 | Tool | Purpose |
 |------|---------|
 | `edit_lines` | **Preferred** — replace line range |
-| `edit_code` | Single anchor-based replacement |
-| `edit_code_multi` | Multiple anchors in one call |
-| `edit_code_dsp_and_ui` | Edit DSP + UI atomically |
 | `regex_replace` | Regex find-and-replace |
 | `generate_code` | Replace entire file in the working draft (overwrites; draft-compiles) |
 | `undo_last_edit` | Revert last edit |
@@ -58,12 +58,9 @@ Tool names use **snake_case** in MCP `tools/call`. Always call **`get_host_statu
 
 ## Eval/admin tools
 
-Some builds may expose eval/admin tools such as `start_agent_session`, `set_provider`,
-and `set_model`. They are not part of the normal external authoring workflow; do not use
-them unless you are explicitly testing/evaluating the product.
+`set_provider` and `set_model` are advertised on this hub. They are **eval/batch only** — do not use them in a normal authoring session.
 
-Internal prompt-loop tools such as `create_checkpoint`, `get_graph_topology`, `plan`,
-`clarify`, and `classify_intent` are not part of the normal external MCP workflow.
+Internal prompt-loop tools such as `edit_code`, `edit_code_multi`, `edit_code_dsp_and_ui`, `start_agent_session`, `create_checkpoint`, `get_graph_topology`, `plan`, `clarify`, and `classify_intent` are **not** in `tools/list`. Do not call them.
 
 ## Lifecycle
 
