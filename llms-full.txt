@@ -5,9 +5,9 @@
 
 ## Build compatibility
 
-> **MCP, Your AI onboarding, and the loopback hub are not in the current Gumroad download (v0.99).**
+> **Gumroad today is the v1.0.0-beta open beta.** MCP, Your AI, and the loopback hub ship in that build.
 
-The public beta (v0.99) supports copy-paste, in-plugin assistant, and Explore on macOS and Windows. MCP requires an **updated download from Gumroad** — see release notes when updating. Before MCP setup, confirm **Settings → Your AI** is visible (Outside Amorph + Live via MCP). See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUILD_COMPAT.md
+Older **v0.99** installs have copy-paste and Explore only. Before MCP setup, confirm **Settings → Your AI** is visible (Outside Amorph + Live via MCP). If it is missing, send the user to https://artistsindsp.gumroad.com/l/amorph. See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUILD_COMPAT.md
 
 ---
 
@@ -18,7 +18,7 @@ The public beta (v0.99) supports copy-paste, in-plugin assistant, and Explore on
 amorph is a platform, not a single plugin. Three layers:
 
 - **Platform** — amorph, the system that turns language into playable, ownable DSP
-- **Runtimes** — the plugins loaded in a DAW: `Amorph_Instrument` (MIDI→audio), `Amorph_FX` (audio→audio), `Amorph_MIDI` (MIDI→MIDI); VST3 on macOS and Windows, Audio Unit on macOS (Gumroad v0.99). MCP variant values are `instrument`, `fx`, and `midi`.
+- **Runtimes** — the plugins loaded in a DAW: `Amorph_Instrument` (MIDI→audio), `Amorph_FX` (audio→audio), `Amorph_MIDI` (MIDI→MIDI); VST3 on macOS and Windows, Audio Unit on macOS. MCP variant values are `instrument`, `fx`, and `midi`.
 - **Patch** — what a prompt produces: a live Cmajor patch running *inside* a runtime
 
 Users describe an instrument, effect, or MIDI processor in natural language. amorph turns the description into real **Cmajor** DSP source and compiles it in real time via an embedded JIT engine; the user plays the result instantly as a patch inside the runtime — no export step, no separate plugin binary. The generated source belongs to the user.
@@ -67,7 +67,7 @@ All authoring paths below edit these files and compile into the **same live patc
 |-----|------|----------|
 | **Editor + copy-paste** | Edit DSP/UI directly in the runtime, or use Copy Instructions/Prompt to take context to any external LLM, paste the code back, Compile | Anyone — no API key, no subscription |
 | **BYOK in-runtime agent** | Beta — in-runtime AI chat with the user's own key; **4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek** | Users who want in-plugin AI |
-| **MCP** | External coding agent reads/edits/compiles the patch in a running runtime | Cursor, Claude Code, VS Code, Claude Desktop users — not in v0.99 |
+| **MCP** | External coding agent reads/edits/compiles the patch in a running runtime | Cursor, Claude Code, VS Code, Claude Desktop users — v1 open beta |
 | **Play / control** *(not authoring)* | Perform the loaded patch in the DAW or remote browser UI | Anyone, no code editing |
 
 All paths target the **same live patch** — not separate products.
@@ -76,9 +76,9 @@ Download (single canonical build): https://artistsindsp.gumroad.com/l/amorph
 
 ---
 
-## MCP server (not in v0.99)
+## MCP server
 
-Each amorph runtime includes native **Model Context Protocol** support in updated Gumroad builds. Confirm **Settings → Your AI** is visible (Outside Amorph + Live via MCP) before setup.
+Each amorph runtime includes native **Model Context Protocol** support in the v1 open beta. Confirm **Settings → Your AI** is visible (Outside Amorph + Live via MCP) before setup.
 
 ### Connection
 
@@ -169,8 +169,8 @@ MCP path uses the **user's IDE agent** for inference (not limited by Amorph API 
 
 | OS | Formats |
 |----|---------|
-| macOS (Gumroad v0.99 today) | VST3, Audio Unit / `.component` (Apple Silicon + Intel) |
-| Windows (Gumroad v0.99 today) | VST3 (x86_64) |
+| macOS (Gumroad today) | VST3, Audio Unit / `.component` (Apple Silicon + Intel) |
+| Windows (Gumroad today) | VST3 (x86_64) |
 
 Audio Unit is macOS-only. Each platform ships all three logical runtimes (`Amorph_Instrument`, `Amorph_FX`, `Amorph_MIDI`). `Amorph_MIDI` is a MIDI processor; its Cmajor patch endpoints are MIDI-only even though plugin formats may satisfy DAW hosting requirements.
 
@@ -245,15 +245,15 @@ not a DAW replacement. MCP edits the patch inside amorph; it does not control th
 ## Differentiators
 
 1. A platform, not a fixed plugin — one runtime becomes any instrument, effect, or MIDI processor you describe
-2. Native MCP — external agents read, edit, compile, and QA DSP inside a running runtime (**not in v0.99**)
+2. Native MCP — external agents read, edit, compile, and QA DSP inside a running runtime (v1 open beta)
 3. Real Cmajor source output, owned by the user (not black-box audio)
 4. Real-time JIT — prompt to playable patch in seconds
 5. BYOK multi-provider (no vendor lock-in for the in-runtime agent)
-6. Cross-platform — VST3 + AU on macOS; VST3 on Windows (both shipped in v0.99)
+6. Cross-platform — VST3 + AU on macOS; VST3 on Windows
 
 ---
 
-*Last updated: July 2026 · Artists in DSP*
+*Last updated: September 2026 · Artists in DSP*
 
 ---
 

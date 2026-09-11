@@ -61,7 +61,7 @@ named consumer-provider gate are green.
 
 ## Build compatibility
 
-**v0.99 (Gumroad):** copy-paste in **Build**; Explore = **chosen** patches only. **v1 beta (next):** MCP, BYOK, share via unlisted link — **not** Explore catalog listing. **v1.0 official** ~ end summer 2026. See [`BUILD_COMPAT.md`](BUILD_COMPAT.md).
+**Gumroad today (v1 open beta):** MCP, BYOK, share via unlisted link — **not** Explore catalog listing. Older **v0.99** installs are copy-paste only (no Your AI panel). See [`BUILD_COMPAT.md`](BUILD_COMPAT.md).
 
 ## Quick links
 
@@ -72,7 +72,7 @@ named consumer-provider gate are green.
 
 ## MCP in 30 seconds (v1 beta)
 
-1. Confirm **Settings → Your AI** is visible ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). If missing, the user is on **v0.99** — copy-paste in Build only.
+1. Confirm **Settings → Your AI** is visible ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). If missing, the user is on an older **v0.99** — copy-paste in Build only; send them to Gumroad for the open beta.
 2. Install amorph, open a runtime, set **Outside Amorph** → **Live via MCP**.
 3. Add the hub once: **Add to Cursor** / **Add to VS Code**, or copy Other clients ([setup guide](MCP_SETUP.md)). URL: `http://127.0.0.1:7330/mcp`.
 4. Call **`get_host_status`** first (works even before the plugin is open).

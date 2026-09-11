@@ -125,4 +125,4 @@ JavaScript Web Components live in `index.js`. Rules: prompt `ui-rules`.
 ## Learn more
 
 - https://cmajor.dev
-- Amorph runtime: Settings → Connections → **Copy Instructions** (includes variant-specific rules)
+- Amorph runtime: Settings → **Share without MCP** → **Copy full instructions** (includes variant-specific rules)

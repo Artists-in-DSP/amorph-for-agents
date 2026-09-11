@@ -12,7 +12,7 @@ Per-instance servers on **7331–7399** still exist (hub forwarding + Remote UI 
 
 ## Prerequisites
 
-1. **Verify compatibility:** Confirm **Settings → Your AI** is visible. That panel appears only when **Outside Amorph** + **Live via MCP**. If missing, the user is on **v0.99** — copy-paste in Build only; do not run MCP or BYOK steps. See [`BUILD_COMPAT.md`](BUILD_COMPAT.md).
+1. **Verify compatibility:** Confirm **Settings → Your AI** is visible. That panel appears only when **Outside Amorph** + **Live via MCP**. If missing, the user is on an older **v0.99** build — copy-paste in Build only; do not run MCP or BYOK steps. Current Gumroad is the v1 open beta. See [`BUILD_COMPAT.md`](BUILD_COMPAT.md).
 2. Install amorph: https://artistsindsp.gumroad.com/l/amorph
 3. Open a runtime in the DAW. Display names may use spaces (`Amorph Instrument`); MCP variants are `instrument`, `fx`, `midi`.
 4. Keep the plugin window open (minimised is fine). MCP starts with the plugin.

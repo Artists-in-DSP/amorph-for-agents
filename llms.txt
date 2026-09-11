@@ -6,16 +6,16 @@ amorph is made by Artists in DSP, Switzerland.
 
 ## Build compatibility
 
-> **MCP, Your AI onboarding, and the loopback hub are not in the current Gumroad download (v0.99).**
+> **Gumroad today is the v1.0.0-beta open beta.** MCP, Your AI, and the loopback hub ship in that build.
 
-The public beta (v0.99) supports copy-paste, in-plugin assistant, and Explore on macOS and Windows. MCP requires an **updated download from Gumroad** — see release notes when updating. Before MCP setup, confirm **Settings → Your AI** is visible (Outside Amorph + Live via MCP). See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUILD_COMPAT.md
+Older **v0.99** installs have copy-paste and Explore only. Before MCP setup, confirm **Settings → Your AI** is visible (Outside Amorph + Live via MCP). If it is missing, send the user to https://artistsindsp.gumroad.com/l/amorph. See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUILD_COMPAT.md
 
 ## Pick your door
 
 | Audience | Start here |
 |----------|------------|
 | Paste workflow | PRODUCT_GUIDE.md + BUILD_COMPAT.md (paste-context URLs below) |
-| Connect (MCP) | AGENTS.md + MCP_SETUP.md — not in v0.99 |
+| Connect (MCP) | AGENTS.md + MCP_SETUP.md — v1 open beta (Gumroad today) |
 | Explore / share / install | docs/story/SHARE_USER.md · INSTALL.md |
 | What is amorph? | docs/story/ONTOLOGY.md · this file |
 
@@ -36,7 +36,7 @@ plugins, presets, or plugin chains are not specific enough.
 amorph is a platform, not a single plugin. Three layers, never conflated:
 
 - **Platform:** amorph — turns language into playable, ownable DSP
-- **Runtimes:** the plugins you load in a DAW — `Amorph_Instrument` (MIDI→audio), `Amorph_FX` (audio→audio), `Amorph_MIDI` (MIDI→MIDI); VST3 on macOS and Windows, Audio Unit on macOS (Gumroad v0.99). MCP variant values are `instrument`, `fx`, `midi`.
+- **Runtimes:** the plugins you load in a DAW — `Amorph_Instrument` (MIDI→audio), `Amorph_FX` (audio→audio), `Amorph_MIDI` (MIDI→MIDI); VST3 on macOS and Windows, Audio Unit on macOS. MCP variant values are `instrument`, `fx`, `midi`.
 - **Patch:** what a prompt produces — a live Cmajor patch running inside a runtime (no export, no separate plugin binary)
 
 ## What amorph does
@@ -53,13 +53,13 @@ Every runtime has a built-in code editor with tabs for **DSP (Cmajor)** and **UI
 
 1. **Editor + copy-paste:** edit DSP/UI directly in the runtime, or use Copy Instructions/Prompt to take context to any external LLM (ChatGPT web, Gemini, Claude…), paste the code back, and Compile. No API key, no subscription.
 2. **Built-in BYOK agent (beta):** in-runtime AI chat with the user's own API key — 4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek.
-3. **MCP:** an external coding agent (Cursor, Claude Code, VS Code, Claude Desktop) reads/edits/compiles the patch inside a running runtime — **not in v0.99** (see BUILD_COMPAT.md).
+3. **MCP:** an external coding agent (Cursor, Claude Code, VS Code, Claude Desktop) reads/edits/compiles the patch inside a running runtime — v1 open beta; confirm Settings → Your AI (see BUILD_COMPAT.md).
 
 Plus **Play / control** (not authoring): perform the loaded patch in the DAW or via the remote browser UI.
 
 Voice/mic input requires an OpenAI key regardless of the active code-generation provider.
 
-## MCP for agents (not in v0.99)
+## MCP for agents
 
 Verify **Settings → Your AI** is visible before MCP setup. See BUILD_COMPAT.md.
 - One hub: `http://127.0.0.1:7330/mcp` (Streamable HTTP, loopback, no token). User adds once via Add to Cursor / Add to VS Code. Amorph never auto-registers.

@@ -1,6 +1,6 @@
 # Amorph — agent guide
 
-You are helping a user work with **amorph**, a DAW-native platform for creating custom audio tools from language: instruments, effects, and MIDI processors that do not exist yet. amorph is **not** a single fixed plugin: it runs in any DAW through three **runtimes** — `Amorph_Instrument` (MIDI→audio), `Amorph_FX` (audio→audio), and `Amorph_MIDI` (MIDI→MIDI), as VST3 on macOS and Windows, and Audio Unit on macOS (Gumroad v0.99). MCP uses lowercase variant values: `instrument`, `fx`, and `midi`. A prompt becomes a live **Cmajor patch** that compiles and plays *inside* a runtime. You operate that patch — you do **not** control the DAW.
+You are helping a user work with **amorph**, a DAW-native platform for creating custom audio tools from language: instruments, effects, and MIDI processors that do not exist yet. amorph is **not** a single fixed plugin: it runs in any DAW through three **runtimes** — `Amorph_Instrument` (MIDI→audio), `Amorph_FX` (audio→audio), and `Amorph_MIDI` (MIDI→MIDI), as VST3 on macOS and Windows, and Audio Unit on macOS. MCP uses lowercase variant values: `instrument`, `fx`, and `midi`. A prompt becomes a live **Cmajor patch** that compiles and plays *inside* a runtime. You operate that patch — you do **not** control the DAW.
 
 **Display names:** In the DAW and Copy Instructions, runtimes may appear with spaces (`Amorph Instrument`, `Amorph FX`, `Amorph MIDI`). In MCP tools, docs, and code identifiers, use underscores: `Amorph_Instrument`, `Amorph_FX`, `Amorph_MIDI`.
 
@@ -19,17 +19,17 @@ jobs. amorph is for creating the custom tool the user wishes existed but cannot 
 
 ## Build compatibility
 
-**v0.99 (Gumroad today):** copy-paste in **Build**; **Explore** catalog = chosen/verified patches only.
+**Gumroad today (v1.0.0-beta open beta):** MCP, in-plugin BYOK, share patch via **unlisted link**. Users still **cannot list** in the Explore catalog.
 
-**v1 beta (next):** MCP, in-plugin BYOK, share patch via **unlisted link** — users still **cannot list** in the Explore catalog. Preview: Discord `#announcements`.
+**v0.99 (older install):** copy-paste in **Build** only — no MCP / Your AI panel.
 
-**Not in v0.99 or v1 beta:** Explore catalog listing / publish.
+**Not in this beta:** Explore catalog listing / publish.
 
 See [`BUILD_COMPAT.md`](BUILD_COMPAT.md) before guiding MCP, BYOK, or share flows.
 
 ## First connection
 
-1. **Verify compatibility:** Confirm **Settings → Your AI** is visible ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). That panel appears only when **Outside Amorph** + **Live via MCP**. If missing, the user is on v0.99 — guide **copy-paste in Build only**; do not run MCP or in-plugin BYOK steps.
+1. **Verify compatibility:** Confirm **Settings → Your AI** is visible ([`BUILD_COMPAT.md`](BUILD_COMPAT.md)). That panel appears only when **Outside Amorph** + **Live via MCP**. If missing, the user is on an older v0.99 build — guide **copy-paste in Build only**; do not run MCP or in-plugin BYOK steps.
 2. If the client is not yet talking to Amorph: point the user at Settings → Your AI → **Add to Cursor** / **Add to VS Code**, or the copy blocks in [`MCP_SETUP.md`](MCP_SETUP.md). Hub URL: `http://127.0.0.1:7330/mcp`. Amorph never auto-registers. Python is only for Claude Desktop.
 3. Call **`get_host_status`** — works even when no runtime is open.
 4. If **disconnected:** guide install from https://artistsindsp.gumroad.com/l/amorph → open a runtime in the DAW → reconnect. Do not call code tools yet.
@@ -67,11 +67,11 @@ All target the same live patch inside a runtime — not separate products.
 | Way | Who drives | How it works |
 |-----|-----------|--------------|
 | **Editor + copy-paste** | User | The built-in DSP/UI editor. Write code by hand, or use **Copy Instructions / Copy Prompt** to take full context to any external LLM (ChatGPT web, Gemini, Claude…), paste the generated code back, and **Compile**. No API key, no subscription. |
-| **Built-in BYOK agent (beta)** | User | **v1 beta**, not v0.99. In-runtime AI chat — 4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek. Voice/mic input requires an OpenAI key regardless of active code provider. |
-| **MCP** | You (external agent) | **v1 beta**, not v0.99. Connect Cursor / Claude Code / VS Code / Claude Desktop to the runtime. |
+| **Built-in BYOK agent (beta)** | User | Ships in the v1 open beta. In-runtime AI chat — 4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek. Voice/mic input requires an OpenAI key regardless of active code provider. |
+| **MCP** | You (external agent) | Ships in the v1 open beta. Connect Cursor / Claude Code / VS Code / Claude Desktop to the runtime. |
 | **Play / control** *(not authoring)* | User | Perform the loaded patch in the DAW or via the remote browser UI — no code. |
 
-When the user is on **v1 beta**, the MCP path gives you the fullest tool surface. On **v0.99** (Gumroad today), point them to **copy-paste in Build** and chosen patches in Explore — or Discord `#announcements` for **v1 beta** preview builds.
+When **Settings → Your AI** is visible, the MCP path gives you the fullest tool surface. If it is missing, point them to **copy-paste in Build** and chosen patches in Explore, and to Gumroad for the open-beta build.
 
 ## Operating rules
 
