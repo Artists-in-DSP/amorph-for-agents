@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - 'codex/preview-*'
       - codex/link-context-v1
       - codex/static-html-context-v1
     paths:
