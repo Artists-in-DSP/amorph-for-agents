@@ -47,7 +47,7 @@ Opening the project folder is **optional** — only for hand-editing `dsp.cmajor
 |--------|------------|
 | **Cursor** | Settings → Your AI → **Add to Cursor** (one-click). Or paste the Cursor JSON below. Folder optional. |
 | **VS Code** | Settings → Your AI → **Add to VS Code** (one-click). Folder optional. Saved `.vscode/mcp.json` is hub HTTP. |
-| **Claude Code** | `claude mcp add --transport http amorph http://127.0.0.1:7330/mcp` |
+| **Claude Code** | `claude mcp add --scope user --transport http amorph http://127.0.0.1:7330/mcp` (`--scope user` is required — default scope is the current folder) |
 | **Windsurf** | Copy the Windsurf / Antigravity JSON from Your AI → Other clients (`serverUrl`). |
 | **Claude Desktop** | Copy the Claude Desktop config (stdio + Python). Windows: `py -3` if `python3` is not on PATH. |
 | **Hand-editing files (optional)** | Open `Projects/<PatchName>/` to browse `dsp.cmajor` / `index.js`; finish with `reload_from_disk` or `apply_draft`. |
@@ -104,8 +104,10 @@ Prefer that URL over a random instance port. Do not treat per-instance `/mcp/set
 **Claude Code:**
 
 ```bash
-claude mcp add --transport http amorph http://127.0.0.1:7330/mcp
+claude mcp add --scope user --transport http amorph http://127.0.0.1:7330/mcp
 ```
+
+`--scope user` is required. Claude Code's default scope is the current project folder, so the server disappears when the user opens another directory.
 
 **Claude Desktop only** — `~/Library/Application Support/Claude/claude_desktop_config.json` (stdio; Python required):
 
