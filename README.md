@@ -29,7 +29,7 @@ Three pieces have to be in the same place at the same time for "imagine it, play
 - **Cmajor — a C-family DSP language, not a toy DSL.** Generated code is readable, editable, and owned by the user. amorph ships under a [commercial Cmajor license](https://cmajor.dev/docs/Licence.html) — your patches are yours, no GPL copyleft, no runtime royalty. Language reference: [cmajor.dev](https://cmajor.dev).
 - **Tailored QA before commit.** `run_qa_probe` renders the patch headlessly — real MIDI (C4 + C6 + GM drums for synths, 440 Hz sine for FX), 32 × 512-sample blocks at 44.1 kHz — and returns RMS, peak, NaN/Inf, silence, clipping, DC offset, stereo correlation, stereo width, phase-cancellation warning, note-off release decay, and a spectral centroid/rolloff/peak FFT for instruments. The agent uses these metrics to decide whether a patch is safe to commit, not just whether it compiles.
 
-These three are the moat. Most "AI audio" tools have one; amorph is the only one with all three inside a DAW runtime.
+These three together are the point. Most "AI audio" tools have one of them; amorph puts all three inside a DAW runtime.
 
 ## Pick your door
 
@@ -61,7 +61,7 @@ named consumer-provider gate are green.
 
 ## Build compatibility
 
-**Gumroad today (v1 open beta):** MCP, BYOK, share via unlisted link — **not** Explore catalog listing. Older **v0.99** installs are copy-paste only (no Your AI panel). See [`BUILD_COMPAT.md`](BUILD_COMPAT.md).
+**Gumroad build (v1 open beta):** MCP, BYOK, share via unlisted link — **not** Explore catalog listing. Older **v0.99** installs are copy-paste only (no Your AI panel). See [`BUILD_COMPAT.md`](BUILD_COMPAT.md).
 
 ## Quick links
 

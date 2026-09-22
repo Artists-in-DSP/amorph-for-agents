@@ -30,8 +30,9 @@ Every path below edits these files and compiles into the same running patch. No 
 **For:** Users who want in-runtime AI chat with their own API key.
 
 - AI chat panel inside the runtime; **bring your own key**
-- **4 code-generation providers supported: OpenAI, Anthropic, Google (Gemini), DeepSeek** (the runtime offers each provider’s current models)
-- Voice/mic input requires an OpenAI key regardless of the active code provider
+- **OpenRouter is supported and recommended: one key covers every model.** Set it in **Settings → In Amorph**
+- Direct provider keys are also supported under **More keys**: OpenAI, Anthropic, Google (Gemini), DeepSeek (the runtime offers each provider’s current models)
+- Voice/mic input uses OpenAI Whisper when an OpenAI key is saved, otherwise OpenRouter speech-to-text on the OpenRouter key. It does **not** work with an Anthropic-only key
 - Reads, edits, and compiles the patch in-plugin
 - Clearly labeled **beta**
 

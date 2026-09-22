@@ -6,7 +6,7 @@ amorph is made by Artists in DSP, Switzerland.
 
 ## Build compatibility
 
-> **Gumroad today is the v1.0.0-beta open beta.** MCP, Your AI, and the loopback hub ship in that build.
+> **The Gumroad build is the v1.0.0-beta open beta (shipped 10 Sep 2026).** MCP, Your AI, and the loopback hub ship in that build.
 
 Older **v0.99** installs have copy-paste and Explore only. Before MCP setup, confirm **Settings → Your AI** is visible (Outside Amorph + Live via MCP). If it is missing, send the user to https://artistsindsp.gumroad.com/l/amorph. See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUILD_COMPAT.md
 
@@ -14,8 +14,9 @@ Older **v0.99** installs have copy-paste and Explore only. Before MCP setup, con
 
 | Audience | Start here |
 |----------|------------|
+| **Setup help, install, troubleshooting** (a human is stuck, or you are helping one) | https://artistsindsp.com/get-started-with-amorph/ (full guide, video transcript; anchors #install #load #first-patch #connect-your-ai #sharing #troubleshooting #faq) |
 | Paste workflow | PRODUCT_GUIDE.md + BUILD_COMPAT.md (paste-context URLs below) |
-| Connect (MCP) | AGENTS.md + MCP_SETUP.md — v1 open beta (Gumroad today) |
+| Connect (MCP) | AGENTS.md + MCP_SETUP.md — v1 open beta (Gumroad) |
 | Explore / share / install | docs/story/SHARE_USER.md · INSTALL.md |
 | What is amorph? | docs/story/ONTOLOGY.md · this file |
 
@@ -52,12 +53,12 @@ Every runtime has a built-in code editor with tabs for **DSP (Cmajor)** and **UI
 ## Three ways to author (one platform)
 
 1. **Editor + copy-paste:** edit DSP/UI directly in the runtime, or use Copy Instructions/Prompt to take context to any external LLM (ChatGPT web, Gemini, Claude…), paste the code back, and Compile. No API key, no subscription.
-2. **Built-in BYOK agent (beta):** in-runtime AI chat with the user's own API key — 4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek.
+2. **Built-in BYOK agent (beta):** in-runtime AI chat with the user's own API key. **OpenRouter is recommended: one key covers every model.** Direct OpenAI, Anthropic, Google (Gemini) and DeepSeek keys also work under More keys.
 3. **MCP:** an external coding agent (Cursor, Claude Code, VS Code, Claude Desktop) reads/edits/compiles the patch inside a running runtime — v1 open beta; confirm Settings → Your AI (see BUILD_COMPAT.md).
 
 Plus **Play / control** (not authoring): perform the loaded patch in the DAW or via the remote browser UI.
 
-Voice/mic input requires an OpenAI key regardless of the active code-generation provider.
+Voice/mic input uses OpenAI Whisper when an OpenAI key is saved, otherwise OpenRouter speech-to-text on the OpenRouter key (see PRODUCT_GUIDE.md). It does not work with an Anthropic-only key.
 
 ## MCP for agents
 
@@ -72,6 +73,7 @@ Verify **Settings → Your AI** is visible before MCP setup. See BUILD_COMPAT.md
 ## Download & links
 
 - Download: https://artistsindsp.gumroad.com/l/amorph
+- Get started, setup and troubleshooting (with the full video transcript): https://artistsindsp.com/get-started-with-amorph/
 - Website: https://artistsindsp.com/
 - Agent docs repo: https://github.com/Artists-in-DSP/amorph-for-agents
 - Full doc: https://artistsindsp.com/llms-full.txt

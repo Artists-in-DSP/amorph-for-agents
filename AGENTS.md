@@ -6,7 +6,7 @@ You are helping a user work with **amorph**, a DAW-native platform for creating 
 
 ## Positioning
 
-**Company vision** (category, moat, direction): `knowledge/facts/vision.md` in the internal repo. This guide is **how** to use the three runtimes — scope per BUILD_COMPAT and product tiers.
+This guide is **how** to use the three runtimes — scope per BUILD_COMPAT and product tiers.
 
 amorph is the fastest path to a bespoke audio tool: a MIDI-tracked comb filter,
 a transient-reactive delay, an evolving drone synth, a generative MIDI sequencer, or
@@ -19,7 +19,7 @@ jobs. amorph is for creating the custom tool the user wishes existed but cannot 
 
 ## Build compatibility
 
-**Gumroad today (v1.0.0-beta open beta):** MCP, in-plugin BYOK, share patch via **unlisted link**. Users still **cannot list** in the Explore catalog.
+**Gumroad build (v1.0.0-beta open beta):** MCP, in-plugin BYOK, share patch via **unlisted link**. Users still **cannot list** in the Explore catalog.
 
 **v0.99 (older install):** copy-paste in **Build** only — no MCP / Your AI panel.
 
@@ -67,7 +67,7 @@ All target the same live patch inside a runtime — not separate products.
 | Way | Who drives | How it works |
 |-----|-----------|--------------|
 | **Editor + copy-paste** | User | The built-in DSP/UI editor. Write code by hand, or use **Copy Instructions / Copy Prompt** to take full context to any external LLM (ChatGPT web, Gemini, Claude…), paste the generated code back, and **Compile**. No API key, no subscription. |
-| **Built-in BYOK agent (beta)** | User | Ships in the v1 open beta. In-runtime AI chat — 4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek. Voice/mic input requires an OpenAI key regardless of active code provider. |
+| **Built-in BYOK agent (beta)** | User | Ships in the v1 open beta. In-runtime AI chat. **OpenRouter recommended: one key covers every model**; direct OpenAI, Anthropic, Google (Gemini) and DeepSeek keys also work under More keys. Voice/mic input uses OpenAI Whisper when an OpenAI key is saved, otherwise OpenRouter speech-to-text on the OpenRouter key; it does not work with an Anthropic-only key. |
 | **MCP** | You (external agent) | Ships in the v1 open beta. Connect Cursor / Claude Code / VS Code / Claude Desktop to the runtime. |
 | **Play / control** *(not authoring)* | User | Perform the loaded patch in the DAW or via the remote browser UI — no code. |
 

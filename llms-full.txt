@@ -5,7 +5,7 @@
 
 ## Build compatibility
 
-> **Gumroad today is the v1.0.0-beta open beta.** MCP, Your AI, and the loopback hub ship in that build.
+> **The Gumroad build is the v1.0.0-beta open beta (shipped 10 Sep 2026).** MCP, Your AI, and the loopback hub ship in that build.
 
 Older **v0.99** installs have copy-paste and Explore only. Before MCP setup, confirm **Settings → Your AI** is visible (Outside Amorph + Live via MCP). If it is missing, send the user to https://artistsindsp.gumroad.com/l/amorph. See https://raw.githubusercontent.com/Artists-in-DSP/amorph-for-agents/main/BUILD_COMPAT.md
 
@@ -66,7 +66,7 @@ All authoring paths below edit these files and compile into the **same live patc
 | Way | Role | Audience |
 |-----|------|----------|
 | **Editor + copy-paste** | Edit DSP/UI directly in the runtime, or use Copy Instructions/Prompt to take context to any external LLM, paste the code back, Compile | Anyone — no API key, no subscription |
-| **BYOK in-runtime agent** | Beta — in-runtime AI chat with the user's own key; **4 providers: OpenAI, Anthropic, Google (Gemini), DeepSeek** | Users who want in-plugin AI |
+| **BYOK in-runtime agent** | Beta — in-runtime AI chat with the user's own key; **OpenRouter recommended (one key, every model)**, plus direct OpenAI, Anthropic, Google (Gemini) and DeepSeek keys under More keys | Users who want in-plugin AI |
 | **MCP** | External coding agent reads/edits/compiles the patch in a running runtime | Cursor, Claude Code, VS Code, Claude Desktop users — v1 open beta |
 | **Play / control** *(not authoring)* | Perform the loaded patch in the DAW or remote browser UI | Anyone, no code editing |
 
@@ -157,9 +157,10 @@ Language: [cmajor.dev](https://cmajor.dev) — amorph ships under a [commercial 
 
 ## LLM providers (BYOK, in-plugin agent)
 
-Anthropic Claude · OpenAI GPT · Google Gemini · DeepSeek — user supplies API key for
-code generation. Voice/mic input requires an OpenAI key regardless of the active code
-provider.
+**OpenRouter (recommended)** — one key covers every model, the simplest setup. Direct keys
+also work under More keys: Anthropic Claude · OpenAI GPT · Google Gemini · DeepSeek. Voice/mic
+input uses OpenAI Whisper when an OpenAI key is saved, otherwise OpenRouter speech-to-text on
+the OpenRouter key; it does not work with an Anthropic-only key.
 
 MCP path uses the **user's IDE agent** for inference (not limited by Amorph API budget).
 
@@ -169,8 +170,8 @@ MCP path uses the **user's IDE agent** for inference (not limited by Amorph API 
 
 | OS | Formats |
 |----|---------|
-| macOS (Gumroad today) | VST3, Audio Unit / `.component` (Apple Silicon + Intel) |
-| Windows (Gumroad today) | VST3 (x86_64) |
+| macOS (Gumroad build) | VST3, Audio Unit / `.component` (Apple Silicon + Intel) |
+| Windows (Gumroad build) | VST3 (x86_64) |
 
 Audio Unit is macOS-only. Each platform ships all three logical runtimes (`Amorph_Instrument`, `Amorph_FX`, `Amorph_MIDI`). `Amorph_MIDI` is a MIDI processor; its Cmajor patch endpoints are MIDI-only even though plugin formats may satisfy DAW hosting requirements.
 
