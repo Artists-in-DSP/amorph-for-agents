@@ -108,7 +108,7 @@ Every host parameter endpoint ID must be the exact sequential form `param1`, `pa
 | `std::filters (float<2>)::tpt::onepole::Processor` | One-pole LPF/HPF |
 | `std::filters (float<2>)::dcblocker::Processor` | DC blocker |
 
-> Prefer stdlib cards from `search_components` for exact 1.0.3175 syntax. Manual one-pole remains valid when you need a specific coefficient recipe.
+> Prefer stdlib cards from `search_components` for exact 1.0.3209 syntax. Manual one-pole remains valid when you need a specific coefficient recipe.
 > `tpt::svf` Q is true Q (min 0.01) — never feed a 0..1 Resonance knob into `setFrequency`; never `create(..., 0.0, ...)`.
 
 **Manual One-Pole Lowpass (fallback):**
